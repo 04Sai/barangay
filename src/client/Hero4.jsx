@@ -40,8 +40,8 @@ const Hero4 = () => {
           {/* Second column - Mission & Vision */}
           <div className="md:w-1/2 flex flex-col justify-center space-y-10">
             <div>
-              <h3 className="text-2xl font-karla font-bold mb-4">Mission:</h3>
-              <p className="text-lg font-inter leading-relaxed">
+              <h3 className="text-2xl text-zinc-950 font-karla font-bold mb-4">Mission:</h3>
+              <p className="text-lg text-zinc-950 font-inter leading-relaxed">
                 To institute good governance, promote culture, trade and
                 investment in the City, through modern technology towards a safe
                 and sound environment.
@@ -49,8 +49,8 @@ const Hero4 = () => {
             </div>
 
             <div>
-              <h3 className="text-2xl font-karla font-bold mb-4">Vision:</h3>
-              <p className="text-lg font-inter leading-relaxed">
+              <h3 className="text-2xl text-zinc-950 font-karla font-bold mb-4">Vision:</h3>
+              <p className="text-lg text-zinc-950 font-inter leading-relaxed">
                 To institute good governance, promote culture, trade and
                 investment in the City, through modern technology towards a safe
                 and sound environment.

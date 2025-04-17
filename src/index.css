@@ -110,7 +110,7 @@ html {
 .hero4 {
   background-image: linear-gradient(
       rgba(0, 94, 122, 0.7),
-      rgba(165, 159, 0, 0.589)
+      rgb(123, 120, 42)
     ),
     url("/src/assets/bacoor3.png");
   background-size: cover;

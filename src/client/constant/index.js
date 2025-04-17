@@ -54,3 +54,64 @@ export const DepartmentUnitHeads = [
         contact: "(046) 481-4100 / 201",
     },
 ];
+
+export const EmgergencyServicesData = [
+    {
+        id: 1,
+        name: "Incident Report",
+        img: "../../assets/services/IncidentReport.svg",
+    },
+    {
+        id: 2,
+        name: "Medical Assistance",
+        img: "../../assets/services/MedicalAssistance.svg",
+    },
+    {
+        id: 3,
+        name: "Police Station",
+        img: "../../assets/services/PoliceStation.svg"
+    },
+    {
+        id: 4,
+        name: "Fire Station",
+        img: "../../assets/services/FireeStation.svg"
+    },
+    {
+        id: 5,
+        name: "Animal Bite Center",
+        img: "../../assets/services/AnimalBite.svg"
+    },
+    {
+        id: 6,
+        name: "Towing Services and Assistance",
+        img: "../../assets/services/Towing.svg"
+    },
+];
+
+export const BarangayServicesData = [
+    {
+        id: 1,
+        name: "Barangay Announcements",
+        img: "../../assets/services/Announcement.svg"
+    },
+    {
+        id: 2,
+        name: "Health Services",
+        img: "../../assets/services/HealthServices.svg"
+    },
+    {
+        id: 3,
+        name: "Peace and Order",
+        img: "../../assets/services/PO.svg"
+    },
+    {
+        id: 4,
+        name: "Document Services",
+        img: "../../assets/services/DocSer.svg"
+    },
+    {
+        id: 3,
+        name: "View Appointments",
+        img: "../../assets/services/Appt.svg"
+    },
+];
