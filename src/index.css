@@ -90,8 +90,8 @@ html {
 
 .hero3 {
   background-image: linear-gradient(
-      rgba(203, 226, 1, 0.6),
-      rgba(45, 44, 0, 0.7)
+      rgba(108, 0, 0, 0.353),
+      rgba(75, 74, 2, 0.7)
     ),
     url("/src/assets/bacoor1.png");
   background-size: cover;
@@ -108,10 +108,7 @@ html {
 
 /* Fix duplicate hero3 class - change to hero4 */
 .hero4 {
-  background-image: linear-gradient(
-      rgba(0, 94, 122, 0.7),
-      rgb(123, 120, 42)
-    ),
+  background-image: linear-gradient(rgba(0, 94, 122, 0.7), rgb(123, 120, 42)),
     url("/src/assets/bacoor3.png");
   background-size: cover;
   background-position: center;
@@ -131,4 +128,69 @@ html {
   .hero4 {
     background-attachment: scroll; /* Better for mobile performance */
   }
+}
+
+.account-bg {
+  background-image: linear-gradient(
+      rgba(0, 10, 122, 0.909),
+      rgba(70, 0, 0, 0.883)
+    ),
+    url("/src/assets/bacoor4.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  width: 100%;
+  min-height: 100vh;
+  height: auto;
+  padding-bottom: 80px; /* Extra padding to ensure arrow visibility */
+}
+
+/* Add text shadow utility class */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Incident Report Styling */
+.incident-form input[type="text"],
+.incident-form input[type="datetime-local"],
+.incident-form textarea,
+.incident-form select {
+  @apply w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white shadow-inner
+    focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
+    hover:bg-white/15 transition-all duration-300;
+}
+
+.incident-form label {
+  @apply block text-lg font-medium text-white text-shadow;
+}
+
+.incident-form .checkbox-group {
+  @apply space-y-3;
+}
+
+.incident-form .checkbox-item {
+  @apply flex items-center;
+}
+
+.incident-form .checkbox-item input[type="checkbox"] {
+  @apply h-5 w-5 rounded border-white/30 bg-white/10 text-red-600 focus:ring-red-500;
+}
+
+.incident-form .checkbox-item label {
+  @apply ml-3 text-white;
+}
+
+.incident-submit-btn {
+  @apply w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-6 rounded-lg 
+    shadow-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 
+    font-medium flex items-center justify-center space-x-2;
+}
+
+.incident-notice {
+  @apply bg-red-600/20 border border-red-300/30 rounded-md p-3 mb-6 text-white text-sm;
 }

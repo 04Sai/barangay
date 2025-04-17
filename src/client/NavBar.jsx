@@ -37,6 +37,9 @@ const NavBar = () => {
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
+              <Link to="/account" className="text-white hover:text-blue-300">
+                Dashboard
+              </Link>
               <span className="text-white">Welcome, {user?.firstName}</span>
               <button
                 onClick={handleLogout}
