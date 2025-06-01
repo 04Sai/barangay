@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { NearbyHospitalsData } from "../constant";
-import MedicalAssistanceImage from "../../assets/services/MedicalAssistance.svg";
+import { TowingServicesData } from "../../constant";
+import TowingImage from "../../../assets/services/Towing.svg";
 import { useNavigate } from "react-router-dom";
+import Button, { BackButton, CallButton } from "../../buttons";
 
-const MedicalAssistance = () => {
+const TowingAssistance = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [vehicleInfo, setVehicleInfo] = useState("");
   const navigate = useNavigate();
 
   const handleCall = (contact) => {
@@ -22,17 +24,17 @@ const MedicalAssistance = () => {
             {/* Image positioned on top right */}
             <div className="absolute right-0 top-0">
               <img
-                src={MedicalAssistanceImage}
-                alt="Medical Assistance"
+                src={TowingImage}
+                alt="Towing Assistance"
                 className="w-16 h-16 md:w-24 md:h-24 object-contain"
               />
             </div>
 
             <h2 className="text-3xl font-karla font-bold text-white text-shadow-lg">
-              Medical Assistance
+              Towing Assistance
             </h2>
             <p className="text-white font-inter">
-              Please provide your information to get medical assistance
+              Please provide your information to get towing assistance
             </p>
           </div>
 
@@ -44,13 +46,13 @@ const MedicalAssistance = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <label htmlFor="address">Your Address</label>
+                <label htmlFor="address">Your Location</label>
                 <input
                   type="text"
                   id="address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter your complete address"
+                  placeholder="Enter your current location"
                 />
               </div>
 
@@ -64,49 +66,58 @@ const MedicalAssistance = () => {
                   placeholder="Enter your contact number"
                 />
               </div>
+
+              <div className="space-y-3 md:col-span-2">
+                <label htmlFor="vehicleInfo">Vehicle Information</label>
+                <input
+                  type="text"
+                  id="vehicleInfo"
+                  value={vehicleInfo}
+                  onChange={(e) => setVehicleInfo(e.target.value)}
+                  placeholder="Enter vehicle make, model, color, and plate number"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Second Row - Nearby Hospitals */}
+          {/* Second Row - Towing Services */}
           <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
-              Nearby Hospitals
+              Available Towing Services
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {NearbyHospitalsData.map((hospital) => (
+              {TowingServicesData.map((service) => (
                 <div
-                  key={hospital.id}
+                  key={service.id}
                   className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col"
                 >
                   <h4 className="text-lg font-bold text-white mb-2 text-shadow">
-                    {hospital.name}
+                    {service.name}
                   </h4>
 
                   <div className="flex items-start space-x-2 mb-1 text-white">
                     <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
-                    <span>{hospital.address}</span>
+                    <span>{service.address}</span>
                   </div>
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{hospital.contact}</span>
+                    <span>{service.contact}</span>
                   </div>
 
                   <div className="text-white mb-4">
                     <span className="font-medium">Distance:</span>{" "}
-                    {hospital.distance}
+                    {service.distance}
                   </div>
 
-                  <button
-                    onClick={() => handleCall(hospital.contact)}
-                    className="mt-auto bg-green-600 text-white py-2 px-4 rounded-md 
-                      shadow-lg hover:bg-green-700 transition-all duration-300 
-                      font-medium flex items-center justify-center space-x-2"
-                  >
-                    <FaPhone />
-                    <span>Call Now</span>
-                  </button>
+                  <Button
+                    onClick={() => handleCall(service.contact)}
+                    label="Call Now"
+                    icon={<FaPhone />}
+                    className="mt-auto"
+                    type="primary"
+                  />
                 </div>
               ))}
             </div>
@@ -114,15 +125,7 @@ const MedicalAssistance = () => {
 
           {/* Add back button at the bottom right */}
           <div className="flex justify-end mt-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="bg-red-600 text-white py-2 px-4 rounded-md 
-                shadow-lg hover:bg-red-700 transition-all duration-300 
-                font-medium flex items-center justify-center space-x-2"
-            >
-              <FaArrowLeft />
-              <span>Go Back</span>
-            </button>
+            <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>
       </div>
@@ -130,4 +133,4 @@ const MedicalAssistance = () => {
   );
 };
 
-export default MedicalAssistance;
+export default TowingAssistance;

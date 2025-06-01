@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import IncidentReportImage from "../../assets/services/IncidentReport.svg";
-import { BackButton, SaveButton } from "../buttons";
+import {
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaUser,
+  FaPhone,
+  FaArrowLeft,
+  FaPaperPlane,
+} from "react-icons/fa";
+import { BackButton, SaveButton } from "../../buttons";
+import IncidentReportImage from "../../../assets/services/IncidentReport.svg";
 
 const IncidentReportPreview = () => {
   const navigate = useNavigate();
@@ -110,13 +118,19 @@ const IncidentReportPreview = () => {
                 </h3>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-gray-300 text-sm">Site/Location:</p>
+                    <p className="text-gray-300 text-sm">
+                      <FaMapMarkerAlt className="inline-block mr-2" />
+                      Site/Location:
+                    </p>
                     <p className="text-white font-medium">
                       {completeData.location}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-300 text-sm">Date & Time:</p>
+                    <p className="text-gray-300 text-sm">
+                      <FaCalendarAlt className="inline-block mr-2" />
+                      Date & Time:
+                    </p>
                     <p className="text-white font-medium">
                       {formatDateTime(completeData.dateTime)}
                     </p>
@@ -143,13 +157,19 @@ const IncidentReportPreview = () => {
                 </h3>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-gray-300 text-sm">Name:</p>
+                    <p className="text-gray-300 text-sm">
+                      <FaUser className="inline-block mr-2" />
+                      Name:
+                    </p>
                     <p className="text-white font-medium">
                       {completeData.affectedName}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-300 text-sm">Contact Number:</p>
+                    <p className="text-gray-300 text-sm">
+                      <FaPhone className="inline-block mr-2" />
+                      Contact Number:
+                    </p>
                     <p className="text-white font-medium">
                       {completeData.phoneNumber}
                     </p>
@@ -185,26 +205,14 @@ const IncidentReportPreview = () => {
                   onClick={handleBack}
                   label="Back"
                   className="w-1/3"
+                  icon={<FaArrowLeft />}
                 />
                 <SaveButton
                   onClick={handleSubmit}
                   label={isSubmitting ? "Submitting..." : "Submit Report"}
                   className="w-2/3"
                   disabled={isSubmitting}
-                  icon={
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  }
+                  icon={<FaPaperPlane />}
                 />
               </div>
             </div>

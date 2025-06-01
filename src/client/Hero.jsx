@@ -20,17 +20,17 @@ const Hero = () => {
           {/* Text container - full width on mobile, 2/5 on larger screens */}
           <div className="w-full flex justify-center items-center mt-6 md:mt-0">
             <div className="text-center justify-start sm:text-left md:text-left w-full">
-              <h1 className="text-white font-karla text-3xl md:text-4xl font-bold">
+              <h1 className="text-white font-karla text-3xl md:text-5xl font-bold">
                 Welcome to Barangay
               </h1>
-              <p className="text-white font-inter text-md md:text-xl mt-2">
+              <p className="text-gray-400 font-inter text-sm md:text-md mt-2">
                 Barangay Security and Incident Reporting System
               </p>
-              <p className="text-white font-inter text-md md:text-xl mt-2">
+              <p className="text-gray-400 font-inter text-sm md:text-md mt-2">
                 Open Hours of Dulong Bayan BSERS: Monday to Saturday (7 AM - 5
                 PM)
               </p>
-              <p className="text-white font-inter text-md md:text-xl mt-2">
+              <p className="text-gray-400 font-inter text-sm md:text-md mt-2">
                 brgydulongbayan1980@gmail.com / 09166221911
               </p>
               <div className="flex justify-center md:justify-start mt-5">

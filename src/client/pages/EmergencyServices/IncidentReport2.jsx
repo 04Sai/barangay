@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import IncidentReportImage from "../../assets/services/IncidentReport.svg";
-import { BackButton, NextButton } from "../buttons";
+import IncidentReportImage from "../../../assets/services/IncidentReport.svg";
+import { BackButton, NextButton } from "../../buttons";
 
 const IncidentReport2 = () => {
   const navigate = useNavigate();

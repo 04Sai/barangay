@@ -9,7 +9,7 @@ const Hero3 = () => {
   const secondHalf = DepartmentUnitHeads.slice(midpoint);
 
   return (
-    <section id="hero3" className="hero3 py-20 relative">
+    <section id="hero3" className="hero3 py-32 w-full relative">
       <div className="screen-max-width mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-4xl font-karla font-bold text-center mb-12 text-white">
           Department Unit Heads

@@ -50,9 +50,7 @@ const NavBar = () => {
             </>
           ) : (
             <>
-              <Link to="/login">
-                <LoginButton />
-              </Link>
+              <LoginButton onClick={() => navigate("/login")} />
               <Link
                 to="/register"
                 className="text-white hover:text-blue-400 ml-4"

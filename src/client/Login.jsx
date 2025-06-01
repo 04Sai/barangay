@@ -17,8 +17,15 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.history.pushState(null, "", window.location.pathname);
+    }
+
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
     }
@@ -57,6 +64,7 @@ const Login = () => {
     e.preventDefault();
     setServerError("");
     setSuccessMessage("");
+    setLoginSuccess(false);
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -79,7 +87,12 @@ const Login = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
-        navigate("/account");
+        setLoginSuccess(true);
+        setSuccessMessage("Login successful! Redirecting to your account...");
+
+        setTimeout(() => {
+          navigate("/account");
+        }, 1500);
       }
     } catch (error) {
       setServerError(
@@ -92,18 +105,28 @@ const Login = () => {
   };
 
   const handleGoBack = () => {
-    navigate(-1); // Navigate to the previous page in history
+    navigate("/");
   };
 
   return (
     <div className="flex min-h-screen bg-gray-900 text-white justify-center py-12 px-4 sm:px-6 lg:px-8 pt-32">
       <div className="max-w-md w-full bg-gray-800/80 p-8 rounded-lg shadow-lg">
+        <div className="flex justify-start mb-4">
+          <BackButton onClick={handleGoBack} />
+        </div>
+
         <h2 className="text-center text-3xl font-extrabold mb-6">
           Sign in to your account
         </h2>
 
         {successMessage && (
-          <div className="bg-green-900/50 border border-green-500 text-green-300 px-4 py-3 rounded mb-4">
+          <div
+            className={`${
+              loginSuccess
+                ? "bg-green-900/50 border border-green-500 text-green-300"
+                : "bg-green-900/50 border border-green-500 text-green-300"
+            } px-4 py-3 rounded mb-4`}
+          >
             {successMessage}
           </div>
         )}
@@ -162,9 +185,6 @@ const Login = () => {
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
-          </div>
-          <div className="flex justify-center">
-            <BackButton onClick={handleGoBack} />
           </div>
         </form>
 

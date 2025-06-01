@@ -235,3 +235,220 @@ export const TowingServicesData = [
         distance: "3.8 km",
     },
 ];
+
+export const BarangayAnnouncementsData = [
+    {
+        id: 1,
+        title: "Barangay Clean-up Drive",
+        date: "2023-11-25",
+        content: "Join us for our monthly barangay clean-up drive this Saturday from 7:00 AM to 11:00 AM. Please bring gloves and trash bags. Light refreshments will be provided.",
+        category: "Community Event",
+        priority: "medium"
+    },
+    {
+        id: 2,
+        title: "Scheduled Water Interruption",
+        date: "2023-11-23",
+        content: "Please be advised that there will be a scheduled water interruption on November 23, 2023, from 10:00 PM to 4:00 AM due to maintenance work. Kindly store enough water for your needs.",
+        category: "Utility Advisory",
+        priority: "high"
+    },
+    {
+        id: 3,
+        title: "Free Medical Check-up",
+        date: "2023-12-02",
+        content: "The Barangay Health Center will be offering free medical check-ups on December 2, 2023, from 8:00 AM to 3:00 PM. Services include blood pressure monitoring, blood sugar testing, and basic consultations.",
+        category: "Health Service",
+        priority: "medium"
+    },
+    {
+        id: 4,
+        title: "COVID-19 Booster Shots Available",
+        date: "2023-11-30",
+        content: "COVID-19 booster shots are now available at the Barangay Health Center. Please bring your vaccination card and a valid ID. First come, first served basis.",
+        category: "Health Advisory",
+        priority: "high"
+    },
+    {
+        id: 5,
+        title: "Barangay Basketball Tournament",
+        date: "2023-12-10",
+        content: "The annual Barangay Basketball Tournament will start on December 10, 2023. Teams can register at the Barangay Hall until December 5. Registration fee is ₱500 per team.",
+        category: "Sports Event",
+        priority: "low"
+    }
+];
+
+export const HealthCenterScheduleData = {
+    monday: [
+        { time: "8:00 AM - 10:00 AM", service: "General Consultation" },
+        { time: "10:00 AM - 12:00 PM", service: "Maternal Care" },
+        { time: "1:00 PM - 3:00 PM", service: "Immunization" },
+        { time: "3:00 PM - 5:00 PM", service: "Family Planning" }
+    ],
+    tuesday: [
+        { time: "8:00 AM - 10:00 AM", service: "General Consultation" },
+        { time: "10:00 AM - 12:00 PM", service: "Dental Services" },
+        { time: "1:00 PM - 3:00 PM", service: "TB DOTS Program" },
+        { time: "3:00 PM - 5:00 PM", service: "Senior Citizen Check-up" }
+    ],
+    wednesday: [
+        { time: "8:00 AM - 10:00 AM", service: "General Consultation" },
+        { time: "10:00 AM - 12:00 PM", service: "Prenatal Check-up" },
+        { time: "1:00 PM - 3:00 PM", service: "Child Health Services" },
+        { time: "3:00 PM - 5:00 PM", service: "Nutritional Counseling" }
+    ],
+    thursday: [
+        { time: "8:00 AM - 10:00 AM", service: "General Consultation" },
+        { time: "10:00 AM - 12:00 PM", service: "Dental Services" },
+        { time: "1:00 PM - 3:00 PM", service: "Mental Health Counseling" },
+        { time: "3:00 PM - 5:00 PM", service: "Blood Pressure Monitoring" }
+    ],
+    friday: [
+        { time: "8:00 AM - 10:00 AM", service: "General Consultation" },
+        { time: "10:00 AM - 12:00 PM", service: "Maternal Care" },
+        { time: "1:00 PM - 3:00 PM", service: "Immunization" },
+        { time: "3:00 PM - 5:00 PM", service: "Physical Therapy Services" }
+    ]
+};
+
+export const HealthServicesAnnouncementsData = [
+    {
+        id: 1,
+        title: "Free Vaccination for Children",
+        date: "2023-12-05",
+        content: "Free vaccines available for children ages 0-5 years old. Bring your child's immunization card and valid ID.",
+        category: "Immunization",
+        priority: "high"
+    },
+    {
+        id: 2,
+        title: "Dental Mission",
+        date: "2023-12-10",
+        content: "Free dental check-up, cleaning, and extraction services will be available at the Barangay Health Center on December 10, 2023.",
+        category: "Dental Services",
+        priority: "medium"
+    },
+    {
+        id: 3,
+        title: "Blood Donation Drive",
+        date: "2023-12-15",
+        content: "Join our blood donation drive in partnership with the Philippine Red Cross. Donors will receive free health screening.",
+        category: "Blood Donation",
+        priority: "medium"
+    },
+    {
+        id: 4,
+        title: "Temporary Suspension of Prenatal Services",
+        date: "2023-11-28",
+        content: "Please be informed that prenatal services will be temporarily suspended on November 28-29, 2023 due to staff training.",
+        category: "Service Advisory",
+        priority: "high"
+    },
+    {
+        id: 5,
+        title: "New Diabetes Screening Program",
+        date: "2023-12-01",
+        content: "We are launching a new diabetes screening program. Free blood sugar testing for residents aged 40 and above.",
+        category: "Health Screening",
+        priority: "medium"
+    }
+];
+
+export const PeaceAndOrderData = [
+    {
+        id: 1,
+        name: "Barangay Tanod Outpost",
+        address: "123 Main Street, Barangay Center",
+        contact: "(046) 123-4567",
+        type: "Barangay Security"
+    },
+    {
+        id: 2,
+        name: "Community Police Assistance Center",
+        address: "456 Barangay Road, Near Public Market",
+        contact: "(046) 234-5678",
+        type: "Police Outpost"
+    },
+    {
+        id: 3,
+        name: "Barangay Peace and Order Committee",
+        address: "789 Barangay Hall, Bacoor City",
+        contact: "(046) 345-6789",
+        type: "Administrative"
+    },
+    {
+        id: 4,
+        name: "24/7 Emergency Response Team",
+        address: "321 Safety Avenue, Bacoor City",
+        contact: "(046) 456-7890",
+        type: "Quick Response"
+    },
+    {
+        id: 5,
+        name: "Anti-Drug Abuse Council",
+        address: "654 Community Center, Bacoor City",
+        contact: "(046) 567-8901",
+        type: "Special Task Force"
+    },
+    {
+        id: 6,
+        name: "Disaster Risk Reduction Office",
+        address: "987 Prevention Road, Bacoor City",
+        contact: "(046) 678-9012",
+        type: "Emergency Management"
+    }
+];
+
+export const AppointmentsData = [
+    {
+        id: 1,
+        title: "Barangay Clearance Appointment",
+        type: "Document Services",
+        date: "2023-12-15",
+        time: "10:00 AM",
+        location: "Barangay Hall - Window 1",
+        status: "Confirmed",
+        notes: "Please bring valid ID and proof of residency. Processing fee is ₱50."
+    },
+    {
+        id: 2,
+        title: "Medical Check-up",
+        type: "Health Services",
+        date: "2023-12-18",
+        time: "9:30 AM",
+        location: "Barangay Health Center",
+        status: "Confirmed",
+        notes: "Regular check-up with Dr. Santos. Bring your medical records and medication list."
+    },
+    {
+        id: 3,
+        title: "Certificate of Indigency",
+        type: "Document Services",
+        date: "2023-12-20",
+        time: "2:00 PM",
+        location: "Barangay Hall - Window 3",
+        status: "Pending",
+        notes: "Required for scholarship application. Bring school enrollment form and valid ID."
+    },
+    {
+        id: 4,
+        title: "Dental Services",
+        type: "Health Services",
+        date: "2023-12-22",
+        time: "11:00 AM",
+        location: "Barangay Health Center - Dental Unit",
+        status: "Confirmed",
+        notes: "Dental cleaning and check-up with Dr. Reyes. Please arrive 15 minutes early to fill out forms."
+    },
+    {
+        id: 5,
+        title: "Barangay Certificate",
+        type: "Document Services",
+        date: "2023-12-28",
+        time: "3:30 PM",
+        location: "Barangay Hall - Window 2",
+        status: "Cancelled",
+        notes: "Required for employment. Please reschedule if needed."
+    }
+];

@@ -213,34 +213,142 @@ const Dashboard = () => {
           </div>
         </Link>
       );
-    }
-
-    // For other services, just display them without a link
-    return (
-      <div
-        key={service.id}
-        className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
-      >
-        <div className="flex items-center justify-center w-full h-28 mb-2">
-          <div className="w-32 h-32 flex items-center justify-center">
-            <img
-              src={getImagePath(service.img, isEmergency)}
-              alt={service.name}
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/src/assets/services/placeholder.svg";
-              }}
-            />
+    } else if (service.name === "Peace and Order") {
+      return (
+        <Link
+          key={service.id}
+          to="/account/peace-and-order"
+          className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-full h-28 mb-2">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={getImagePath(service.img, isEmergency)}
+                alt={service.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/src/assets/services/placeholder.svg";
+                }}
+              />
+            </div>
           </div>
-        </div>
-        <div className="h-14 flex items-center">
-          <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
-            {service.name}
-          </span>
-        </div>
-      </div>
-    );
+          <div className="h-14 flex items-center">
+            <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
+              {service.name}
+            </span>
+          </div>
+        </Link>
+      );
+    } else if (service.name === "Document Services") {
+      return (
+        <Link
+          key={service.id}
+          to="/account/document-services"
+          className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-full h-28 mb-2">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={getImagePath(service.img, isEmergency)}
+                alt={service.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/src/assets/services/placeholder.svg";
+                }}
+              />
+            </div>
+          </div>
+          <div className="h-14 flex items-center">
+            <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
+              {service.name}
+            </span>
+          </div>
+        </Link>
+      );
+    } else if (service.name === "Barangay Announcements") {
+      return (
+        <Link
+          key={service.id}
+          to="/account/announcements"
+          className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-full h-28 mb-2">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={getImagePath(service.img, isEmergency)}
+                alt={service.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/src/assets/services/placeholder.svg";
+                }}
+              />
+            </div>
+          </div>
+          <div className="h-14 flex items-center">
+            <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
+              {service.name}
+            </span>
+          </div>
+        </Link>
+      );
+    } else if (service.name === "Health Services") {
+      return (
+        <Link
+          key={service.id}
+          to="/account/health-services"
+          className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-full h-28 mb-2">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={getImagePath(service.img, isEmergency)}
+                alt={service.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/src/assets/services/placeholder.svg";
+                }}
+              />
+            </div>
+          </div>
+          <div className="h-14 flex items-center">
+            <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
+              {service.name}
+            </span>
+          </div>
+        </Link>
+      );
+    } else if (service.name === "View Appointments") {
+      return (
+        <Link
+          key={service.id}
+          to="/account/appointments"
+          className="flex flex-col items-center justify-between h-44 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-full h-28 mb-2">
+            <div className="w-32 h-32 flex items-center justify-center">
+              <img
+                src={getImagePath(service.img, isEmergency)}
+                alt={service.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/src/assets/services/placeholder.svg";
+                }}
+              />
+            </div>
+          </div>
+          <div className="h-14 flex items-center">
+            <span className="text-center font-inter text-white text-lg mt-2 line-clamp-2 text-shadow">
+              {service.name}
+            </span>
+          </div>
+        </Link>
+      );
+    }
   };
 
   useEffect(() => {

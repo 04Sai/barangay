@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { NearbyFireStationsData } from "../constant";
-import FireStationImage from "../../assets/services/FireStation.svg";
+import { AnimalBiteCentersData } from "../../constant";
+import AnimalBiteImage from "../../../assets/services/AnimalBite.svg";
 import { useNavigate } from "react-router-dom";
+import Button, { BackButton, CallButton } from "../../buttons";
 
-const FireStation = () => {
+const AnimalBiteCenter = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const navigate = useNavigate();
@@ -22,17 +23,18 @@ const FireStation = () => {
             {/* Image positioned on top right */}
             <div className="absolute right-0 top-0">
               <img
-                src={FireStationImage}
-                alt="Fire Station"
+                src={AnimalBiteImage}
+                alt="Animal Bite Center"
                 className="w-16 h-16 md:w-24 md:h-24 object-contain"
               />
             </div>
 
             <h2 className="text-3xl font-karla font-bold text-white text-shadow-lg">
-              Fire Station
+              Animal Bite Center
             </h2>
             <p className="text-white font-inter">
-              Please provide your information to get fire emergency assistance
+              Please provide your information to get animal bite treatment
+              assistance
             </p>
           </div>
 
@@ -67,46 +69,44 @@ const FireStation = () => {
             </div>
           </div>
 
-          {/* Second Row - Nearby Fire Stations */}
+          {/* Second Row - Nearby Animal Bite Centers */}
           <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
-              Nearby Fire Stations
+              Nearby Animal Bite Centers
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {NearbyFireStationsData.map((station) => (
+              {AnimalBiteCentersData.map((center) => (
                 <div
-                  key={station.id}
+                  key={center.id}
                   className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col"
                 >
                   <h4 className="text-lg font-bold text-white mb-2 text-shadow">
-                    {station.name}
+                    {center.name}
                   </h4>
 
                   <div className="flex items-start space-x-2 mb-1 text-white">
                     <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
-                    <span>{station.address}</span>
+                    <span>{center.address}</span>
                   </div>
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{station.contact}</span>
+                    <span>{center.contact}</span>
                   </div>
 
                   <div className="text-white mb-4">
                     <span className="font-medium">Distance:</span>{" "}
-                    {station.distance}
+                    {center.distance}
                   </div>
 
-                  <button
-                    onClick={() => handleCall(station.contact)}
-                    className="mt-auto bg-red-600 text-white py-2 px-4 rounded-md 
-                      shadow-lg hover:bg-red-700 transition-all duration-300 
-                      font-medium flex items-center justify-center space-x-2"
-                  >
-                    <FaPhone />
-                    <span>Call Now</span>
-                  </button>
+                  <CallButton
+                    onClick={() => handleCall(center.contact)}
+                    label="Call Now"
+                    icon={<FaPhone />}
+                    className="mt-auto"
+                    type="success"
+                  />
                 </div>
               ))}
             </div>
@@ -114,15 +114,7 @@ const FireStation = () => {
 
           {/* Add back button at the bottom right */}
           <div className="flex justify-end mt-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="bg-gray-600 text-white py-2 px-4 rounded-md 
-                shadow-lg hover:bg-gray-700 transition-all duration-300 
-                font-medium flex items-center justify-center space-x-2"
-            >
-              <FaArrowLeft />
-              <span>Go Back</span>
-            </button>
+            <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>
       </div>
@@ -130,4 +122,4 @@ const FireStation = () => {
   );
 };
 
-export default FireStation;
+export default AnimalBiteCenter;

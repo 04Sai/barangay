@@ -18,8 +18,11 @@ import Account from "./client/pages/AccountPage";
 // Protected route component to check authentication
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("token") !== null;
+  const location = useLocation();
 
+  // If not authenticated, navigate to login
   if (!isAuthenticated) {
+    // Use replace to prevent going back to protected routes after logout
     return <Navigate to="/login" replace />;
   }
 

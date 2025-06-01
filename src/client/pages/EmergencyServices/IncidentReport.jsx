@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CancelButton, NextButton } from "../buttons";
-import IncidentReportImage from "../../assets/services/IncidentReport.svg";
+import {
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaExclamationTriangle,
+  FaArrowRight,
+  FaTimes,
+} from "react-icons/fa";
+import { CancelButton, NextButton } from "../../buttons";
+import IncidentReportImage from "../../../assets/services/IncidentReport.svg";
 
 const IncidentReport = () => {
   const [userData, setUserData] = useState(null);
@@ -265,20 +272,7 @@ const IncidentReport = () => {
                         onClick={handleSubmit}
                         label="Continue"
                         className="w-2/3"
-                        icon={
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        }
+                        icon={<FaArrowRight />}
                       />
                     </div>
                   </div>
