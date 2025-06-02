@@ -132,8 +132,8 @@ html {
 
 .account-bg {
   background-image: linear-gradient(
-      rgba(0, 10, 122, 0.909),
-      rgba(70, 0, 0, 0.883)
+      rgba(0, 10, 122, 1),
+      rgba(70, 0, 0, 0.676)
     ),
     url("/src/assets/bacoor4.png");
   background-size: cover;
