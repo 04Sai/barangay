@@ -39,7 +39,44 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         required: [true, 'You must agree to terms and conditions']
     },
+    // Additional profile fields
+    civilStatus: {
+        type: String,
+        enum: ['single', 'married', 'divorced', 'widowed'],
+        trim: true
+    },
+    religion: {
+        type: String,
+        trim: true
+    },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        trim: true
+    },
+    address: {
+        type: String,
+        trim: true
+    },
+    birthday: {
+        month: {
+            type: String,
+            match: [/^(0[1-9]|1[0-2])$/, 'Month must be in MM format (01-12)']
+        },
+        day: {
+            type: String,
+            match: [/^(0[1-9]|[12][0-9]|3[01])$/, 'Day must be in DD format (01-31)']
+        },
+        year: {
+            type: String,
+            match: [/^\d{4}$/, 'Year must be in YYYY format']
+        }
+    },
     createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
         type: Date,
         default: Date.now
     }
@@ -47,6 +84,8 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+    this.updatedAt = new Date();
+    
     if (!this.isModified('password')) return next();
     
     try {
