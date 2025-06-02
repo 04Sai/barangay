@@ -1,6 +1,6 @@
 import React from "react";
 import { CiCircleChevDown } from "react-icons/ci";
-import { DepartmentUnitHeads } from "./constant/index";
+import { DepartmentUnitHeads } from "./data/index";
 
 const Hero3 = () => {
   // Split the departments into two equal parts

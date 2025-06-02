@@ -6,7 +6,7 @@ import {
   FaLock,
   FaExclamationTriangle,
 } from "react-icons/fa";
-import { NearbyPoliceStationsData } from "../../constant";
+import { NearbyPoliceStationsData } from "../../data";
 import PoliceStationImage from "../../../assets/services/PoliceStation.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";

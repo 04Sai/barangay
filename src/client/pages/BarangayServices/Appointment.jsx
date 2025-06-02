@@ -10,7 +10,7 @@ import {
   FaExchangeAlt,
   FaBan,
 } from "react-icons/fa";
-import { AppointmentsData } from "../../constant";
+import { AppointmentsData } from "../../data";
 import ApptImage from "../../../assets/services/Appt.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton } from "../../buttons";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { AnimalBiteCentersData } from "../../constant";
+import { AnimalBiteCentersData } from "../../data";
 import AnimalBiteImage from "../../../assets/services/AnimalBite.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
