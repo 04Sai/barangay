@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
 import { AnimalBiteCentersData } from "../../constant";
 import AnimalBiteImage from "../../../assets/services/AnimalBite.svg";
@@ -8,11 +8,68 @@ import Button, { BackButton, CallButton } from "../../buttons";
 const AnimalBiteCenter = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Fetch user profile data on component mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Please log in to access this service");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:1337/api/auth/profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          // Populate form with user's existing data
+          setAddress(data.user.address || "");
+          setContactNumber(data.user.contactNumber || "");
+        } else {
+          setError("Failed to retrieve profile information");
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleCall = (contact) => {
     window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
   };
+
+  if (loading) {
+    return (
+      <div className="pt-28 pb-10 px-4 sm:px-6">
+        <div className="screen-max-width mx-auto">
+          <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6">
+            <div className="text-center text-white">
+              <p>Loading your information...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">
@@ -43,6 +100,12 @@ const AnimalBiteCenter = () => {
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
               Your Information
             </h3>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-white">
+                {error}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
