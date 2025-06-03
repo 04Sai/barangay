@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { PeaceAndOrderData } from "../../constant";
+import { PeaceAndOrderData } from "../../data";
 import POImage from "../../../assets/services/PO.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";

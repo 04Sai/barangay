@@ -6,7 +6,7 @@ import {
   FaUserInjured,
   FaAmbulance,
 } from "react-icons/fa";
-import { NearbyHospitalsData } from "../../constant";
+import { NearbyHospitalsData } from "../../data";
 import MedicalAssistanceImage from "../../../assets/services/MedicalAssistance.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";

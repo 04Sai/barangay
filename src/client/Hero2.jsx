@@ -1,7 +1,7 @@
 import { FaPhone } from "react-icons/fa";
 import { CiCircleChevDown } from "react-icons/ci";
 import { CallButton } from "./buttons";
-import { BarangayServices } from "./constant/index";
+import { BarangayServices } from "./data/index";
 
 // Import images
 import fire from "../assets/fireHydrant.svg";

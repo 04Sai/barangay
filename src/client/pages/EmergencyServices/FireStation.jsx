@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { NearbyFireStationsData } from "../../constant";
+import { NearbyFireStationsData } from "../../data";
 import FireStationImage from "../../../assets/services/FireStation.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";

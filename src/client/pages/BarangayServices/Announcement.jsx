@@ -8,7 +8,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
-import { BarangayAnnouncementsData } from "../../constant";
+import { BarangayAnnouncementsData } from "../../data";
 import AnnouncementImage from "../../../assets/services/Announcements.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton } from "../../buttons";

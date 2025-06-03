@@ -11,7 +11,7 @@ import {
 import {
   HealthCenterScheduleData,
   HealthServicesAnnouncementsData,
-} from "../../constant";
+} from "../../data";
 import HealthServicesImage from "../../../assets/services/HealthService.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton } from "../../buttons";

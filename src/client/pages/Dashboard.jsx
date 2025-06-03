@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { EmgergencyServicesData, BarangayServicesData } from "../constant";
+import { EmgergencyServicesData, BarangayServicesData } from "../data";
 
 // Import images directly to ensure they're available
 import IncidentReport from "../../assets/services/IncidentReport.svg";

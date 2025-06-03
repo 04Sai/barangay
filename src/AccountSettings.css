@@ -1,0 +1,346 @@
+/* Main container styles */
+.account-settings-container {
+  padding-top: 7rem;
+  padding-bottom: 2.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.account-settings-inner {
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.space-y-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Glassmorphism styles */
+.glassmorphism {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+/* Header styles */
+.page-title {
+  font-family: "Karla", sans-serif;
+  font-weight: 700;
+  font-size: 1.875rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 0.25rem;
+}
+
+.date-display {
+  color: white;
+  font-family: "Inter", sans-serif;
+}
+
+/* Message styles */
+.error-message {
+  margin-top: 1rem;
+  background-color: rgba(220, 38, 38, 0.3);
+  border: 1px solid rgba(252, 165, 165, 0.3);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.error-message p {
+  color: rgb(252, 165, 165);
+  font-size: 0.875rem;
+}
+
+.success-message {
+  margin-top: 1rem;
+  background-color: rgba(5, 150, 105, 0.3);
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.success-message p {
+  color: rgb(110, 231, 183);
+  font-size: 0.875rem;
+}
+
+/* Form section styles */
+.form-container {
+  margin-top: 2rem;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-family: "Karla", sans-serif;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.section-title svg {
+  color: rgb(147, 197, 253);
+  margin-right: 0.5rem;
+}
+
+/* Form grid layouts */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .profile-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Form field styles */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(209, 213, 219);
+  transition: color 0.2s;
+}
+
+.form-group:hover .form-label {
+  color: rgb(147, 197, 253);
+}
+
+.form-input {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  border-color: transparent;
+}
+
+.form-input:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.input-icon {
+  position: relative;
+}
+
+.input-icon svg {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0.75rem;
+  color: rgb(156, 163, 175);
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.input-icon input,
+.input-icon select {
+  padding-left: 2.5rem;
+}
+
+.form-select {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+}
+
+.form-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  border-color: transparent;
+}
+
+.form-select:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.birthday-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.profile-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  height: 100%;
+  min-height: 200px;
+}
+
+.profile-upload:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+.profile-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  background-color: rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-image svg {
+  color: rgb(147, 197, 253);
+  height: 3rem;
+  width: 3rem;
+}
+
+.upload-text {
+  color: white;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Divider styles */
+.divider {
+  margin: 2.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+.divider-icon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgb(37, 99, 235);
+  border-radius: 9999px;
+  padding: 0.5rem;
+}
+
+.divider-icon svg {
+  color: white;
+}
+
+/* Button styles */
+.button-container {
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.back-button {
+  background-color: rgb(220, 38, 38);
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+}
+
+.back-button:hover {
+  background-color: rgb(185, 28, 28);
+  transform: translateY(-2px);
+}
+
+.save-button {
+  background: linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229));
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+}
+
+.save-button:hover {
+  background: linear-gradient(to right, rgb(29, 78, 216), rgb(67, 56, 202));
+  transform: translateY(-2px);
+}
+
+.save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-button svg.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
