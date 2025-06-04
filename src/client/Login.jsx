@@ -111,10 +111,6 @@ const Login = () => {
   return (
     <div className="flex min-h-screen bg-gray-900 text-white justify-center py-12 px-4 sm:px-6 lg:px-8 pt-32">
       <div className="max-w-md w-full bg-gray-800/80 p-8 rounded-lg shadow-lg">
-        <div className="flex justify-start mb-4">
-          <BackButton onClick={handleGoBack} />
-        </div>
-
         <h2 className="text-center text-3xl font-extrabold mb-6">
           Sign in to your account
         </h2>
@@ -198,6 +194,9 @@ const Login = () => {
               Register
             </Link>
           </p>
+            <div className="flex justify-center mt-4">
+              <BackButton onClick={handleGoBack} />
+            </div>
         </div>
       </div>
     </div>
