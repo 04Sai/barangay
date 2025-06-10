@@ -4,6 +4,7 @@ import { NearbyFireStationsData } from "../../data";
 import FireStationImage from "../../../assets/services/FireStation.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const FireStation = () => {
   const [address, setAddress] = useState("");
@@ -23,16 +24,13 @@ const FireStation = () => {
           return;
         }
 
-        const response = await fetch(
-          "http://localhost:1337/api/auth/profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (response.ok) {
           const data = await response.json();

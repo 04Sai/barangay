@@ -10,6 +10,7 @@ import { NearbyPoliceStationsData } from "../../data";
 import PoliceStationImage from "../../../assets/services/PoliceStation.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const PoliceStation = () => {
   const [address, setAddress] = useState("");
@@ -30,7 +31,7 @@ const PoliceStation = () => {
         }
 
         const response = await fetch(
-          "http://localhost:1337/api/auth/profile",
+          API_ENDPOINTS.AUTH.PROFILE,
           {
             method: "GET",
             headers: {

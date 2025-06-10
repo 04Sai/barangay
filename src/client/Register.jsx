@@ -4,6 +4,7 @@ import axios from "axios";
 import FormInput from "./components/FormInput";
 import FormCheckbox from "./components/FormCheckbox";
 import { BackButton } from "./buttons";
+import { API_ENDPOINTS } from "../config/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -87,7 +88,7 @@ const Register = () => {
       const { confirmPassword, ...dataToSend } = formData;
 
       const response = await axios.post(
-        "http://localhost:1337/api/auth/register",
+        API_ENDPOINTS.AUTH.REGISTER,
         dataToSend
       );
 
