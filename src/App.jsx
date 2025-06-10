@@ -15,6 +15,7 @@ import Register from "./client/Register";
 import Login from "./client/Login";
 import Account from "./client/pages/AccountPage";
 import EmailVerification from "./client/components/EmailVerification";
+import PageNotFound from "./client/PageNotFound";
 
 // Admin imports
 import AdminLayout from "./admin/components/AdminLayout";
@@ -40,6 +41,23 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Non-auth route component to redirect authenticated users away from public pages
+const NonAuthRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem("token") !== null;
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+  if (isAuthenticated) {
+    // Redirect authenticated users to their appropriate dashboard
+    return isAdmin ? (
+      <Navigate to="/admin/dashboard" replace />
+    ) : (
+      <Navigate to="/account" replace />
+    );
+  }
+
+  return children;
+};
+
 // Admin route component to check admin authentication
 const AdminRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("token") !== null;
@@ -59,18 +77,6 @@ const AdminRoute = ({ children }) => {
 
 // Landing page with redirection for logged-in users
 const LandingPage = () => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
-
-  if (isAuthenticated) {
-    // Redirect logged-in users away from the landing page
-    return isAdmin ? (
-      <Navigate to="/admin/dashboard" replace />
-    ) : (
-      <Navigate to="/account/dashboard" replace />
-    );
-  }
-
   // Only show landing page components for non-authenticated users
   return (
     <>
@@ -92,9 +98,25 @@ const Layout = () => {
     <div className="bg-black w-full overflow-hidden">
       {!isAccountPage && !isAdminPage && <NavBar />}
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Public routes that should redirect authenticated users */}
+        <Route
+          path="/login"
+          element={
+            <NonAuthRoute>
+              <Login />
+            </NonAuthRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <NonAuthRoute>
+              <Register />
+            </NonAuthRoute>
+          }
+        />
         <Route path="/verify-email" element={<EmailVerification />} />
+        {/* Protected routes */}
         <Route
           path="/account/*"
           element={
@@ -136,7 +158,16 @@ const Layout = () => {
           <Route path="settings" element={<AdminSettings />} />
         </Route>{" "}
         {/* Root route with authentication check */}
-        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/"
+          element={
+            <NonAuthRoute>
+              <LandingPage />
+            </NonAuthRoute>
+          }
+        />
+        {/* 404 Page - This should be the last route */}
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
   );
