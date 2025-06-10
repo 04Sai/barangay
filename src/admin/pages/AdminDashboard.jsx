@@ -9,6 +9,18 @@ import {
 } from "react-icons/fa";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import {
+  BarangayAnnouncementsData,
+  AppointmentsData,
+  PeaceAndOrderData,
+  NearbyHospitalsData,
+  NearbyPoliceStationsData,
+  NearbyFireStationsData,
+  AnimalBiteCentersData,
+  TowingServicesData,
+} from "../../client/data/index";
+import { ResidentsData } from "../../client/data/residents";
+import { IncidentReportsData } from "../../client/data/incidentReports";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -21,13 +33,35 @@ const AdminDashboard = () => {
     announcements: 0,
   });
 
+  const [ageDistribution, setAgeDistribution] = useState({
+    labels: ["0-18", "19-30", "31-45", "46-60", "61+"],
+    data: [0, 0, 0, 0, 0],
+  });
+
+  const [genderDistribution, setGenderDistribution] = useState({
+    male: 0,
+    female: 0,
+  });
+
+  // Calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   // Age distribution data for pie chart
   const ageDistributionData = {
-    labels: ["0-18", "19-30", "31-45", "46-60", "61+"],
+    labels: ageDistribution.labels,
     datasets: [
       {
         label: "Age Distribution",
-        data: [45, 76, 68, 42, 14],
+        data: ageDistribution.data,
         backgroundColor: [
           "rgba(54, 162, 235, 0.8)",
           "rgba(75, 192, 192, 0.8)",
@@ -73,17 +107,54 @@ const AdminDashboard = () => {
     },
   };
 
-  // Mock data for demonstration - replace with actual API calls
+  // Fetch data from imported data sources
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setStats({
-        users: 245,
-        incidents: 18,
-        appointments: 32,
-        announcements: 12,
-      });
-    }, 1000);
+    // Calculate stats from imported data
+    const totalAnnouncements = BarangayAnnouncementsData.length;
+    const totalAppointments = AppointmentsData.length;
+
+    // Calculate total incidents from IncidentReportsData
+    const totalIncidents = IncidentReportsData.length;
+
+    // Calculate total residents from ResidentsData
+    const totalResidents = ResidentsData.length;
+
+    setStats({
+      users: totalResidents,
+      incidents: totalIncidents,
+      appointments: totalAppointments,
+      announcements: totalAnnouncements,
+    });
+
+    // Calculate age distribution
+    const ageGroups = [0, 0, 0, 0, 0]; // [0-18, 19-30, 31-45, 46-60, 61+]
+    let maleCount = 0;
+    let femaleCount = 0;
+
+    ResidentsData.forEach((resident) => {
+      const age = calculateAge(resident.birthdate);
+
+      // Count by gender
+      if (resident.gender === "Male") maleCount++;
+      else if (resident.gender === "Female") femaleCount++;
+
+      // Count by age group
+      if (age <= 18) ageGroups[0]++;
+      else if (age <= 30) ageGroups[1]++;
+      else if (age <= 45) ageGroups[2]++;
+      else if (age <= 60) ageGroups[3]++;
+      else ageGroups[4]++;
+    });
+
+    setAgeDistribution({
+      labels: ["0-18", "19-30", "31-45", "46-60", "61+"],
+      data: ageGroups,
+    });
+
+    setGenderDistribution({
+      male: maleCount,
+      female: femaleCount,
+    });
   }, []);
   const StatCard = ({ icon, title, value, color }) => (
     <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-5 transition-all duration-300 hover:bg-white/15 hover:shadow-xl h-full flex">
@@ -143,7 +214,7 @@ const AdminDashboard = () => {
         <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4 col-span-1 lg:col-span-2">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Demographics Overview
-          </h3>
+          </h3>{" "}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 border border-white/20 rounded-lg bg-white/5">
               <h4 className="text-white font-medium mb-2">
@@ -151,18 +222,34 @@ const AdminDashboard = () => {
               </h4>
               <div className="flex justify-between">
                 <p className="text-gray-300">Males</p>
-                <p className="text-white font-medium">128 (52.2%)</p>
+                <p className="text-white font-medium">
+                  {genderDistribution.male} (
+                  {Math.round(
+                    (genderDistribution.male * 100) /
+                      (genderDistribution.male + genderDistribution.female)
+                  )}
+                  %)
+                </p>
               </div>
               <div className="flex justify-between">
                 <p className="text-gray-300">Females</p>
-                <p className="text-white font-medium">117 (47.8%)</p>
+                <p className="text-white font-medium">
+                  {genderDistribution.female} (
+                  {Math.round(
+                    (genderDistribution.female * 100) /
+                      (genderDistribution.male + genderDistribution.female)
+                  )}
+                  %)
+                </p>
               </div>
             </div>
             <div className="p-4 border border-white/20 rounded-lg bg-white/5">
               <h4 className="text-white font-medium mb-2">Household Stats</h4>
               <div className="flex justify-between">
                 <p className="text-gray-300">Total Households</p>
-                <p className="text-white font-medium">87</p>
+                <p className="text-white font-medium">
+                  {Math.round(ResidentsData.length / 2.8)}
+                </p>
               </div>
               <div className="flex justify-between">
                 <p className="text-gray-300">Avg. Household Size</p>
@@ -171,21 +258,21 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>{" "}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Recent Incident Reports
-          </h3>
+          </h3>{" "}
           <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
+            {PeaceAndOrderData.slice(0, 3).map((item, index) => (
               <div
-                key={item}
+                key={`peace-order-${item.id}`}
                 className="p-3 border border-white/20 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
               >
-                <h4 className="text-white font-medium">Incident #{item}</h4>
+                <h4 className="text-white font-medium">{item.name}</h4>
                 <p className="text-gray-300 text-sm">
-                  Reported on {new Date().toLocaleDateString()}
+                  {item.type} • {item.contact}
                 </p>
               </div>
             ))}
@@ -198,20 +285,16 @@ const AdminDashboard = () => {
         <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Upcoming Appointments
-          </h3>
+          </h3>{" "}
           <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
+            {AppointmentsData.slice(0, 3).map((item) => (
               <div
-                key={item}
+                key={`appointment-${item.id}`}
                 className="p-3 border border-white/20 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
               >
-                <h4 className="text-white font-medium">Appointment #{item}</h4>
+                <h4 className="text-white font-medium">{item.title}</h4>
                 <p className="text-gray-300 text-sm">
-                  Scheduled for {new Date().toLocaleDateString()} at{" "}
-                  {new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {item.date} at {item.time} • {item.status}
                 </p>
               </div>
             ))}

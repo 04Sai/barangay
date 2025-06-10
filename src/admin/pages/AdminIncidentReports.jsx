@@ -1,43 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaFileAlt, FaEye, FaTrash, FaCheckCircle } from "react-icons/fa";
+import { IncidentReportsData } from "../../client/data/incidentReports";
 
 const AdminIncidentReports = () => {
-  // Mock data for demonstration - replace with actual API calls
-  const [reports, setReports] = useState([
-    {
-      id: 1,
-      location: "Main Street, Block 3",
-      dateTime: "2025-05-28T10:30",
-      types: ["Accident", "Property Damage"],
-      description: "Vehicle collision with property damage",
-      affectedName: "John Doe",
-      phoneNumber: "123-456-7890",
-      status: "Pending",
-      submittedAt: "2025-05-28T11:45",
-    },
-    {
-      id: 2,
-      location: "Community Park",
-      dateTime: "2025-05-29T15:20",
-      types: ["Theft"],
-      description: "Personal belongings stolen from park bench",
-      affectedName: "Jane Smith",
-      phoneNumber: "098-765-4321",
-      status: "In Progress",
-      submittedAt: "2025-05-29T16:05",
-    },
-    {
-      id: 3,
-      location: "Residential Area, Block 7",
-      dateTime: "2025-05-30T20:15",
-      types: ["Noise Complaint", "Disturbance"],
-      description: "Loud party causing disturbance in residential area",
-      affectedName: "Robert Johnson",
-      phoneNumber: "555-123-4567",
-      status: "Resolved",
-      submittedAt: "2025-05-30T20:45",
-    },
-  ]);
+  // Use real data from the data file
+  const [reports, setReports] = useState([]);
+
+  // Load data from the imported data source
+  useEffect(() => {
+    setReports(IncidentReportsData);
+  }, []);
 
   const [filter, setFilter] = useState("All");
   const [selectedReport, setSelectedReport] = useState(null);

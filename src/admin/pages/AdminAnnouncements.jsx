@@ -1,33 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBullhorn, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  BarangayAnnouncementsData,
+  HealthServicesAnnouncementsData,
+} from "../../client/data/index";
 
 const AdminAnnouncements = () => {
-  // Mock data for demonstration - replace with actual API calls
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: 1,
-      title: "Community Clean-up Drive",
-      category: "Community Event",
-      date: "2025-06-15",
-      content:
-        "Join us for a community clean-up event to beautify our barangay.",
-    },
-    {
-      id: 2,
-      title: "Free Health Screening",
-      category: "Health",
-      date: "2025-06-10",
-      content:
-        "Free health screenings available at the barangay health center.",
-    },
-    {
-      id: 3,
-      title: "Road Closure Notice",
-      category: "Advisory",
-      date: "2025-06-05",
-      content: "Main street will be closed for repairs from 8AM to 5PM.",
-    },
-  ]);
+  // Use real data from the data files
+  const [announcements, setAnnouncements] = useState([]);
+
+  // Load data from the imported data source
+  useEffect(() => {
+    // Combine all announcement data and format it
+    const combinedAnnouncements = [
+      ...BarangayAnnouncementsData.map((item) => ({
+        ...item,
+        source: "Barangay",
+      })),
+      ...HealthServicesAnnouncementsData.map((item) => ({
+        ...item,
+        source: "Health Services",
+      })),
+    ];
+
+    // Sort by date (most recent first)
+    combinedAnnouncements.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    setAnnouncements(combinedAnnouncements);
+  }, []);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -132,7 +132,7 @@ const AdminAnnouncements = () => {
                 />
               </div>
               <div>
-                <label className="block text-white mb-1">Category</label>
+                <label className="block text-white mb-1">Category</label>{" "}
                 <select
                   name="category"
                   value={formData.category}
@@ -142,9 +142,12 @@ const AdminAnnouncements = () => {
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select Category</option>
-                  <option value="Health">Health</option>
+                  <option value="Health Service">Health Service</option>
+                  <option value="Health Advisory">Health Advisory</option>
                   <option value="Community Event">Community Event</option>
-                  <option value="Advisory">Advisory</option>
+                  <option value="Utility Advisory">Utility Advisory</option>
+                  <option value="Sports Event">Sports Event</option>
+                  <option value="Service Advisory">Service Advisory</option>
                   <option value="Emergency">Emergency</option>
                 </select>
               </div>

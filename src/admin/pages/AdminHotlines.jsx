@@ -1,31 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPhone, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  BarangayServices,
+  DepartmentUnitHeads,
+  NearbyPoliceStationsData,
+  NearbyFireStationsData,
+  PeaceAndOrderData,
+} from "../../client/data/index";
 
 const AdminHotlines = () => {
-  // Mock data for demonstration - replace with actual API calls
-  const [hotlines, setHotlines] = useState([
-    {
-      id: 1,
-      name: "Police Station",
-      type: "Emergency",
-      contact: "911",
-      address: "Main Street, Barangay Center",
-    },
-    {
-      id: 2,
-      name: "Fire Department",
-      type: "Emergency",
-      contact: "912",
-      address: "Fire Station Road, Barangay Center",
-    },
-    {
-      id: 3,
-      name: "Barangay Health Center",
-      type: "Health",
-      contact: "123-4567",
-      address: "Health Street, Barangay Center",
-    },
-  ]);
+  // Use real data from the data files
+  const [hotlines, setHotlines] = useState([]);
+
+  // Load data from the imported data sources
+  useEffect(() => {
+    // Combine all hotline data from different sources
+    const combinedHotlines = [
+      ...BarangayServices.map((item) => ({
+        id: `barangay-${item.id}`,
+        name: item.name,
+        type: "Emergency Service",
+        contact: item.phoneNumber,
+        address: "Barangay Center",
+        source: "Barangay Services",
+      })),
+      ...DepartmentUnitHeads.map((item) => ({
+        id: `dept-${item.id}`,
+        name: item.name,
+        type: "Department",
+        contact: item.contact,
+        address: "City Hall",
+        source: "Department Units",
+      })),
+      ...NearbyPoliceStationsData.map((item) => ({
+        id: `police-${item.id}`,
+        name: item.name,
+        type: "Police",
+        contact: item.contact,
+        address: item.address,
+        source: "Police Stations",
+      })),
+      ...NearbyFireStationsData.map((item) => ({
+        id: `fire-${item.id}`,
+        name: item.name,
+        type: "Fire",
+        contact: item.contact,
+        address: item.address,
+        source: "Fire Stations",
+      })),
+      ...PeaceAndOrderData.slice(0, 3).map((item) => ({
+        id: `peace-${item.id}`,
+        name: item.name,
+        type: item.type,
+        contact: item.contact,
+        address: item.address,
+        source: "Peace and Order",
+      })),
+    ];
+
+    setHotlines(combinedHotlines);
+  }, []);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -128,7 +162,7 @@ const AdminHotlines = () => {
                 />
               </div>
               <div>
-                <label className="block text-white mb-1">Type</label>
+                <label className="block text-white mb-1">Type</label>{" "}
                 <select
                   name="type"
                   value={formData.type}
@@ -138,10 +172,17 @@ const AdminHotlines = () => {
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select Type</option>
-                  <option value="Emergency">Emergency</option>
+                  <option value="Emergency Service">Emergency Service</option>
+                  <option value="Department">Department</option>
+                  <option value="Police">Police</option>
+                  <option value="Fire">Fire</option>
                   <option value="Health">Health</option>
-                  <option value="Utility">Utility</option>
-                  <option value="Transportation">Transportation</option>
+                  <option value="Barangay Security">Barangay Security</option>
+                  <option value="Administrative">Administrative</option>
+                  <option value="Quick Response">Quick Response</option>
+                  <option value="Emergency Management">
+                    Emergency Management
+                  </option>
                   <option value="Other">Other</option>
                 </select>
               </div>
@@ -211,7 +252,7 @@ const AdminHotlines = () => {
             </div>
             <h3 className="text-lg font-medium text-white mt-2">
               {hotline.name}
-            </h3>
+            </h3>{" "}
             <div className="mt-2 space-y-1">
               <p className="text-sm">
                 <span className="text-gray-300">Type: </span>
@@ -225,6 +266,13 @@ const AdminHotlines = () => {
                 <span className="text-gray-300">Address: </span>
                 <span className="text-white">{hotline.address}</span>
               </p>
+              {hotline.source && (
+                <p className="text-sm mt-2">
+                  <span className="text-blue-300 text-xs">
+                    {hotline.source}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         ))}
