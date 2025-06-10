@@ -1,20 +1,20 @@
 export const BarangayServices = [
     {
-        id: 1,
+        id: "bs-1",
         name: "Fire Department",
         img: "fireHydrant",
         phoneNumber: "+123456789",
         buttonLabel: "Call Fire Dept"
     },
     {
-        id: 2,
+        id: "bs-2",
         name: "Police Department",
         img: "policeshield",
         phoneNumber: "+123456789",
         buttonLabel: "Call Police"
     },
     {
-        id: 3,
+        id: "bs-3",
         name: "Medical Services",
         img: "medicshield",
         phoneNumber: "+123456789",
