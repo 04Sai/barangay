@@ -6,40 +6,61 @@ import { LoginButton } from "./buttons";
 const NavBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
+    const adminStatus = localStorage.getItem("isAdmin") === "true";
 
     if (token && userData) {
       setIsLoggedIn(true);
       setUser(JSON.parse(userData));
+      setIsAdmin(adminStatus);
     }
   }, []);
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("isAdmin");
     setIsLoggedIn(false);
     setUser(null);
+    setIsAdmin(false);
     navigate("/login");
   };
-
   return (
     <header className="w-full fixed top-0 z-50 bg-black/40 backdrop-blur-md shadow-md">
       <nav className="flex items-center justify-between w-full px-5 sm:px-10">
         <div className="flex items-center">
-          <Link to="/">
-            <img src={logo} alt="BSERS Logo" width={100} height={100} />
-          </Link>
+          {isLoggedIn ? (
+            <Link to={isAdmin ? "/admin/dashboard" : "/account/dashboard"}>
+              <img src={logo} alt="BSERS Logo" width={100} height={100} />
+            </Link>
+          ) : (
+            <Link to="/">
+              <img src={logo} alt="BSERS Logo" width={100} height={100} />
+            </Link>
+          )}
         </div>
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <Link to="/account" className="text-white hover:text-blue-300">
-                Dashboard
-              </Link>
+              {isAdmin ? (
+                <Link
+                  to="/admin/dashboard"
+                  className="text-white hover:text-blue-300"
+                >
+                  Admin Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/account/dashboard"
+                  className="text-white hover:text-blue-300"
+                >
+                  Dashboard
+                </Link>
+              )}
               <span className="text-white">Welcome, {user?.firstName}</span>
               <button
                 onClick={handleLogout}

@@ -4,10 +4,10 @@ import BSERSLogo from "../../assets/BSERS-logo.svg";
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
-
   const handleLogout = () => {
     // Clear token and any admin-related data
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     localStorage.removeItem("isAdmin");
     // Navigate to login page
     navigate("/login");

@@ -56,6 +56,31 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Landing page with redirection for logged-in users
+const LandingPage = () => {
+  const isAuthenticated = localStorage.getItem("token") !== null;
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+  if (isAuthenticated) {
+    // Redirect logged-in users away from the landing page
+    return isAdmin ? (
+      <Navigate to="/admin/dashboard" replace />
+    ) : (
+      <Navigate to="/account/dashboard" replace />
+    );
+  }
+
+  // Only show landing page components for non-authenticated users
+  return (
+    <>
+      <Hero />
+      <Hero2 />
+      <Hero3 />
+      <Hero4 />
+    </>
+  );
+};
+
 // Layout component to conditionally render the NavBar
 const Layout = () => {
   const location = useLocation();
@@ -94,7 +119,6 @@ const Layout = () => {
           <Route path="residents" element={<AdminResidents />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
-
         {/* Temporary direct access to admin without authentication */}
         <Route path="/temp-admin" element={<AdminLayout />}>
           <Route
@@ -106,21 +130,11 @@ const Layout = () => {
           <Route path="hotlines" element={<AdminHotlines />} />
           <Route path="incident-reports" element={<AdminIncidentReports />} />
           <Route path="appointments" element={<AdminAppointments />} />
-          <Route path="residents" element={<AdminResidents />} />
+          <Route path="residents" element={<AdminResidents />} />{" "}
           <Route path="settings" element={<AdminSettings />} />
-        </Route>
-
-        <Route
-          path="/"
-          element={
-            <>
-              <Hero />
-              <Hero2 />
-              <Hero3 />
-              <Hero4 />
-            </>
-          }
-        />
+        </Route>{" "}
+        {/* Root route with authentication check */}
+        <Route path="/" element={<LandingPage />} />
       </Routes>
     </div>
   );
