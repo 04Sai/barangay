@@ -21,6 +21,9 @@ import {
 } from "../../client/data/index";
 import { ResidentsData } from "../../client/data/residents";
 import { IncidentReportsData } from "../../client/data/incidentReports";
+import announcementService from "../services/announcementService";
+import incidentReportService from "../services/incidentReportService";
+import appointmentService from "../services/appointmentService";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -107,54 +110,101 @@ const AdminDashboard = () => {
     },
   };
 
-  // Fetch data from imported data sources
+  // Fetch data from imported data sources and real APIs
   useEffect(() => {
-    // Calculate stats from imported data
-    const totalAnnouncements = BarangayAnnouncementsData.length;
-    const totalAppointments = AppointmentsData.length;
+    const fetchDashboardData = async () => {
+      try {
+        const totalResidents = ResidentsData.length;
 
-    // Calculate total incidents from IncidentReportsData
-    const totalIncidents = IncidentReportsData.length;
+        // Fetch real data from APIs
+        let totalAnnouncements = 0;
+        let totalIncidents = 0;
+        let totalAppointments = 0;
 
-    // Calculate total residents from ResidentsData
-    const totalResidents = ResidentsData.length;
+        try {
+          const announcementsResponse = await announcementService.getAllAnnouncements(
+            {
+              isActive: true,
+            }
+          );
+          totalAnnouncements = announcementsResponse.success
+            ? announcementsResponse.data.length
+            : 0;
+        } catch (error) {
+          console.error("Error fetching announcements for dashboard:", error);
+          totalAnnouncements = BarangayAnnouncementsData.length;
+        }
 
-    setStats({
-      users: totalResidents,
-      incidents: totalIncidents,
-      appointments: totalAppointments,
-      announcements: totalAnnouncements,
-    });
+        try {
+          const incidentsResponse = await incidentReportService.getAllIncidentReports(
+            {
+              limit: 1000,
+            }
+          );
+          totalIncidents = incidentsResponse.success
+            ? incidentsResponse.data.length
+            : 0;
+        } catch (error) {
+          console.error("Error fetching incidents for dashboard:", error);
+          totalIncidents = IncidentReportsData.length;
+        }
 
-    // Calculate age distribution
-    const ageGroups = [0, 0, 0, 0, 0]; // [0-18, 19-30, 31-45, 46-60, 61+]
-    let maleCount = 0;
-    let femaleCount = 0;
+        try {
+          const appointmentsResponse = await appointmentService.getAllAppointments(
+            {
+              limit: 1000,
+            }
+          );
+          totalAppointments = appointmentsResponse.success
+            ? appointmentsResponse.data.length
+            : 0;
+        } catch (error) {
+          console.error("Error fetching appointments for dashboard:", error);
+          totalAppointments = AppointmentsData.length;
+        }
 
-    ResidentsData.forEach((resident) => {
-      const age = calculateAge(resident.birthdate);
+        setStats({
+          users: totalResidents,
+          incidents: totalIncidents,
+          appointments: totalAppointments,
+          announcements: totalAnnouncements,
+        });
 
-      // Count by gender
-      if (resident.gender === "Male") maleCount++;
-      else if (resident.gender === "Female") femaleCount++;
+        // Calculate age distribution
+        const ageGroups = [0, 0, 0, 0, 0]; // [0-18, 19-30, 31-45, 46-60, 61+]
+        let maleCount = 0;
+        let femaleCount = 0;
 
-      // Count by age group
-      if (age <= 18) ageGroups[0]++;
-      else if (age <= 30) ageGroups[1]++;
-      else if (age <= 45) ageGroups[2]++;
-      else if (age <= 60) ageGroups[3]++;
-      else ageGroups[4]++;
-    });
+        ResidentsData.forEach((resident) => {
+          const age = calculateAge(resident.birthdate);
 
-    setAgeDistribution({
-      labels: ["0-18", "19-30", "31-45", "46-60", "61+"],
-      data: ageGroups,
-    });
+          // Count by gender
+          if (resident.gender === "Male") maleCount++;
+          else if (resident.gender === "Female") femaleCount++;
 
-    setGenderDistribution({
-      male: maleCount,
-      female: femaleCount,
-    });
+          // Count by age group
+          if (age <= 18) ageGroups[0]++;
+          else if (age <= 30) ageGroups[1]++;
+          else if (age <= 45) ageGroups[2]++;
+          else if (age <= 60) ageGroups[3]++;
+          else ageGroups[4]++;
+        });
+
+        setAgeDistribution({
+          labels: ["0-18", "19-30", "31-45", "46-60", "61+"],
+          data: ageGroups,
+        });
+
+        setGenderDistribution({
+          male: maleCount,
+          female: femaleCount,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
   const StatCard = ({ icon, title, value, color }) => (
     <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-5 transition-all duration-300 hover:bg-white/15 hover:shadow-xl h-full flex">
@@ -263,19 +313,15 @@ const AdminDashboard = () => {
         <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Recent Incident Reports
-          </h3>{" "}
+          </h3>
           <div className="space-y-3">
-            {PeaceAndOrderData.slice(0, 3).map((item, index) => (
-              <div
-                key={`peace-order-${item.id}`}
-                className="p-3 border border-white/20 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
-              >
-                <h4 className="text-white font-medium">{item.name}</h4>
-                <p className="text-gray-300 text-sm">
-                  {item.type} • {item.contact}
-                </p>
-              </div>
-            ))}
+            {/* Updated to show message about real-time data */}
+            <div className="p-3 border border-white/20 rounded-lg bg-white/5">
+              <p className="text-white text-sm">Loading recent incidents...</p>
+              <p className="text-gray-300 text-xs">
+                Real-time data from database
+              </p>
+            </div>
           </div>
           <button className="mt-4 text-blue-300 hover:text-blue-100 text-sm font-medium">
             View All Reports
@@ -285,19 +331,12 @@ const AdminDashboard = () => {
         <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Upcoming Appointments
-          </h3>{" "}
+          </h3>
           <div className="space-y-3">
-            {AppointmentsData.slice(0, 3).map((item) => (
-              <div
-                key={`appointment-${item.id}`}
-                className="p-3 border border-white/20 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200"
-              >
-                <h4 className="text-white font-medium">{item.title}</h4>
-                <p className="text-gray-300 text-sm">
-                  {item.date} at {item.time} • {item.status}
-                </p>
-              </div>
-            ))}
+            <div className="p-3 border border-white/20 rounded-lg bg-white/5">
+              <p className="text-white text-sm">Loading upcoming appointments...</p>
+              <p className="text-gray-300 text-xs">Real-time data from database</p>
+            </div>
           </div>
           <button className="mt-4 text-blue-300 hover:text-blue-100 text-sm font-medium">
             View All Appointments

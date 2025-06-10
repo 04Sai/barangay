@@ -12,7 +12,7 @@ const AdminLayout = () => {
   const getPageTitle = () => {
     if (path.includes("dashboard")) return "Dashboard";
     if (path.includes("announcements")) return "Announcements";
-    if (path.includes("hotlines")) return "Hotlines";
+    if (path.includes("hotlines")) return "Emergency Hotlines";
     if (path.includes("incident-reports")) return "Incident Reports";
     if (path.includes("appointments")) return "Appointments";
     if (path.includes("residents")) return "Residents Information";

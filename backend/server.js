@@ -30,6 +30,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Import routes
 const authRoutes = require('./server/routes/auth')
+const announcementRoutes = require('./server/routes/announcements')
+const hotlineRoutes = require('./server/routes/hotlines')
+const incidentReportRoutes = require('./server/routes/incidentReports')
+const appointmentRoutes = require('./server/routes/appointments')
 
 // Root route
 app.get('/', (req, res) => {
@@ -42,6 +46,10 @@ app.get('/', (req, res) => {
 
 // Use routes
 app.use('/api/auth', authRoutes)
+app.use('/api/announcements', announcementRoutes)
+app.use('/api/hotlines', hotlineRoutes)
+app.use('/api/incident-reports', incidentReportRoutes)
+app.use('/api/appointments', appointmentRoutes)
 
 // 404 handler - use a simple string pattern instead of wildcard
 app.use((req, res) => {

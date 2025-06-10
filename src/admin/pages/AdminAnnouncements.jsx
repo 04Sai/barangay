@@ -1,42 +1,47 @@
 import React, { useState, useEffect } from "react";
-import { FaBullhorn, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import {
-  BarangayAnnouncementsData,
-  HealthServicesAnnouncementsData,
-} from "../../client/data/index";
+import { FaBullhorn, FaPlus, FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
+import announcementService from "../services/announcementService";
 
 const AdminAnnouncements = () => {
-  // Use real data from the data files
   const [announcements, setAnnouncements] = useState([]);
-
-  // Load data from the imported data source
-  useEffect(() => {
-    // Combine all announcement data and format it
-    const combinedAnnouncements = [
-      ...BarangayAnnouncementsData.map((item) => ({
-        ...item,
-        source: "Barangay",
-      })),
-      ...HealthServicesAnnouncementsData.map((item) => ({
-        ...item,
-        source: "Health Services",
-      })),
-    ];
-
-    // Sort by date (most recent first)
-    combinedAnnouncements.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    setAnnouncements(combinedAnnouncements);
-  }, []);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     content: "",
   });
+
+  // Load announcements from database
+  const loadAnnouncements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await announcementService.getAllAnnouncements({
+        isActive: true,
+        limit: 100,
+      });
+
+      if (response.success) {
+        setAnnouncements(response.data);
+      } else {
+        throw new Error(response.message || "Failed to load announcements");
+      }
+    } catch (error) {
+      console.error("Error loading announcements:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,51 +56,94 @@ const AdminAnnouncements = () => {
     setFormData({
       title: "",
       category: "",
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       content: "",
     });
     setShowForm(true);
   };
 
   const handleEdit = (announcement) => {
-    setEditingId(announcement.id);
+    setEditingId(announcement._id);
     setFormData({
       title: announcement.title,
       category: announcement.category,
-      date: announcement.date,
+      date: new Date(announcement.date).toISOString().split("T")[0],
       content: announcement.content,
     });
     setShowForm(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (editingId) {
-      // Update existing announcement
-      setAnnouncements(
-        announcements.map((item) =>
-          item.id === editingId ? { ...item, ...formData } : item
-        )
-      );
-    } else {
-      // Add new announcement
-      setAnnouncements([
-        ...announcements,
-        {
-          id: Date.now(),
-          ...formData,
-        },
-      ]);
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      if (editingId) {
+        // Update existing announcement
+        const response = await announcementService.updateAnnouncement(
+          editingId,
+          formData
+        );
+        if (response.success) {
+          setAnnouncements(
+            announcements.map((item) =>
+              item._id === editingId ? response.data : item
+            )
+          );
+        } else {
+          throw new Error(response.message || "Failed to update announcement");
+        }
+      } else {
+        // Create new announcement
+        const response = await announcementService.createAnnouncement(formData);
+        if (response.success) {
+          setAnnouncements([response.data, ...announcements]);
+        } else {
+          throw new Error(response.message || "Failed to create announcement");
+        }
+      }
+
+      setShowForm(false);
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error submitting announcement:", error);
+      setError(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?")) {
+      return;
     }
 
-    setShowForm(false);
-    setEditingId(null);
+    try {
+      setError(null);
+      const response = await announcementService.deleteAnnouncement(id);
+      if (response.success) {
+        setAnnouncements(announcements.filter((item) => item._id !== id));
+      } else {
+        throw new Error(response.message || "Failed to delete announcement");
+      }
+    } catch (error) {
+      console.error("Error deleting announcement:", error);
+      setError(error.message);
+    }
   };
 
-  const handleDelete = (id) => {
-    setAnnouncements(announcements.filter((item) => item.id !== id));
-  };
+  if (loading) {
+    return (
+      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <FaSpinner className="animate-spin text-white text-2xl mr-3" />
+          <span className="text-white text-lg">Loading announcements...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
@@ -112,6 +160,12 @@ const AdminAnnouncements = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+          <p className="text-red-200">{error}</p>
+        </div>
+      )}
+
       {showForm && (
         <div className="mb-6 backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4">
           <h3 className="text-xl font-karla font-bold text-white mb-4">
@@ -127,19 +181,21 @@ const AdminAnnouncements = () => {
                   value={formData.title}
                   onChange={handleInputChange}
                   required
+                  disabled={submitting}
                   className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                 />
               </div>
               <div>
-                <label className="block text-white mb-1">Category</label>{" "}
+                <label className="block text-white mb-1">Category</label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
                   required
+                  disabled={submitting}
                   className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                 >
                   <option value="">Select Category</option>
                   <option value="Health Service">Health Service</option>
@@ -159,8 +215,9 @@ const AdminAnnouncements = () => {
                   value={formData.date}
                   onChange={handleInputChange}
                   required
+                  disabled={submitting}
                   className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                 />
               </div>
             </div>
@@ -172,22 +229,26 @@ const AdminAnnouncements = () => {
                 onChange={handleInputChange}
                 required
                 rows="4"
+                disabled={submitting}
                 className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
               ></textarea>
             </div>
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
+                disabled={submitting}
+                className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600"
+                disabled={submitting}
+                className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 disabled:opacity-50 flex items-center"
               >
+                {submitting && <FaSpinner className="animate-spin mr-2" />}
                 {editingId ? "Update" : "Create"}
               </button>
             </div>
@@ -196,43 +257,57 @@ const AdminAnnouncements = () => {
       )}
 
       <div className="space-y-4">
-        {announcements.map((announcement) => (
-          <div
-            key={announcement.id}
-            className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg p-4"
-          >
-            <div className="flex justify-between">
-              <div>
-                <h3 className="text-xl font-medium text-white">
-                  {announcement.title}
-                </h3>
-                <div className="flex space-x-4 mt-1 mb-2">
-                  <span className="text-sm text-blue-300">
-                    {announcement.category}
-                  </span>
-                  <span className="text-sm text-gray-300">
-                    {new Date(announcement.date).toLocaleDateString()}
-                  </span>
+        {announcements.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-white text-lg">No announcements found.</p>
+            <p className="text-gray-300 mt-2">
+              Click "Add New" to create your first announcement.
+            </p>
+          </div>
+        ) : (
+          announcements.map((announcement) => (
+            <div
+              key={announcement._id}
+              className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg p-4"
+            >
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-xl font-medium text-white">
+                    {announcement.title}
+                  </h3>
+                  <div className="flex space-x-4 mt-1 mb-2">
+                    <span className="text-sm text-blue-300">
+                      {announcement.category}
+                    </span>
+                    <span className="text-sm text-gray-300">
+                      {new Date(announcement.date).toLocaleDateString()}
+                    </span>
+                    {announcement.source && (
+                      <span className="text-sm text-green-300">
+                        {announcement.source}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-white/80">{announcement.content}</p>
                 </div>
-                <p className="text-white/80">{announcement.content}</p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEdit(announcement)}
-                  className="p-2 text-white hover:bg-white/10 rounded-full"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => handleDelete(announcement.id)}
-                  className="p-2 text-red-400 hover:bg-white/10 rounded-full"
-                >
-                  <FaTrash />
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(announcement)}
+                    className="p-2 text-white hover:bg-white/10 rounded-full"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(announcement._id)}
+                    className="p-2 text-red-400 hover:bg-white/10 rounded-full"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
