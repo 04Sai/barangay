@@ -19,6 +19,9 @@ const Login = () => {
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -96,12 +99,41 @@ const Login = () => {
         }, 1500);
       }
     } catch (error) {
-      setServerError(
-        error.response?.data?.message ||
-          "Login failed. Please check your credentials and try again."
-      );
+      if (error.response?.data?.emailNotVerified) {
+        setServerError(
+          error.response.data.message + " " +
+          "Check your email for the verification link or request a new one."
+        );
+        // Show resend verification option
+        setShowResendVerification(true);
+        setUserEmail(error.response.data.email);
+      } else {
+        setServerError(
+          error.response?.data?.message ||
+            "Login failed. Please check your credentials and try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!userEmail) return;
+
+    setIsResendingVerification(true);
+    try {
+      await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, { 
+        email: userEmail 
+      });
+      setSuccessMessage("Verification email sent! Please check your inbox.");
+      setShowResendVerification(false);
+    } catch (error) {
+      setServerError(
+        error.response?.data?.message || "Failed to resend verification email."
+      );
+    } finally {
+      setIsResendingVerification(false);
     }
   };
 
@@ -188,6 +220,18 @@ const Login = () => {
             </button>
           </div>
         </form>
+
+        {showResendVerification && (
+          <div className="mt-4">
+            <button
+              onClick={handleResendVerification}
+              disabled={isResendingVerification}
+              className="w-full flex justify-center py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-blue-400 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+            >
+              {isResendingVerification ? "Sending..." : "Resend Verification Email"}
+            </button>
+          </div>
+        )}
 
         <div className="mt-4 flex flex-col space-y-4">
           <p className="text-center text-sm text-gray-400">
