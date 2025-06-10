@@ -18,6 +18,14 @@ const authenticateToken = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid token' });
         }
 
+        // Check if email is verified for protected routes
+        if (!user.isEmailVerified) {
+            return res.status(401).json({ 
+                message: 'Email not verified. Please verify your email to access this resource.',
+                emailNotVerified: true 
+            });
+        }
+
         req.user = user;
         next();
     } catch (error) {

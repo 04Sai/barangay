@@ -133,7 +133,7 @@ router.get('/verify-email/:token', async (req, res) => {
             
             if (expiredTokenUser && expiredTokenUser.isEmailVerified) {
                 console.log('User already verified, returning success');
-                return res.json({ 
+                return res.status(200).json({ 
                     message: 'Email already verified! You can now log in to your account.',
                     success: true,
                     alreadyVerified: true
@@ -145,7 +145,7 @@ router.get('/verify-email/:token', async (req, res) => {
             if (expiredTokenUser) {
                 console.log('Token exists but expired, checking verification status');
                 if (expiredTokenUser.isEmailVerified) {
-                    return res.json({ 
+                    return res.status(200).json({ 
                         message: 'Email already verified! You can now log in to your account.',
                         success: true,
                         alreadyVerified: true
@@ -174,7 +174,7 @@ router.get('/verify-email/:token', async (req, res) => {
             console.error('Failed to send welcome email:', emailError);
         }
 
-        res.json({ 
+        res.status(200).json({ 
             message: 'Email verified successfully! You can now log in to your account.',
             success: true
         });

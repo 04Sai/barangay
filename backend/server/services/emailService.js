@@ -23,15 +23,26 @@ const checkUserVerificationStatus = async (email) => {
 };
 
 // Handle verification response - helper for auth controller
-const getVerificationResponse = (isAlreadyVerified, firstName) => {
+const getVerificationResponse = (isAlreadyVerified, firstName, isTokenExpired = false) => {
     if (isAlreadyVerified) {
         return {
             success: true,
             message: 'Email already verified. You can now log in.',
             redirectTo: '/login',
-            showSuccessMessage: true
+            showSuccessMessage: true,
+            alreadyVerified: true
         };
     }
+    
+    if (isTokenExpired) {
+        return {
+            success: false,
+            message: 'Verification link has expired. Please request a new one.',
+            redirectTo: '/verify-email-failed',
+            expired: true
+        };
+    }
+    
     return {
         success: false,
         message: 'Invalid or expired verification token.',
