@@ -4,6 +4,7 @@ import axios from "axios";
 import FormInput from "./components/FormInput";
 import FormCheckbox from "./components/FormCheckbox";
 import { BackButton } from "./buttons";
+import { API_ENDPOINTS } from "../config/api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:1337/api/auth/login",
+        API_ENDPOINTS.AUTH.LOGIN,
         {
           email: formData.email,
           password: formData.password,

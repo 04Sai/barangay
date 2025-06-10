@@ -20,6 +20,7 @@ import {
   generateYears,
   generateDays,
 } from "../data/inputfieldsdata.js";
+import { API_ENDPOINTS } from "../../config/api";
 
 const AccountSettings = () => {
   const [userData, setUserData] = useState(null);
@@ -41,9 +42,6 @@ const AccountSettings = () => {
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  // API Base URL
-  const API_BASE = "http://localhost:1337/api";
-
   // Get token from localStorage
   const getToken = () => localStorage.getItem("token");
 
@@ -60,7 +58,7 @@ const AccountSettings = () => {
         return;
       }
 
-      const response = await fetch(`${API_BASE}/auth/profile`, {
+      const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,7 +125,7 @@ const AccountSettings = () => {
         birthday: birthday,
       };
 
-      const response = await fetch(`${API_BASE}/auth/profile`, {
+      const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

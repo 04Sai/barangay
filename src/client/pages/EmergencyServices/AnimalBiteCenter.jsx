@@ -4,6 +4,7 @@ import { AnimalBiteCentersData } from "../../data";
 import AnimalBiteImage from "../../../assets/services/AnimalBite.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const AnimalBiteCenter = () => {
   const [address, setAddress] = useState("");
@@ -24,7 +25,7 @@ const AnimalBiteCenter = () => {
         }
 
         const response = await fetch(
-          "http://localhost:1337/api/auth/profile",
+          API_ENDPOINTS.AUTH.PROFILE,
           {
             method: "GET",
             headers: {
