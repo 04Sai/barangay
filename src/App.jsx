@@ -14,6 +14,7 @@ import NavBar from "./client/NavBar";
 import Register from "./client/Register";
 import Login from "./client/Login";
 import Account from "./client/pages/AccountPage";
+import EmailVerification from "./client/components/EmailVerification";
 
 // Admin imports
 import AdminLayout from "./admin/components/AdminLayout";
@@ -93,6 +94,7 @@ const Layout = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         <Route
           path="/account/*"
           element={

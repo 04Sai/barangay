@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 // User schema
 const userSchema = new mongoose.Schema({
@@ -38,6 +39,17 @@ const userSchema = new mongoose.Schema({
     agreedToTerms: {
         type: Boolean,
         required: [true, 'You must agree to terms and conditions']
+    },
+    // Email verification fields
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String
+    },
+    emailVerificationExpires: {
+        type: Date
     },
     // Additional profile fields
     civilStatus: {
@@ -100,6 +112,14 @@ userSchema.pre('save', async function(next) {
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to generate email verification token
+userSchema.methods.generateEmailVerificationToken = function() {
+    const token = crypto.randomBytes(32).toString('hex');
+    this.emailVerificationToken = token;
+    this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    return token;
 };
 
 const User = mongoose.model('User', userSchema);

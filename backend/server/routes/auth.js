@@ -1,24 +1,21 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
+const { sendEmailVerification, sendWelcomeEmail } = require('../services/emailService');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET;
 
-// Register a new user
+// Register route
 router.post('/register', async (req, res) => {
     try {
         const { firstName, lastName, middleName, contactNumber, email, password, agreedToTerms } = req.body;
 
+        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists' });
-        }
-
-        // Check if terms are agreed
-        if (!agreedToTerms) {
-            return res.status(400).json({ message: 'You must agree to the terms and conditions' });
         }
 
         // Create new user
@@ -32,269 +29,238 @@ router.post('/register', async (req, res) => {
             agreedToTerms
         });
 
+        // Generate email verification token
+        const verificationToken = user.generateEmailVerificationToken();
+        
+        // Save user
         await user.save();
 
-        // Return success without sending password
-        const userWithoutPassword = { ...user.toObject() };
-        delete userWithoutPassword.password;
+        // Send verification email
+        try {
+            await sendEmailVerification(email, firstName, verificationToken);
+            console.log('Verification email sent successfully');
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+            // Don't fail registration if email fails, just log it
+        }
 
         res.status(201).json({
-            message: 'User registered successfully',
-            user: userWithoutPassword
+            message: 'User registered successfully. Please check your email to verify your account.',
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                isEmailVerified: user.isEmailVerified
+            }
         });
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Registration failed', error: error.message });
     }
 });
 
-// Login user
+// Login route
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check if user exists
+        // Find user by email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            return res.status(401).json({ 
+                message: 'Please verify your email before logging in.',
+                emailNotVerified: true,
+                email: user.email
+            });
+        }
+
         // Check password
-        const isPasswordValid = await user.comparePassword(password);
-        if (!isPasswordValid) {
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            JWT_SECRET,
+            { userId: user._id },
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        res.status(200).json({
+        res.json({
             message: 'Login successful',
             token,
             user: {
                 id: user._id,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                email: user.email
+                email: user.email,
+                isEmailVerified: user.isEmailVerified
             }
         });
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ message: 'Login failed', error: error.message });
     }
 });
 
-// Get user profile
-router.get('/profile', authenticateToken, async (req, res) => {
+// Email verification route
+router.get('/verify-email/:token', async (req, res) => {
     try {
-        const user = req.user;
+        const { token } = req.params;
         
-        // Return user profile without password
-        const userProfile = {
-            id: user._id,
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            middleName: user.middleName || '',
-            contactNumber: user.contactNumber || '',
-            email: user.email || '',
-            civilStatus: user.civilStatus || '',
-            religion: user.religion || '',
-            gender: user.gender || '',
-            address: user.address || '',
-            birthday: user.birthday || { month: '', day: '', year: '' },
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        };
+        console.log('Verifying email with token:', token);
 
-        res.status(200).json({
-            message: 'Profile retrieved successfully',
-            user: userProfile
+        // Find user with this verification token
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: Date.now() }
         });
-    } catch (error) {
-        console.error('Profile fetch error:', error);
-        res.status(500).json({ message: 'Failed to retrieve profile', error: error.message });
-    }
-});
 
-// Update user profile
-router.put('/profile', authenticateToken, async (req, res) => {
-    try {
-        console.log('Profile update request received');
-        console.log('User ID:', req.user._id);
-        console.log('Request body:', req.body);
-
-        const userId = req.user._id;
-        const {
-            firstName,
-            lastName,
-            middleName,
-            contactNumber,
-            civilStatus,
-            religion,
-            gender,
-            address,
-            birthday
-        } = req.body;
-
-        // Validate required fields that cannot be empty if they were required during registration
-        if (firstName !== undefined && firstName.trim() === '') {
-            return res.status(400).json({ message: 'First name cannot be empty' });
-        }
-        if (lastName !== undefined && lastName.trim() === '') {
-            return res.status(400).json({ message: 'Last name cannot be empty' });
-        }
-        if (contactNumber !== undefined && contactNumber.trim() === '') {
-            return res.status(400).json({ message: 'Contact number cannot be empty' });
-        }
-
-        // Build update object with only provided fields
-        const updateData = {};
-        
-        if (firstName !== undefined) updateData.firstName = firstName.trim();
-        if (lastName !== undefined) updateData.lastName = lastName.trim();
-        if (middleName !== undefined) updateData.middleName = middleName.trim();
-        if (contactNumber !== undefined) updateData.contactNumber = contactNumber.trim();
-        if (civilStatus !== undefined) updateData.civilStatus = civilStatus;
-        if (religion !== undefined) updateData.religion = religion.trim();
-        if (gender !== undefined) updateData.gender = gender;
-        if (address !== undefined) updateData.address = address.trim();
-
-        // Handle birthday validation
-        if (birthday && typeof birthday === 'object') {
-            const { month, day, year } = birthday;
+        if (!user) {
+            console.log('Invalid or expired token');
             
-            // Reset birthday if all fields are empty
-            if (!month && !day && !year) {
-                updateData.birthday = { month: '', day: '', year: '' };
-            } else {
-                // Validate individual fields only if they have values
-                if (month && !/^(0[1-9]|1[0-2])$/.test(month)) {
-                    return res.status(400).json({ message: 'Invalid month format. Use MM (01-12)' });
-                }
-                
-                if (day && !/^(0[1-9]|[12][0-9]|3[01])$/.test(day)) {
-                    return res.status(400).json({ message: 'Invalid day format. Use DD (01-31)' });
-                }
-                
-                if (year && !/^\d{4}$/.test(year)) {
-                    return res.status(400).json({ message: 'Invalid year format. Use YYYY' });
-                }
-
-                // Validate complete date only if all parts are provided
-                if (month && day && year) {
-                    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    if (date.getMonth() !== parseInt(month) - 1 || date.getDate() !== parseInt(day)) {
-                        return res.status(400).json({ message: 'Invalid date combination' });
-                    }
-                    
-                    // Check if date is not in the future
-                    if (date > new Date()) {
-                        return res.status(400).json({ message: 'Birthday cannot be in the future' });
-                    }
-                }
-
-                updateData.birthday = { 
-                    month: month || '', 
-                    day: day || '', 
-                    year: year || '' 
-                };
+            // Check if there's a user with this token that's already verified
+            const expiredTokenUser = await User.findOne({
+                emailVerificationToken: token
+            });
+            
+            if (expiredTokenUser && expiredTokenUser.isEmailVerified) {
+                console.log('User already verified, returning success');
+                return res.json({ 
+                    message: 'Email already verified! You can now log in to your account.',
+                    success: true,
+                    alreadyVerified: true
+                });
             }
+            
+            // Also check if user might be verified but token was cleared
+            // This handles cases where the same verification link is clicked multiple times
+            if (expiredTokenUser) {
+                console.log('Token exists but expired, checking verification status');
+                if (expiredTokenUser.isEmailVerified) {
+                    return res.json({ 
+                        message: 'Email already verified! You can now log in to your account.',
+                        success: true,
+                        alreadyVerified: true
+                    });
+                }
+            }
+            
+            return res.status(400).json({ 
+                message: 'Invalid or expired verification token',
+                expired: true
+            });
         }
 
-        updateData.updatedAt = new Date();
+        // Update user verification status
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save();
 
-        console.log('Update data:', updateData);
+        console.log('Email verified successfully for user:', user.email);
 
-        // Update user profile
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updateData,
-            { 
-                new: true, 
-                runValidators: false, // Disable validators to avoid required field conflicts
-                select: '-password' // Exclude password from response
-            }
-        );
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
+        // Send welcome email
+        try {
+            await sendWelcomeEmail(user.email, user.firstName);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
         }
 
-        console.log('User updated successfully');
-
-        // Format response similar to profile GET
-        const userProfile = {
-            id: updatedUser._id,
-            firstName: updatedUser.firstName || '',
-            lastName: updatedUser.lastName || '',
-            middleName: updatedUser.middleName || '',
-            contactNumber: updatedUser.contactNumber || '',
-            email: updatedUser.email || '',
-            civilStatus: updatedUser.civilStatus || '',
-            religion: updatedUser.religion || '',
-            gender: updatedUser.gender || '',
-            address: updatedUser.address || '',
-            birthday: updatedUser.birthday || { month: '', day: '', year: '' },
-            createdAt: updatedUser.createdAt,
-            updatedAt: updatedUser.updatedAt
-        };
-
-        res.status(200).json({
-            message: 'Profile updated successfully',
-            user: userProfile
+        res.json({ 
+            message: 'Email verified successfully! You can now log in to your account.',
+            success: true
         });
     } catch (error) {
-        console.error('Profile update error:', error);
-        
-        if (error.name === 'ValidationError') {
-            const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ message: 'Validation failed', errors });
-        }
-        
-        if (error.name === 'CastError') {
-            return res.status(400).json({ message: 'Invalid data format' });
-        }
-        
-        res.status(500).json({ message: 'Profile update failed', error: error.message });
+        console.error('Email verification error:', error);
+        res.status(500).json({ message: 'Email verification failed', error: error.message });
     }
 });
 
-// Change password endpoint
-router.put('/change-password', authenticateToken, async (req, res) => {
+// Resend verification email route
+router.post('/resend-verification', async (req, res) => {
     try {
-        const userId = req.user._id;
-        const { currentPassword, newPassword } = req.body;
+        const { email } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ message: 'Current password and new password are required' });
-        }
-
-        if (newPassword.length < 6) {
-            return res.status(400).json({ message: 'New password must be at least 6 characters long' });
-        }
-
-        // Get user with password
-        const user = await User.findById(userId);
+        const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Verify current password
-        const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-        if (!isCurrentPasswordValid) {
-            return res.status(400).json({ message: 'Current password is incorrect' });
+        if (user.isEmailVerified) {
+            return res.status(400).json({ message: 'Email is already verified' });
         }
 
-        // Update password
-        user.password = newPassword;
+        // Generate new verification token
+        const verificationToken = user.generateEmailVerificationToken();
         await user.save();
 
-        res.status(200).json({ message: 'Password changed successfully' });
+        // Send verification email
+        await sendEmailVerification(email, user.firstName, verificationToken);
+
+        res.json({ message: 'Verification email sent successfully' });
     } catch (error) {
-        console.error('Password change error:', error);
-        res.status(500).json({ message: 'Password change failed', error: error.message });
+        console.error('Resend verification error:', error);
+        res.status(500).json({ message: 'Failed to resend verification email', error: error.message });
+    }
+});
+
+// Get user profile route
+router.get('/profile', authenticateToken, async (req, res) => {
+    try {
+        res.json({
+            message: 'Profile retrieved successfully',
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.status(500).json({ message: 'Failed to fetch profile', error: error.message });
+    }
+});
+
+// Update user profile route
+router.put('/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const updateData = req.body;
+
+        // Remove fields that shouldn't be updated via this endpoint
+        delete updateData.email;
+        delete updateData.password;
+        delete updateData.isEmailVerified;
+        delete updateData.emailVerificationToken;
+        delete updateData.emailVerificationExpires;
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { ...updateData, updatedAt: new Date() },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            message: 'Profile updated successfully',
+            user
+        });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                message: 'Validation error', 
+                errors: Object.values(error.errors).map(e => e.message)
+            });
+        }
+        res.status(500).json({ message: 'Failed to update profile', error: error.message });
     }
 });
 
