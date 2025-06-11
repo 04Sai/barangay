@@ -10,8 +10,8 @@ import {
 import incidentReportService from "../services/incidentReportService";
 import IncidentReportStatsCards from "../components/incidentReports/IncidentReportStatsCards";
 import IncidentReportTable from "../components/incidentReports/IncidentReportTable";
-import IncidentReportForm from "../components/incidentReports/IncidentReportForm";
-import IncidentReportDetails from "../components/incidentReports/IncidentReportDetails";
+import IncidentReportDetailsModal from "../components/incidentReports/IncidentReportDetailsModal";
+import IncidentReportFormModal from "../components/incidentReports/IncidentReportFormModal";
 import {
   incidentTypes,
   statuses,
@@ -20,6 +20,7 @@ import {
   departments,
   relationships,
 } from "../utils/incidentReportConstants";
+import { dropdownStyles } from "../utils/formStyles";
 
 const AdminIncidentReports = () => {
   const [reports, setReports] = useState([]);
@@ -373,11 +374,14 @@ const AdminIncidentReports = () => {
             name="status"
             value={filters.status}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Status</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Status
+            </option>
             {statuses.map((status) => (
-              <option key={status} value={status}>
+              <option key={status} value={status} style={dropdownStyles.option}>
                 {status}
               </option>
             ))}
@@ -387,11 +391,18 @@ const AdminIncidentReports = () => {
             name="severity"
             value={filters.severity}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Severity</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Severity
+            </option>
             {severities.map((severity) => (
-              <option key={severity} value={severity}>
+              <option
+                key={severity}
+                value={severity}
+                style={dropdownStyles.option}
+              >
                 {severity}
               </option>
             ))}
@@ -401,11 +412,18 @@ const AdminIncidentReports = () => {
             name="priority"
             value={filters.priority}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Priority</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Priority
+            </option>
             {priorities.map((priority) => (
-              <option key={priority} value={priority}>
+              <option
+                key={priority}
+                value={priority}
+                style={dropdownStyles.option}
+              >
                 {priority}
               </option>
             ))}
@@ -415,11 +433,14 @@ const AdminIncidentReports = () => {
             name="incidentTypes"
             value={filters.incidentTypes}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Types</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Types
+            </option>
             {incidentTypes.map((type) => (
-              <option key={type} value={type}>
+              <option key={type} value={type} style={dropdownStyles.option}>
                 {type}
               </option>
             ))}
@@ -467,12 +488,11 @@ const AdminIncidentReports = () => {
 
         {/* Form Modal */}
         {showForm && (
-          <IncidentReportForm
+          <IncidentReportFormModal
             report={selectedReport}
-            isEditing={!!editingId}
+            isOpen={showForm}
+            onClose={() => setShowForm(false)}
             onSubmit={handleSubmit}
-            onCancel={() => setShowForm(false)}
-            submitting={submitting}
             incidentTypes={incidentTypes}
             severities={severities}
             priorities={priorities}
@@ -482,10 +502,14 @@ const AdminIncidentReports = () => {
 
         {/* Details Modal */}
         {showDetails && selectedReport && (
-          <IncidentReportDetails
+          <IncidentReportDetailsModal
             report={selectedReport}
+            isOpen={showDetails}
             onClose={() => setShowDetails(false)}
-            onEdit={() => handleEdit(selectedReport)}
+            onEdit={() => {
+              handleEdit(selectedReport);
+              setShowDetails(false);
+            }}
           />
         )}
       </div>

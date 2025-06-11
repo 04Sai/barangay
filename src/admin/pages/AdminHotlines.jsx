@@ -19,6 +19,8 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import hotlineService from "../services/hotlineService";
+import HotlineFormModal from "../components/hotlines/HotlineFormModal";
+import { dropdownStyles } from "../utils/formStyles";
 
 const AdminHotlines = () => {
   const [hotlines, setHotlines] = useState([]);
@@ -244,29 +246,10 @@ const AdminHotlines = () => {
     // setShowDetails(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmitHotline = async (submitData, editingId) => {
     try {
       setSubmitting(true);
       setError(null);
-
-      // Clean up form data
-      const submitData = {
-        ...formData,
-        tags:
-          typeof formData.tags === "string"
-            ? formData.tags.split(",").map((tag) => tag.trim())
-            : formData.tags,
-        coordinates: {
-          latitude: formData.coordinates.latitude
-            ? parseFloat(formData.coordinates.latitude)
-            : undefined,
-          longitude: formData.coordinates.longitude
-            ? parseFloat(formData.coordinates.longitude)
-            : undefined,
-        },
-      };
 
       if (editingId) {
         const response = await hotlineService.updateHotline(
@@ -296,7 +279,7 @@ const AdminHotlines = () => {
       loadStats(); // Refresh stats
     } catch (error) {
       console.error("Error submitting hotline:", error);
-      setError(error.message);
+      throw error;
     } finally {
       setSubmitting(false);
     }
@@ -506,11 +489,14 @@ const AdminHotlines = () => {
             name="category"
             value={filters.category}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Categories</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Categories
+            </option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
+              <option key={cat} value={cat} style={dropdownStyles.option}>
                 {cat}
               </option>
             ))}
@@ -520,11 +506,18 @@ const AdminHotlines = () => {
             name="priority"
             value={filters.priority}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Priorities</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Priorities
+            </option>
             {priorities.map((priority) => (
-              <option key={priority} value={priority}>
+              <option
+                key={priority}
+                value={priority}
+                style={dropdownStyles.option}
+              >
                 {priority}
               </option>
             ))}
@@ -534,11 +527,14 @@ const AdminHotlines = () => {
             name="availability"
             value={filters.availability}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Availability</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Availability
+            </option>
             {availabilities.map((avail) => (
-              <option key={avail} value={avail}>
+              <option key={avail} value={avail} style={dropdownStyles.option}>
                 {avail}
               </option>
             ))}
@@ -548,22 +544,36 @@ const AdminHotlines = () => {
             name="isActive"
             value={filters.isActive}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="">All Status</option>
-            <option value="true">Active Only</option>
-            <option value="false">Inactive Only</option>
+            <option value="" style={dropdownStyles.option}>
+              All Status
+            </option>
+            <option value="true" style={dropdownStyles.option}>
+              Active Only
+            </option>
+            <option value="false" style={dropdownStyles.option}>
+              Inactive Only
+            </option>
           </select>
 
           <select
             name="isVerified"
             value={filters.isVerified}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Verification</option>
-            <option value="true">Verified Only</option>
-            <option value="false">Unverified Only</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Verification
+            </option>
+            <option value="true" style={dropdownStyles.option}>
+              Verified Only
+            </option>
+            <option value="false" style={dropdownStyles.option}>
+              Unverified Only
+            </option>
           </select>
         </div>
 
@@ -574,225 +584,17 @@ const AdminHotlines = () => {
         )}
 
         {/* Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 max-w-4xl w-full my-8">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-karla font-bold text-white">
-                  {editingId ? "Edit Hotline" : "Add New Hotline"}
-                </h3>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="text-white hover:bg-white/10 p-2 rounded-full"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-4 max-h-96 overflow-y-auto"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white mb-1">Name *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Category *</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Priority</label>
-                    <select
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {priorities.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Alternate Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="alternateNumber"
-                      value={formData.alternateNumber}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-white mb-1">Description *</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows="3"
-                    disabled={submitting}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                  ></textarea>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white mb-1">
-                      Availability
-                    </label>
-                    <select
-                      name="availability"
-                      value={formData.availability}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {availabilities.map((avail) => (
-                        <option key={avail} value={avail}>
-                          {avail}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Response Time
-                    </label>
-                    <select
-                      name="responseTime"
-                      value={formData.responseTime}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {responseTimes.map((time) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-white mb-1">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    disabled={submitting}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white mb-1">
-                    Supported Languages
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {supportedLanguages.map((lang) => (
-                      <div key={lang} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`lang-${lang}`}
-                          name="languages"
-                          value={lang}
-                          checked={formData.languages.includes(lang)}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <label
-                          htmlFor={`lang-${lang}`}
-                          className="text-white text-sm"
-                        >
-                          {lang}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    disabled={submitting}
-                    className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 flex items-center"
-                  >
-                    {submitting && <FaSpinner className="animate-spin mr-2" />}
-                    {editingId ? "Update" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <HotlineFormModal
+          hotline={editingId ? hotlines.find((h) => h._id === editingId) : null}
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={handleSubmitHotline}
+          categories={categories}
+          priorities={priorities}
+          availabilities={availabilities}
+          responseTimes={responseTimes}
+          supportedLanguages={supportedLanguages}
+        />
 
         {/* Hotlines Table */}
         <div className="overflow-x-auto">

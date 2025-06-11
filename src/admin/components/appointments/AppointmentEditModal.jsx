@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes, FaSpinner } from "react-icons/fa";
+import { dropdownStyles } from "../../utils/formStyles";
 
 const AppointmentEditModal = ({ appointment, isEditing, onSave, onClose }) => {
   const [formData, setFormData] = useState({
@@ -130,12 +131,14 @@ const AppointmentEditModal = ({ appointment, isEditing, onSave, onClose }) => {
                 onChange={handleInputChange}
                 required
                 disabled={submitting}
-                className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={dropdownStyles.select}
+                style={{ backgroundColor: "#1e3a8a" }}
               >
-                <option value="">Select Type</option>
+                <option value="" style={dropdownStyles.option}>
+                  Select Type
+                </option>
                 {appointmentTypes.map((type) => (
-                  <option key={type} value={type}>
+                  <option key={type} value={type} style={dropdownStyles.option}>
                     {type}
                   </option>
                 ))}
@@ -206,13 +209,21 @@ const AppointmentEditModal = ({ appointment, isEditing, onSave, onClose }) => {
                 value={formData.status}
                 onChange={handleInputChange}
                 disabled={submitting}
-                className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={dropdownStyles.select}
+                style={{ backgroundColor: "#1e3a8a" }}
               >
-                <option value="Pending">Pending</option>
-                <option value="Confirmed">Confirmed</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="Completed">Completed</option>
+                <option value="Pending" style={dropdownStyles.option}>
+                  Pending
+                </option>
+                <option value="Confirmed" style={dropdownStyles.option}>
+                  Confirmed
+                </option>
+                <option value="Cancelled" style={dropdownStyles.option}>
+                  Cancelled
+                </option>
+                <option value="Completed" style={dropdownStyles.option}>
+                  Completed
+                </option>
               </select>
             </div>
           )}

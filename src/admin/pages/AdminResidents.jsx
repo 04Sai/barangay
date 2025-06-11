@@ -12,7 +12,8 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import residentService from "../services/residentService";
-import AddResidentForm from "../components/residents/AddResidentForm";
+import ResidentDetailsModal from "../components/residents/ResidentDetailsModal";
+import ResidentFormModal from "../components/residents/ResidentFormModal";
 
 const AdminResidents = () => {
   const [residents, setResidents] = useState([]);
@@ -429,105 +430,24 @@ const AdminResidents = () => {
       )}
 
       {/* Resident Details Modal */}
-      {showDetails && selectedResident && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto transition-all duration-300 ease-in-out">
-          <div className="bg-gradient-to-br from-blue-900/80 to-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 max-w-2xl w-full my-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-karla font-bold text-white">
-                Resident Details
-              </h3>
-              <button
-                onClick={handleCloseDetails}
-                className="text-white hover:bg-white/10 p-1.5 rounded-full"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Full Name</p>
-                <p className="text-white">
-                  {selectedResident.firstName} {selectedResident.lastName}
-                </p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Email</p>
-                <p className="text-white">
-                  {selectedResident.email || "Not provided"}
-                </p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Phone Number</p>
-                <p className="text-white">{selectedResident.phoneNumber}</p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Address</p>
-                <p className="text-white">{selectedResident.address}</p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Gender</p>
-                <p className="text-white">{selectedResident.gender}</p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Birthdate</p>
-                <p className="text-white">
-                  {selectedResident.birthdate} (
-                  {calculateAge(selectedResident.birthdate)} years old)
-                </p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Civil Status</p>
-                <p className="text-white">
-                  {selectedResident.civilStatus || "Not provided"}
-                </p>
-              </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                <p className="text-gray-300 text-sm">Occupation</p>
-                <p className="text-white">
-                  {selectedResident.occupation || "Not provided"}
-                </p>
-              </div>
-              {selectedResident.registeredDate && (
-                <div className="bg-white/5 p-4 rounded-lg border border-white/20 md:col-span-2">
-                  <p className="text-gray-300 text-sm">Registered Date</p>
-                  <p className="text-white">
-                    {selectedResident.registeredDate}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end mt-6 space-x-3">
-              <button
-                onClick={() => {
-                  handleEdit(selectedResident._id || selectedResident.id);
-                  handleCloseDetails();
-                }}
-                className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
-              >
-                Edit Details
-              </button>
-              <button
-                onClick={handleCloseDetails}
-                className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ResidentDetailsModal
+        resident={selectedResident}
+        isOpen={showDetails}
+        onClose={handleCloseDetails}
+        onEdit={() => {
+          handleEdit(selectedResident._id || selectedResident.id);
+          handleCloseDetails();
+        }}
+        calculateAge={calculateAge}
+      />
 
       {/* Add/Edit Resident Form Modal */}
-      {showAddForm && (
-        <AddResidentForm
-          resident={selectedResident}
-          isEditing={!!selectedResident}
-          onClose={handleFormClose}
-          onSubmit={handleFormClose}
-        />
-      )}
+      <ResidentFormModal
+        resident={selectedResident}
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        onSuccess={handleFormClose}
+      />
     </div>
   );
 };
