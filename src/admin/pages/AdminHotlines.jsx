@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaPhone,
   FaPlus,
@@ -6,30 +6,32 @@ import {
   FaTrash,
   FaEye,
   FaSearch,
-  FaFilter,
   FaSpinner,
   FaCheck,
   FaTimes,
   FaExclamationTriangle,
-  FaMapMarkerAlt,
-  FaGlobe,
-  FaClock,
   FaShieldAlt,
-  FaSort,
-  FaDownload,
 } from "react-icons/fa";
 import hotlineService from "../services/hotlineService";
+import HotlineFormModal from "../components/hotlines/HotlineFormModal";
+import { dropdownStyles, containerStyles } from "../utils/formStyles";
 
 const AdminHotlines = () => {
   const [hotlines, setHotlines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [selectedHotline, setSelectedHotline] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [stats, setStats] = useState({});
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [stats, setStats] = useState({
+    overview: {
+      total: 0,
+      active: 0,
+      verified: 0,
+      critical: 0,
+      emergency: 0,
+    },
+  });
 
   // Filters and search
   const [filters, setFilters] = useState({
@@ -39,31 +41,6 @@ const AdminHotlines = () => {
     availability: "All",
     isActive: "true",
     isVerified: "All",
-  });
-
-  // Selection for bulk operations
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
-
-  // Form data
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    phoneNumber: "",
-    alternateNumber: "",
-    email: "",
-    category: "",
-    priority: "Medium",
-    availability: "24/7",
-    customHours: "",
-    address: "",
-    website: "",
-    coordinates: { latitude: "", longitude: "" },
-    responseTime: "Variable",
-    languages: [],
-    specialInstructions: "",
-    tags: [],
-    socialMedia: { facebook: "", twitter: "", instagram: "" },
   });
 
   const categories = [
@@ -100,7 +77,9 @@ const AdminHotlines = () => {
     "Within 1 hour",
     "Variable",
   ];
-  const languages = [
+
+  // Define supported languages for the form
+  const supportedLanguages = [
     "English",
     "Filipino",
     "Tagalog",
@@ -113,7 +92,7 @@ const AdminHotlines = () => {
   ];
 
   // Load hotlines from database
-  const loadHotlines = async () => {
+  const loadHotlines = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -130,10 +109,10 @@ const AdminHotlines = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]); // Added filters as dependency
 
   // Load statistics
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const response = await hotlineService.getStatistics();
       if (response.success) {
@@ -142,48 +121,12 @@ const AdminHotlines = () => {
     } catch (error) {
       console.error("Error loading stats:", error);
     }
-  };
+  }, []); // Empty dependency array as this doesn't depend on any state
 
   useEffect(() => {
     loadHotlines();
     loadStats();
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadHotlines();
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [filters]);
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
-    } else if (type === "checkbox") {
-      if (name === "languages") {
-        setFormData((prev) => ({
-          ...prev,
-          languages: checked
-            ? [...prev.languages, value]
-            : prev.languages.filter((lang) => lang !== value),
-        }));
-      }
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
+  }, [loadHotlines, loadStats]); // Added dependencies
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -195,93 +138,36 @@ const AdminHotlines = () => {
 
   const handleAddNew = () => {
     setEditingId(null);
-    setFormData({
-      name: "",
-      description: "",
-      phoneNumber: "",
-      alternateNumber: "",
-      email: "",
-      category: "",
-      priority: "Medium",
-      availability: "24/7",
-      customHours: "",
-      address: "",
-      website: "",
-      coordinates: { latitude: "", longitude: "" },
-      responseTime: "Variable",
-      languages: [],
-      specialInstructions: "",
-      tags: [],
-      socialMedia: { facebook: "", twitter: "", instagram: "" },
-    });
     setShowForm(true);
   };
 
   const handleEdit = (hotline) => {
     setEditingId(hotline._id);
-    setFormData({
-      name: hotline.name || "",
-      description: hotline.description || "",
-      phoneNumber: hotline.phoneNumber || "",
-      alternateNumber: hotline.alternateNumber || "",
-      email: hotline.email || "",
-      category: hotline.category || "",
-      priority: hotline.priority || "Medium",
-      availability: hotline.availability || "24/7",
-      customHours: hotline.customHours || "",
-      address: hotline.address || "",
-      website: hotline.website || "",
-      coordinates: {
-        latitude: hotline.coordinates?.latitude || "",
-        longitude: hotline.coordinates?.longitude || "",
-      },
-      responseTime: hotline.responseTime || "Variable",
-      languages: hotline.languages || [],
-      specialInstructions: hotline.specialInstructions || "",
-      tags: hotline.tags || [],
-      socialMedia: {
-        facebook: hotline.socialMedia?.facebook || "",
-        twitter: hotline.socialMedia?.twitter || "",
-        instagram: hotline.socialMedia?.instagram || "",
-      },
-    });
     setShowForm(true);
   };
 
   const handleViewDetails = (hotline) => {
-    setSelectedHotline(hotline);
-    setShowDetails(true);
+    // Implement hotline details view or remove if not needed
+    console.log("Viewing details for:", hotline.name);
+    // If you want to implement details view later:
+    // setSelectedHotline(hotline);
+    // setShowDetails(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmitHotline = async (submitData, editingId) => {
     try {
-      setSubmitting(true);
       setError(null);
 
-      // Clean up form data
-      const submitData = {
-        ...formData,
-        tags:
-          typeof formData.tags === "string"
-            ? formData.tags.split(",").map((tag) => tag.trim())
-            : formData.tags,
-        coordinates: {
-          latitude: formData.coordinates.latitude
-            ? parseFloat(formData.coordinates.latitude)
-            : undefined,
-          longitude: formData.coordinates.longitude
-            ? parseFloat(formData.coordinates.longitude)
-            : undefined,
-        },
-      };
-
       if (editingId) {
-        const response = await hotlineService.updateHotline(editingId, submitData);
+        const response = await hotlineService.updateHotline(
+          editingId,
+          submitData
+        );
         if (response.success) {
           setHotlines(
-            hotlines.map((item) => (item._id === editingId ? response.data : item))
+            hotlines.map((item) =>
+              item._id === editingId ? response.data : item
+            )
           );
         } else {
           throw new Error(response.message || "Failed to update hotline");
@@ -298,11 +184,10 @@ const AdminHotlines = () => {
       setShowForm(false);
       setEditingId(null);
       loadStats(); // Refresh stats
+      return true;
     } catch (error) {
       console.error("Error submitting hotline:", error);
-      setError(error.message);
-    } finally {
-      setSubmitting(false);
+      throw error;
     }
   };
 
@@ -335,7 +220,7 @@ const AdminHotlines = () => {
       if (response.success) {
         loadHotlines();
         setSelectedItems([]);
-        setShowBulkActions(false);
+        // No need for showBulkActions if not using it
       }
     } catch (error) {
       setError(error.message);
@@ -386,7 +271,7 @@ const AdminHotlines = () => {
 
   if (loading) {
     return (
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex items-center justify-center py-12">
           <FaSpinner className="animate-spin text-white text-2xl mr-3" />
           <span className="text-white text-lg">Loading hotlines...</span>
@@ -400,7 +285,7 @@ const AdminHotlines = () => {
       {/* Statistics Cards */}
       {stats.overview && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Total Hotlines</p>
@@ -411,7 +296,7 @@ const AdminHotlines = () => {
               <FaPhone className="text-blue-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Active</p>
@@ -422,7 +307,7 @@ const AdminHotlines = () => {
               <FaCheck className="text-green-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Verified</p>
@@ -433,7 +318,7 @@ const AdminHotlines = () => {
               <FaShieldAlt className="text-blue-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Critical</p>
@@ -444,7 +329,7 @@ const AdminHotlines = () => {
               <FaExclamationTriangle className="text-red-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Emergency</p>
@@ -459,7 +344,7 @@ const AdminHotlines = () => {
       )}
 
       {/* Main Content */}
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
           <h2 className="text-2xl font-karla font-bold text-white">
             Emergency Hotlines Management
@@ -510,11 +395,14 @@ const AdminHotlines = () => {
             name="category"
             value={filters.category}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Categories</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Categories
+            </option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
+              <option key={cat} value={cat} style={dropdownStyles.option}>
                 {cat}
               </option>
             ))}
@@ -524,11 +412,18 @@ const AdminHotlines = () => {
             name="priority"
             value={filters.priority}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Priorities</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Priorities
+            </option>
             {priorities.map((priority) => (
-              <option key={priority} value={priority}>
+              <option
+                key={priority}
+                value={priority}
+                style={dropdownStyles.option}
+              >
                 {priority}
               </option>
             ))}
@@ -538,11 +433,14 @@ const AdminHotlines = () => {
             name="availability"
             value={filters.availability}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Availability</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Availability
+            </option>
             {availabilities.map((avail) => (
-              <option key={avail} value={avail}>
+              <option key={avail} value={avail} style={dropdownStyles.option}>
                 {avail}
               </option>
             ))}
@@ -552,22 +450,36 @@ const AdminHotlines = () => {
             name="isActive"
             value={filters.isActive}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="">All Status</option>
-            <option value="true">Active Only</option>
-            <option value="false">Inactive Only</option>
+            <option value="" style={dropdownStyles.option}>
+              All Status
+            </option>
+            <option value="true" style={dropdownStyles.option}>
+              Active Only
+            </option>
+            <option value="false" style={dropdownStyles.option}>
+              Inactive Only
+            </option>
           </select>
 
           <select
             name="isVerified"
             value={filters.isVerified}
             onChange={handleFilterChange}
-            className="bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All">All Verification</option>
-            <option value="true">Verified Only</option>
-            <option value="false">Unverified Only</option>
+            <option value="All" style={dropdownStyles.option}>
+              All Verification
+            </option>
+            <option value="true" style={dropdownStyles.option}>
+              Verified Only
+            </option>
+            <option value="false" style={dropdownStyles.option}>
+              Unverified Only
+            </option>
           </select>
         </div>
 
@@ -578,197 +490,20 @@ const AdminHotlines = () => {
         )}
 
         {/* Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 overflow-y-auto">
-            <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 max-w-4xl w-full my-8">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-karla font-bold text-white">
-                  {editingId ? "Edit Hotline" : "Add New Hotline"}
-                </h3>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="text-white hover:bg-white/10 p-2 rounded-full"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-4 max-h-96 overflow-y-auto"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white mb-1">Name *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Category *</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      required
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Priority</label>
-                    <select
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {priorities.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Alternate Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="alternateNumber"
-                      value={formData.alternateNumber}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-white mb-1">Description *</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows="3"
-                    disabled={submitting}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                  ></textarea>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white mb-1">Availability</label>
-                    <select
-                      name="availability"
-                      value={formData.availability}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {availabilities.map((avail) => (
-                        <option key={avail} value={avail}>
-                          {avail}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">Response Time</label>
-                    <select
-                      name="responseTime"
-                      value={formData.responseTime}
-                      onChange={handleInputChange}
-                      disabled={submitting}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                    >
-                      {responseTimes.map((time) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-white mb-1">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    disabled={submitting}
-                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    disabled={submitting}
-                    className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 flex items-center"
-                  >
-                    {submitting && <FaSpinner className="animate-spin mr-2" />}
-                    {editingId ? "Update" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <HotlineFormModal
+          hotline={editingId ? hotlines.find((h) => h._id === editingId) : null}
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={handleSubmitHotline}
+          categories={categories}
+          priorities={priorities}
+          availabilities={availabilities}
+          responseTimes={responseTimes}
+          supportedLanguages={supportedLanguages}
+        />
 
         {/* Hotlines Table */}
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto ${containerStyles.contentContainer}`}>
           <table className="w-full text-white">
             <thead>
               <tr className="bg-white/10 border-b border-white/20">
@@ -891,88 +626,6 @@ const AdminHotlines = () => {
             <p className="text-gray-300 mt-2">
               Click "Add Hotline" to create your first emergency hotline.
             </p>
-          </div>
-        )}
-
-        {/* Details Modal */}
-        {showDetails && selectedHotline && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-            <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-karla font-bold text-white">
-                  Hotline Details
-                </h3>
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="text-white hover:bg-white/10 p-2 rounded-full"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Name</p>
-                    <p className="text-white font-medium">
-                      {selectedHotline.name}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Category</p>
-                    <p className="text-white">{selectedHotline.category}</p>
-                  </div>
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Phone Number</p>
-                    <p className="text-white font-mono">
-                      {selectedHotline.phoneNumber}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Priority</p>
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs text-white ${getPriorityColor(
-                        selectedHotline.priority
-                      )}`}
-                    >
-                      {selectedHotline.priority}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                  <p className="text-gray-300 text-sm mb-1">Description</p>
-                  <p className="text-white">{selectedHotline.description}</p>
-                </div>
-
-                {selectedHotline.address && (
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm mb-1">Address</p>
-                    <p className="text-white">{selectedHotline.address}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Availability</p>
-                    <p className="text-white">{selectedHotline.availability}</p>
-                  </div>
-                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                    <p className="text-gray-300 text-sm">Response Time</p>
-                    <p className="text-white">{selectedHotline.responseTime}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowDetails(false)}
-                    className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>

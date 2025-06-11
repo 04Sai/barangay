@@ -24,6 +24,7 @@ import { IncidentReportsData } from "../../client/data/incidentReports";
 import announcementService from "../services/announcementService";
 import incidentReportService from "../services/incidentReportService";
 import appointmentService from "../services/appointmentService";
+import { containerStyles } from "../utils/formStyles";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -122,11 +123,10 @@ const AdminDashboard = () => {
         let totalAppointments = 0;
 
         try {
-          const announcementsResponse = await announcementService.getAllAnnouncements(
-            {
+          const announcementsResponse =
+            await announcementService.getAllAnnouncements({
               isActive: true,
-            }
-          );
+            });
           totalAnnouncements = announcementsResponse.success
             ? announcementsResponse.data.length
             : 0;
@@ -136,11 +136,10 @@ const AdminDashboard = () => {
         }
 
         try {
-          const incidentsResponse = await incidentReportService.getAllIncidentReports(
-            {
+          const incidentsResponse =
+            await incidentReportService.getAllIncidentReports({
               limit: 1000,
-            }
-          );
+            });
           totalIncidents = incidentsResponse.success
             ? incidentsResponse.data.length
             : 0;
@@ -150,11 +149,10 @@ const AdminDashboard = () => {
         }
 
         try {
-          const appointmentsResponse = await appointmentService.getAllAppointments(
-            {
+          const appointmentsResponse =
+            await appointmentService.getAllAppointments({
               limit: 1000,
-            }
-          );
+            });
           totalAppointments = appointmentsResponse.success
             ? appointmentsResponse.data.length
             : 0;
@@ -207,7 +205,9 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
   const StatCard = ({ icon, title, value, color }) => (
-    <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-5 transition-all duration-300 hover:bg-white/15 hover:shadow-xl h-full flex">
+    <div
+      className={`${containerStyles.statCard} transition-all duration-300 hover:bg-white/15 hover:shadow-xl flex`}
+    >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <div
@@ -252,7 +252,7 @@ const AdminDashboard = () => {
         />
       </div>{" "}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4 col-span-1">
+        <div className={`${containerStyles.cardContainer} col-span-1`}>
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Age Distribution
           </h3>
@@ -261,7 +261,9 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4 col-span-1 lg:col-span-2">
+        <div
+          className={`${containerStyles.cardContainer} col-span-1 lg:col-span-2`}
+        >
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Demographics Overview
           </h3>{" "}
@@ -310,11 +312,11 @@ const AdminDashboard = () => {
         </div>
       </div>{" "}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
+        <div className={containerStyles.cardContainer}>
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Recent Incident Reports
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-3 min-h-[200px]">
             {/* Updated to show message about real-time data */}
             <div className="p-3 border border-white/20 rounded-lg bg-white/5">
               <p className="text-white text-sm">Loading recent incidents...</p>
@@ -328,14 +330,18 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4">
+        <div className={containerStyles.cardContainer}>
           <h3 className="text-xl font-karla font-bold text-white mb-4">
             Upcoming Appointments
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-3 min-h-[200px]">
             <div className="p-3 border border-white/20 rounded-lg bg-white/5">
-              <p className="text-white text-sm">Loading upcoming appointments...</p>
-              <p className="text-gray-300 text-xs">Real-time data from database</p>
+              <p className="text-white text-sm">
+                Loading upcoming appointments...
+              </p>
+              <p className="text-gray-300 text-xs">
+                Real-time data from database
+              </p>
             </div>
           </div>
           <button className="mt-4 text-blue-300 hover:text-blue-100 text-sm font-medium">

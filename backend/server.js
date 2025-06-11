@@ -34,13 +34,14 @@ const announcementRoutes = require('./server/routes/announcements')
 const hotlineRoutes = require('./server/routes/hotlines')
 const incidentReportRoutes = require('./server/routes/incidentReports')
 const appointmentRoutes = require('./server/routes/appointments')
+const residentRoutes = require('./server/routes/residents')
 
 // Root route
 app.get('/', (req, res) => {
-    res.json({ 
-        message: 'BSERS API Server Running', 
-        version: '1.0.0', 
-        timestamp: new Date().toISOString() 
+    res.json({
+        message: 'BSERS API Server Running',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
     })
 })
 
@@ -50,6 +51,7 @@ app.use('/api/announcements', announcementRoutes)
 app.use('/api/hotlines', hotlineRoutes)
 app.use('/api/incident-reports', incidentReportRoutes)
 app.use('/api/appointments', appointmentRoutes)
+app.use('/api/residents', residentRoutes)
 
 // 404 handler - use a simple string pattern instead of wildcard
 app.use((req, res) => {
