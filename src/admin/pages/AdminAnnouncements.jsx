@@ -167,92 +167,94 @@ const AdminAnnouncements = () => {
       )}
 
       {showForm && (
-        <div className="mb-6 backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4">
-          <h3 className="text-xl font-karla font-bold text-white mb-4">
-            {editingId ? "Edit Announcement" : "Create New Announcement"}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-white mb-1">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  disabled={submitting}
-                  className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 max-w-2xl w-full my-8">
+            <h3 className="text-xl font-karla font-bold text-white mb-4">
+              {editingId ? "Edit Announcement" : "Create New Announcement"}
+            </h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white mb-1">Title</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    disabled={submitting}
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                />
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-1">Category</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                    disabled={submitting}
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Health Service">Health Service</option>
+                    <option value="Health Advisory">Health Advisory</option>
+                    <option value="Community Event">Community Event</option>
+                    <option value="Utility Advisory">Utility Advisory</option>
+                    <option value="Sports Event">Sports Event</option>
+                    <option value="Service Advisory">Service Advisory</option>
+                    <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-white mb-1">Date</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    required
+                    disabled={submitting}
+                    className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-white mb-1">Category</label>
-                <select
-                  name="category"
-                  value={formData.category}
+                <label className="block text-white mb-1">Content</label>
+                <textarea
+                  name="content"
+                  value={formData.content}
                   onChange={handleInputChange}
                   required
+                  rows="4"
                   disabled={submitting}
                   className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                >
-                  <option value="">Select Category</option>
-                  <option value="Health Service">Health Service</option>
-                  <option value="Health Advisory">Health Advisory</option>
-                  <option value="Community Event">Community Event</option>
-                  <option value="Utility Advisory">Utility Advisory</option>
-                  <option value="Sports Event">Sports Event</option>
-                  <option value="Service Advisory">Service Advisory</option>
-                  <option value="Emergency">Emergency</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-white mb-1">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  required
-                  disabled={submitting}
-                  className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-white mb-1">Content</label>
-              <textarea
-                name="content"
-                value={formData.content}
-                onChange={handleInputChange}
-                required
-                rows="4"
-                disabled={submitting}
-                className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-              ></textarea>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                disabled={submitting}
-                className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 disabled:opacity-50 flex items-center"
-              >
-                {submitting && <FaSpinner className="animate-spin mr-2" />}
-                {editingId ? "Update" : "Create"}
-              </button>
-            </div>
-          </form>
+                ></textarea>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 disabled:opacity-50 flex items-center"
+                >
+                  {submitting && <FaSpinner className="animate-spin mr-2" />}
+                  {editingId ? "Update" : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
