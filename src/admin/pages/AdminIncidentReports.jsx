@@ -20,7 +20,7 @@ import {
   departments,
   relationships,
 } from "../utils/incidentReportConstants";
-import { dropdownStyles } from "../utils/formStyles";
+import { dropdownStyles, containerStyles } from "../utils/formStyles";
 
 const AdminIncidentReports = () => {
   const [reports, setReports] = useState([]);
@@ -30,7 +30,6 @@ const AdminIncidentReports = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
   const [stats, setStats] = useState({});
 
   // Filters
@@ -172,7 +171,6 @@ const AdminIncidentReports = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      setSubmitting(true);
       setError(null);
 
       if (editingId) {
@@ -212,8 +210,6 @@ const AdminIncidentReports = () => {
       console.error("Error submitting report:", error);
       setError(error.message);
       return false;
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -307,7 +303,7 @@ const AdminIncidentReports = () => {
 
   if (loading && reports.length === 0) {
     return (
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex items-center justify-center py-12">
           <FaSpinner className="animate-spin text-white text-2xl mr-3" />
           <span className="text-white text-lg">
@@ -324,7 +320,7 @@ const AdminIncidentReports = () => {
       {stats.overview && <IncidentReportStatsCards stats={stats.overview} />}
 
       {/* Main Content */}
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
           <h2 className="text-2xl font-karla font-bold text-white">
             Incident Reports Management
@@ -472,19 +468,21 @@ const AdminIncidentReports = () => {
         )}
 
         {/* Reports Table */}
-        <IncidentReportTable
-          reports={reports}
-          selectedItems={selectedItems}
-          onSelectItem={handleSelectItem}
-          onSelectAll={handleSelectAll}
-          onViewDetails={handleViewDetails}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onStatusUpdate={handleStatusUpdate}
-          onAssignDepartment={handleAssignDepartment} // Pass the function to child component
-          statuses={statuses}
-          loading={loading}
-        />
+        <div className={containerStyles.contentContainer}>
+          <IncidentReportTable
+            reports={reports}
+            selectedItems={selectedItems}
+            onSelectItem={handleSelectItem}
+            onSelectAll={handleSelectAll}
+            onViewDetails={handleViewDetails}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onStatusUpdate={handleStatusUpdate}
+            onAssignDepartment={handleAssignDepartment}
+            statuses={statuses}
+            loading={loading}
+          />
+        </div>
 
         {/* Form Modal */}
         {showForm && (

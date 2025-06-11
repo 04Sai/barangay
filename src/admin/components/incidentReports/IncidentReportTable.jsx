@@ -30,7 +30,7 @@ const IncidentReportTable = ({
   loading,
 }) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="min-h-[400px]">
       <table className="w-full text-white">
         <thead>
           <tr className="bg-white/10 border-b border-white/20">

@@ -14,6 +14,7 @@ import {
 import residentService from "../services/residentService";
 import ResidentDetailsModal from "../components/residents/ResidentDetailsModal";
 import ResidentFormModal from "../components/residents/ResidentFormModal";
+import { containerStyles } from "../utils/formStyles";
 
 const AdminResidents = () => {
   const [residents, setResidents] = useState([]);
@@ -242,7 +243,7 @@ const AdminResidents = () => {
   });
 
   return (
-    <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+    <div className={containerStyles.mainContainer}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">
           Residents Information
@@ -281,7 +282,7 @@ const AdminResidents = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className={`overflow-x-auto ${containerStyles.contentContainer}`}>
         <table className="w-full text-white">
           <thead>
             <tr className="bg-white/10 border-b border-white/20">

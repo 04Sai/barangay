@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { FaTimes, FaSpinner } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 import { formatDateTime } from "../../utils/dateUtils";
-import AppointmentStatusBadge from "./AppointmentStatusBadge";
+import Modal from "../common/Modal";
 
 const AppointmentDetailsModal = ({
   appointment,
+  isOpen,
   onClose,
   onEdit,
   onUpdateStatus,
@@ -25,140 +26,131 @@ const AppointmentDetailsModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto transition-all duration-300 ease-in-out">
-      <div className="bg-gradient-to-br from-blue-900/80 to-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-6 max-w-2xl w-full my-8">
-        <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-          <h3 className="text-2xl font-karla font-bold text-white">
-            Appointment Details
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-white hover:bg-white/10 p-2 rounded-full transition-all duration-200 ease-in-out transform hover:scale-110"
-          >
-            <FaTimes className="text-xl" />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Appointment Details"
+      size="medium"
+    >
+      {/* Only render error message if it exists */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+          <p className="text-red-200">{error}</p>
+        </div>
+      )}
+
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+            <p className="text-gray-300 text-sm">Title</p>
+            <p className="text-white font-medium">{appointment.title}</p>
+          </div>
+          <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+            <p className="text-gray-300 text-sm">Type</p>
+            <p className="text-white">{appointment.type}</p>
+          </div>
         </div>
 
-        {/* Only render error message if it exists */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
-            <p className="text-red-200">{error}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+            <p className="text-gray-300 text-sm">Date & Time</p>
+            <p className="text-white">
+              {formatDateTime(
+                appointment.dateTime?.scheduled || appointment.date
+              )}
+            </p>
+          </div>
+          <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+            <p className="text-gray-300 text-sm">Location</p>
+            <p className="text-white">
+              {appointment.location?.venue || appointment.location}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+          <p className="text-gray-300 text-sm">Status</p>
+          {updating ? (
+            <div className="flex items-center mt-1">
+              <FaSpinner className="animate-spin mr-2 text-white" />
+              <span className="text-white">Updating status...</span>
+            </div>
+          ) : (
+            <div className="flex space-x-2 mt-1">
+              <button
+                onClick={() => handleStatusChange("Confirmed")}
+                className={`px-3 py-1 rounded text-sm ${
+                  appointment.status === "Confirmed"
+                    ? "bg-green-500 text-white"
+                    : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => handleStatusChange("Pending")}
+                className={`px-3 py-1 rounded text-sm ${
+                  appointment.status === "Pending"
+                    ? "bg-yellow-500 text-white"
+                    : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                onClick={() => handleStatusChange("Cancelled")}
+                className={`px-3 py-1 rounded text-sm ${
+                  appointment.status === "Cancelled"
+                    ? "bg-red-500 text-white"
+                    : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleStatusChange("Completed")}
+                className={`px-3 py-1 rounded text-sm ${
+                  appointment.status === "Completed"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                Complete
+              </button>
+            </div>
+          )}
+        </div>
+
+        {appointment.description && (
+          <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+            <p className="text-gray-300 text-sm">Description</p>
+            <p className="text-white">{appointment.description}</p>
           </div>
         )}
 
-        <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Title</p>
-              <p className="text-white font-medium">{appointment.title}</p>
-            </div>
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Type</p>
-              <p className="text-white">{appointment.type}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Date & Time</p>
-              <p className="text-white">
-                {formatDateTime(
-                  appointment.dateTime?.scheduled || appointment.date
-                )}
-              </p>
-            </div>
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Location</p>
-              <p className="text-white">
-                {appointment.location?.venue || appointment.location}
-              </p>
-            </div>
-          </div>
-
+        {appointment.contactInfo && (
           <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-            <p className="text-gray-300 text-sm">Status</p>
-            {updating ? (
-              <div className="flex items-center mt-1">
-                <FaSpinner className="animate-spin mr-2 text-white" />
-                <span className="text-white">Updating status...</span>
-              </div>
-            ) : (
-              <div className="flex space-x-2 mt-1">
-                <button
-                  onClick={() => handleStatusChange("Confirmed")}
-                  className={`px-3 py-1 rounded text-sm ${
-                    appointment.status === "Confirmed"
-                      ? "bg-green-500 text-white"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  }`}
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => handleStatusChange("Pending")}
-                  className={`px-3 py-1 rounded text-sm ${
-                    appointment.status === "Pending"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => handleStatusChange("Cancelled")}
-                  className={`px-3 py-1 rounded text-sm ${
-                    appointment.status === "Cancelled"
-                      ? "bg-red-500 text-white"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  }`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleStatusChange("Completed")}
-                  className={`px-3 py-1 rounded text-sm ${
-                    appointment.status === "Completed"
-                      ? "bg-blue-500 text-white"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  }`}
-                >
-                  Complete
-                </button>
-              </div>
-            )}
+            <p className="text-gray-300 text-sm">Contact Information</p>
+            <p className="text-white">{appointment.contactInfo}</p>
           </div>
+        )}
 
-          {appointment.description && (
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Description</p>
-              <p className="text-white">{appointment.description}</p>
-            </div>
-          )}
-
-          {appointment.contactInfo && (
-            <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-              <p className="text-gray-300 text-sm">Contact Information</p>
-              <p className="text-white">{appointment.contactInfo}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onEdit}
-              className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
-            >
-              Edit Appointment
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600"
-            >
-              Close
-            </button>
-          </div>
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onEdit}
+            className="px-4 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10"
+          >
+            Edit Appointment
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600"
+          >
+            Close
+          </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

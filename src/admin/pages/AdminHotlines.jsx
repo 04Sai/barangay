@@ -6,21 +6,15 @@ import {
   FaTrash,
   FaEye,
   FaSearch,
-  FaFilter,
   FaSpinner,
   FaCheck,
   FaTimes,
   FaExclamationTriangle,
-  FaMapMarkerAlt,
-  FaGlobe,
-  FaClock,
   FaShieldAlt,
-  FaSort,
-  FaDownload,
 } from "react-icons/fa";
 import hotlineService from "../services/hotlineService";
 import HotlineFormModal from "../components/hotlines/HotlineFormModal";
-import { dropdownStyles } from "../utils/formStyles";
+import { dropdownStyles, containerStyles } from "../utils/formStyles";
 
 const AdminHotlines = () => {
   const [hotlines, setHotlines] = useState([]);
@@ -29,26 +23,14 @@ const AdminHotlines = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [stats, setStats] = useState({});
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    phoneNumber: "",
-    alternateNumber: "",
-    email: "",
-    category: "",
-    priority: "Medium",
-    availability: "24/7",
-    customHours: "",
-    address: "",
-    website: "",
-    coordinates: { latitude: "", longitude: "" },
-    responseTime: "Variable",
-    languages: [],
-    specialInstructions: "",
-    tags: [],
-    socialMedia: { facebook: "", twitter: "", instagram: "" },
+  const [stats, setStats] = useState({
+    overview: {
+      total: 0,
+      active: 0,
+      verified: 0,
+      critical: 0,
+      emergency: 0,
+    },
   });
 
   // Filters and search
@@ -146,35 +128,6 @@ const AdminHotlines = () => {
     loadStats();
   }, [loadHotlines, loadStats]); // Added dependencies
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
-    } else if (type === "checkbox") {
-      if (name === "languages") {
-        setFormData((prev) => ({
-          ...prev,
-          languages: checked
-            ? [...prev.languages, value]
-            : prev.languages.filter((lang) => lang !== value),
-        }));
-      }
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
@@ -185,56 +138,11 @@ const AdminHotlines = () => {
 
   const handleAddNew = () => {
     setEditingId(null);
-    setFormData({
-      name: "",
-      description: "",
-      phoneNumber: "",
-      alternateNumber: "",
-      email: "",
-      category: "",
-      priority: "Medium",
-      availability: "24/7",
-      customHours: "",
-      address: "",
-      website: "",
-      coordinates: { latitude: "", longitude: "" },
-      responseTime: "Variable",
-      languages: [],
-      specialInstructions: "",
-      tags: [],
-      socialMedia: { facebook: "", twitter: "", instagram: "" },
-    });
     setShowForm(true);
   };
 
   const handleEdit = (hotline) => {
     setEditingId(hotline._id);
-    setFormData({
-      name: hotline.name || "",
-      description: hotline.description || "",
-      phoneNumber: hotline.phoneNumber || "",
-      alternateNumber: hotline.alternateNumber || "",
-      email: hotline.email || "",
-      category: hotline.category || "",
-      priority: hotline.priority || "Medium",
-      availability: hotline.availability || "24/7",
-      customHours: hotline.customHours || "",
-      address: hotline.address || "",
-      website: hotline.website || "",
-      coordinates: {
-        latitude: hotline.coordinates?.latitude || "",
-        longitude: hotline.coordinates?.longitude || "",
-      },
-      responseTime: hotline.responseTime || "Variable",
-      languages: hotline.languages || [],
-      specialInstructions: hotline.specialInstructions || "",
-      tags: hotline.tags || [],
-      socialMedia: {
-        facebook: hotline.socialMedia?.facebook || "",
-        twitter: hotline.socialMedia?.twitter || "",
-        instagram: hotline.socialMedia?.instagram || "",
-      },
-    });
     setShowForm(true);
   };
 
@@ -248,7 +156,6 @@ const AdminHotlines = () => {
 
   const handleSubmitHotline = async (submitData, editingId) => {
     try {
-      setSubmitting(true);
       setError(null);
 
       if (editingId) {
@@ -277,11 +184,10 @@ const AdminHotlines = () => {
       setShowForm(false);
       setEditingId(null);
       loadStats(); // Refresh stats
+      return true;
     } catch (error) {
       console.error("Error submitting hotline:", error);
       throw error;
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -365,7 +271,7 @@ const AdminHotlines = () => {
 
   if (loading) {
     return (
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex items-center justify-center py-12">
           <FaSpinner className="animate-spin text-white text-2xl mr-3" />
           <span className="text-white text-lg">Loading hotlines...</span>
@@ -379,7 +285,7 @@ const AdminHotlines = () => {
       {/* Statistics Cards */}
       {stats.overview && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Total Hotlines</p>
@@ -390,7 +296,7 @@ const AdminHotlines = () => {
               <FaPhone className="text-blue-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Active</p>
@@ -401,7 +307,7 @@ const AdminHotlines = () => {
               <FaCheck className="text-green-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Verified</p>
@@ -412,7 +318,7 @@ const AdminHotlines = () => {
               <FaShieldAlt className="text-blue-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Critical</p>
@@ -423,7 +329,7 @@ const AdminHotlines = () => {
               <FaExclamationTriangle className="text-red-400 text-2xl" />
             </div>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 p-4">
+          <div className={containerStyles.statCard}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-300 text-sm">Emergency</p>
@@ -438,7 +344,7 @@ const AdminHotlines = () => {
       )}
 
       {/* Main Content */}
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
           <h2 className="text-2xl font-karla font-bold text-white">
             Emergency Hotlines Management
@@ -597,7 +503,7 @@ const AdminHotlines = () => {
         />
 
         {/* Hotlines Table */}
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto ${containerStyles.contentContainer}`}>
           <table className="w-full text-white">
             <thead>
               <tr className="bg-white/10 border-b border-white/20">

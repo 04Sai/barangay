@@ -5,6 +5,7 @@ import { formatDateTime } from "../utils/dateUtils";
 import AppointmentStatusBadge from "../components/appointments/AppointmentStatusBadge";
 import AppointmentDetailsModal from "../components/appointments/AppointmentDetailsModal";
 import AppointmentEditModal from "../components/appointments/AppointmentEditModal";
+import { containerStyles } from "../utils/formStyles";
 
 const AdminAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -184,7 +185,7 @@ const AdminAppointments = () => {
   };
 
   return (
-    <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+    <div className={containerStyles.mainContainer}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">
           Appointments
@@ -215,7 +216,7 @@ const AdminAppointments = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className={`overflow-x-auto ${containerStyles.contentContainer}`}>
         <table className="w-full text-white">
           <thead>
             <tr className="bg-white/10 border-b border-white/20">
@@ -293,8 +294,11 @@ const AdminAppointments = () => {
       {showDetails && selectedAppointment && (
         <AppointmentDetailsModal
           appointment={selectedAppointment}
+          isOpen={showDetails}
           onClose={handleCloseDetails}
-          onEdit={() => handleEditAppointment(selectedAppointment)}
+          onEdit={function () {
+            handleEditAppointment(selectedAppointment);
+          }}
           onUpdateStatus={handleUpdateStatus}
         />
       )}
@@ -304,6 +308,7 @@ const AdminAppointments = () => {
         <AppointmentEditModal
           appointment={selectedAppointment}
           isEditing={!!editingId}
+          isOpen={showEditForm}
           onSave={handleSaveAppointment}
           onClose={() => {
             setShowEditForm(false);

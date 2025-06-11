@@ -7,6 +7,7 @@ import {
   FaServer,
   FaSave,
 } from "react-icons/fa";
+import { containerStyles } from "../utils/formStyles";
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState("account");
@@ -37,7 +38,7 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+    <div className={containerStyles.mainContainer}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">Settings</h2>
         <div className="flex items-center text-white bg-blue-500/30 px-3 py-1.5 rounded-lg border border-blue-500/50">
@@ -48,7 +49,7 @@ const AdminSettings = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
-          <div className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg overflow-hidden">
+          <div className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg overflow-hidden min-h-[300px]">
             <div className="p-4 border-b border-white/10">
               <h3 className="text-lg font-medium text-white">Settings Menu</h3>
             </div>
@@ -98,7 +99,9 @@ const AdminSettings = () => {
         </div>
 
         <div className="md:col-span-3">
-          <div className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg p-6">
+          <div
+            className={`backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg p-6 min-h-[500px]`}
+          >
             {activeTab === "account" && (
               <form onSubmit={handleSubmit}>
                 <h3 className="text-xl font-karla font-bold text-white mb-4">

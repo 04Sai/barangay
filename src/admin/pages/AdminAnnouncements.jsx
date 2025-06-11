@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaBullhorn, FaPlus, FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
 import announcementService from "../services/announcementService";
 import AnnouncementFormModal from "../components/announcements/AnnouncementFormModal";
+import { containerStyles } from "../utils/formStyles";
 
 const AdminAnnouncements = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -9,8 +10,7 @@ const AdminAnnouncements = () => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [setFormData] = useState({
     title: "",
     category: "",
     date: new Date().toISOString().split("T")[0],
@@ -44,14 +44,6 @@ const AdminAnnouncements = () => {
     loadAnnouncements();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
   const handleAddNew = () => {
     setEditingId(null);
     setFormData({
@@ -75,8 +67,9 @@ const AdminAnnouncements = () => {
   };
 
   const handleSubmitAnnouncement = async (data, id) => {
+    let success = false;
+
     try {
-      setSubmitting(true);
       setError(null);
 
       if (id) {
@@ -88,6 +81,7 @@ const AdminAnnouncements = () => {
               item._id === id ? response.data : item
             )
           );
+          success = true;
         } else {
           throw new Error(response.message || "Failed to update announcement");
         }
@@ -96,17 +90,22 @@ const AdminAnnouncements = () => {
         const response = await announcementService.createAnnouncement(data);
         if (response.success) {
           setAnnouncements([response.data, ...announcements]);
+          success = true;
         } else {
           throw new Error(response.message || "Failed to create announcement");
         }
       }
 
-      setShowForm(false);
-      setEditingId(null);
+      if (success) {
+        setShowForm(false);
+        setEditingId(null);
+      }
+
+      return success;
     } catch (error) {
-      throw error;
-    } finally {
-      setSubmitting(false);
+      console.error("Error submitting announcement:", error);
+      setError(error.message || "Failed to save announcement");
+      return false;
     }
   };
 
@@ -131,7 +130,7 @@ const AdminAnnouncements = () => {
 
   if (loading) {
     return (
-      <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+      <div className={containerStyles.mainContainer}>
         <div className="flex items-center justify-center py-12">
           <FaSpinner className="animate-spin text-white text-2xl mr-3" />
           <span className="text-white text-lg">Loading announcements...</span>
@@ -141,7 +140,7 @@ const AdminAnnouncements = () => {
   }
 
   return (
-    <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+    <div className={containerStyles.mainContainer}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">
           Announcements
@@ -171,7 +170,7 @@ const AdminAnnouncements = () => {
         onSubmit={handleSubmitAnnouncement}
       />
 
-      <div className="space-y-4">
+      <div className={`space-y-4 ${containerStyles.contentContainer}`}>
         {announcements.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-white text-lg">No announcements found.</p>
