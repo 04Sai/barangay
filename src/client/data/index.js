@@ -236,49 +236,6 @@ export const TowingServicesData = [
     },
 ];
 
-export const BarangayAnnouncementsData = [
-    {
-        id: 1,
-        title: "Barangay Clean-up Drive",
-        date: "2023-11-25",
-        content: "Join us for our monthly barangay clean-up drive this Saturday from 7:00 AM to 11:00 AM. Please bring gloves and trash bags. Light refreshments will be provided.",
-        category: "Community Event",
-        priority: "medium"
-    },
-    {
-        id: 2,
-        title: "Scheduled Water Interruption",
-        date: "2023-11-23",
-        content: "Please be advised that there will be a scheduled water interruption on November 23, 2023, from 10:00 PM to 4:00 AM due to maintenance work. Kindly store enough water for your needs.",
-        category: "Utility Advisory",
-        priority: "high"
-    },
-    {
-        id: 3,
-        title: "Free Medical Check-up",
-        date: "2023-12-02",
-        content: "The Barangay Health Center will be offering free medical check-ups on December 2, 2023, from 8:00 AM to 3:00 PM. Services include blood pressure monitoring, blood sugar testing, and basic consultations.",
-        category: "Health Service",
-        priority: "medium"
-    },
-    {
-        id: 4,
-        title: "COVID-19 Booster Shots Available",
-        date: "2023-11-30",
-        content: "COVID-19 booster shots are now available at the Barangay Health Center. Please bring your vaccination card and a valid ID. First come, first served basis.",
-        category: "Health Advisory",
-        priority: "high"
-    },
-    {
-        id: 5,
-        title: "Barangay Basketball Tournament",
-        date: "2023-12-10",
-        content: "The annual Barangay Basketball Tournament will start on December 10, 2023. Teams can register at the Barangay Hall until December 5. Registration fee is ₱500 per team.",
-        category: "Sports Event",
-        priority: "low"
-    }
-];
-
 export const HealthCenterScheduleData = {
     monday: [
         { time: "8:00 AM - 10:00 AM", service: "General Consultation" },

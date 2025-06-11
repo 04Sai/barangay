@@ -11,53 +11,71 @@ import MedicalAssistanceImage from "../../../assets/services/MedicalAssistance.s
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
 import { API_ENDPOINTS } from "../../../config/api";
+import hotlineService from "../../services/hotlineService";
+import LocationDisplay from "../../components/LocationDisplay";
 
 const MedicalAssistance = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch user profile data on component mount
+  // Fetch user profile data and hospitals on component mount
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Please log in to access this service");
-          setLoading(false);
-          return;
+        
+        // If no token, skip profile fetch but still show the page
+        if (token) {
+          try {
+            // Fetch user profile
+            const profileResponse = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (profileResponse.ok) {
+              const profileData = await profileResponse.json();
+              setAddress(profileData.user.address || "");
+              setContactNumber(profileData.user.contactNumber || "");
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile (backend offline):", profileError);
+            // Don't set error for profile fetch failure, just continue
+          }
         }
 
-        const response = await fetch(
-          API_ENDPOINTS.AUTH.PROFILE,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+        // Fetch hospitals from backend with fallback
+        try {
+          const hospitalsResponse = await hotlineService.getHotlinesByCategory(
+            "Medical Emergency"
+          );
+          if (hospitalsResponse && hospitalsResponse.success) {
+            setHospitals(hospitalsResponse.data);
+          } else {
+            throw new Error("Backend response not successful");
           }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          // Populate form with user's existing data
-          setAddress(data.user.address || "");
-          setContactNumber(data.user.contactNumber || "");
-        } else {
-          setError("Failed to retrieve profile information");
+        } catch (hospitalError) {
+          console.error("Error fetching hospitals (using static data):", hospitalError);
+          // Fallback to static data when backend is unavailable
+          setHospitals(NearbyHospitalsData);
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError("Failed to load profile data");
+        console.error("General error in fetchData:", err);
+        // Use static data as final fallback
+        setHospitals(NearbyHospitalsData);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
+    fetchData();
   }, []);
 
   const handleCall = (contact) => {
@@ -145,9 +163,9 @@ const MedicalAssistance = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {NearbyHospitalsData.map((hospital) => (
+              {hospitals.map((hospital) => (
                 <div
-                  key={hospital.id}
+                  key={hospital._id || hospital.id}
                   className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col"
                 >
                   <h4 className="text-lg font-bold text-white mb-2 text-shadow">
@@ -156,21 +174,36 @@ const MedicalAssistance = () => {
 
                   <div className="flex items-start space-x-2 mb-1 text-white">
                     <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
-                    <span>{hospital.address}</span>
+                    <span>{hospital.address || hospital.location?.address}</span>
                   </div>
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{hospital.contact}</span>
+                    <span>{hospital.contact || hospital.contactNumbers?.[0]}</span>
                   </div>
 
                   <div className="text-white mb-4">
                     <span className="font-medium">Distance:</span>{" "}
-                    {hospital.distance}
+                    {hospital.distance || "Contact for details"}
                   </div>
 
+                  {/* Add location display with Google Maps links */}
+                  {hospital.coordinates && (
+                    <LocationDisplay
+                      location={{
+                        coordinates: hospital.coordinates,
+                        address: hospital.address,
+                      }}
+                      showAddress={false}
+                      showCoordinates={false}
+                      className="mb-4"
+                    />
+                  )}
+
                   <CallButton
-                    onClick={() => handleCall(hospital.contact)}
+                    onClick={() =>
+                      handleCall(hospital.contact || hospital.contactNumbers?.[0])
+                    }
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"

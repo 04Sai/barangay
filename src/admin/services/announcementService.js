@@ -3,6 +3,8 @@ const API_BASE_URL = 'http://localhost:1337/api';
 class AnnouncementService {
     async getAllAnnouncements(params = {}) {
         try {
+            console.log('Admin: Fetching announcements with params:', params);
+            
             const queryParams = new URLSearchParams();
             
             if (params.category && params.category !== 'All') {
@@ -19,6 +21,8 @@ class AnnouncementService {
             }
 
             const url = `${API_BASE_URL}/announcements?${queryParams.toString()}`;
+            console.log('Admin: Request URL:', url);
+            
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -26,14 +30,19 @@ class AnnouncementService {
                 },
             });
 
+            console.log('Admin: Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Admin: API error response:', errorData);
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('Admin: API success response:', data);
             return data;
         } catch (error) {
-            console.error('Error fetching announcements:', error);
+            console.error('Admin: Error fetching announcements:', error);
             throw error;
         }
     }

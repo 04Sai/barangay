@@ -22,19 +22,23 @@ const AdminAnnouncements = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('Admin: Loading announcements from database');
       const response = await announcementService.getAllAnnouncements({
-        isActive: true,
+        // Don't filter by isActive in admin - show all announcements
         limit: 100,
       });
 
       if (response.success) {
         setAnnouncements(response.data);
+        console.log('Admin: Successfully loaded announcements:', response.data?.length || 0);
       } else {
         throw new Error(response.message || "Failed to load announcements");
       }
     } catch (error) {
-      console.error("Error loading announcements:", error);
-      setError(error.message);
+      console.error("Admin: Error loading announcements:", error);
+      setError(`Failed to load announcements: ${error.message}. Please check if the backend server is running.`);
+      setAnnouncements([]); // Don't use fallback data in admin
     } finally {
       setLoading(false);
     }
@@ -157,6 +161,15 @@ const AdminAnnouncements = () => {
       {error && (
         <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
           <p className="text-red-200">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              loadAnnouncements();
+            }}
+            className="mt-3 px-4 py-2 bg-red-500/30 hover:bg-red-500/50 text-white rounded border border-red-500/50 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -173,9 +186,14 @@ const AdminAnnouncements = () => {
       <div className={`space-y-4 ${containerStyles.contentContainer}`}>
         {announcements.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-white text-lg">No announcements found.</p>
+            <p className="text-white text-lg">
+              {error ? "Unable to load announcements from database." : "No announcements found."}
+            </p>
             <p className="text-gray-300 mt-2">
-              Click "Add New" to create your first announcement.
+              {error 
+                ? "Please check if the backend server is running." 
+                : "Click \"Add New\" to create your first announcement."
+              }
             </p>
           </div>
         ) : (

@@ -10,7 +10,6 @@ import {
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import {
-  BarangayAnnouncementsData,
   AppointmentsData,
   PeaceAndOrderData,
   NearbyHospitalsData,
@@ -24,6 +23,7 @@ import { IncidentReportsData } from "../../client/data/incidentReports";
 import announcementService from "../services/announcementService";
 import incidentReportService from "../services/incidentReportService";
 import appointmentService from "../services/appointmentService";
+import residentService from "../services/residentService";
 import { containerStyles } from "../utils/formStyles";
 
 // Register Chart.js components
@@ -111,51 +111,73 @@ const AdminDashboard = () => {
     },
   };
 
-  // Fetch data from imported data sources and real APIs
+  // Fetch data from APIs and static data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const totalResidents = ResidentsData.length;
-
-        // Fetch real data from APIs
+        let totalResidents = 0;
         let totalAnnouncements = 0;
         let totalIncidents = 0;
         let totalAppointments = 0;
 
+        // Fetch residents data from API
         try {
-          const announcementsResponse =
-            await announcementService.getAllAnnouncements({
-              isActive: true,
-            });
-          totalAnnouncements = announcementsResponse.success
-            ? announcementsResponse.data.length
-            : 0;
+          const residentsResponse = await residentService.getAllResidents({
+            limit: 1000,
+          });
+          totalResidents = residentsResponse.success
+            ? residentsResponse.pagination?.totalItems ||
+              residentsResponse.data.length
+            : ResidentsData.length;
         } catch (error) {
-          console.error("Error fetching announcements for dashboard:", error);
-          totalAnnouncements = BarangayAnnouncementsData.length;
+          console.error("Error fetching residents for dashboard:", error);
+          totalResidents = ResidentsData.length;
         }
 
+        // Fetch announcements from API
         try {
-          const incidentsResponse =
-            await incidentReportService.getAllIncidentReports({
+          const announcementsResponse = await announcementService.getAllAnnouncements(
+            {
+              isActive: true,
               limit: 1000,
-            });
+            }
+          );
+          totalAnnouncements = announcementsResponse.success
+            ? announcementsResponse.pagination?.totalItems ||
+              announcementsResponse.data.length
+            : 0; // Don't use fallback static data
+        } catch (error) {
+          console.error("Error fetching announcements for dashboard:", error);
+          totalAnnouncements = 0; // Set to 0 instead of using static data
+        }
+
+        // Fetch incidents from API
+        try {
+          const incidentsResponse = await incidentReportService.getAllIncidentReports(
+            {
+              limit: 1000,
+            }
+          );
           totalIncidents = incidentsResponse.success
-            ? incidentsResponse.data.length
-            : 0;
+            ? incidentsResponse.pagination?.totalItems ||
+              incidentsResponse.data.length
+            : IncidentReportsData.length;
         } catch (error) {
           console.error("Error fetching incidents for dashboard:", error);
           totalIncidents = IncidentReportsData.length;
         }
 
+        // Fetch appointments from API
         try {
-          const appointmentsResponse =
-            await appointmentService.getAllAppointments({
+          const appointmentsResponse = await appointmentService.getAllAppointments(
+            {
               limit: 1000,
-            });
+            }
+          );
           totalAppointments = appointmentsResponse.success
-            ? appointmentsResponse.data.length
-            : 0;
+            ? appointmentsResponse.pagination?.totalItems ||
+              appointmentsResponse.data.length
+            : AppointmentsData.length;
         } catch (error) {
           console.error("Error fetching appointments for dashboard:", error);
           totalAppointments = AppointmentsData.length;
@@ -168,7 +190,7 @@ const AdminDashboard = () => {
           announcements: totalAnnouncements,
         });
 
-        // Calculate age distribution
+        // Calculate age distribution (use static data for now, can be enhanced to use API data)
         const ageGroups = [0, 0, 0, 0, 0]; // [0-18, 19-30, 31-45, 46-60, 61+]
         let maleCount = 0;
         let femaleCount = 0;

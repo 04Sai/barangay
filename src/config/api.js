@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://139.59.250.140:1337' || 'http://localhost:1337';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:1337';
 
 export const API_ENDPOINTS = {
   AUTH: {

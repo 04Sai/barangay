@@ -3,6 +3,8 @@ const API_BASE_URL = 'http://localhost:1337/api';
 class IncidentReportService {
     async getAllIncidentReports(params = {}) {
         try {
+            console.log('Fetching incident reports with params:', params);
+            
             const queryParams = new URLSearchParams();
             
             Object.keys(params).forEach(key => {
@@ -12,6 +14,8 @@ class IncidentReportService {
             });
 
             const url = `${API_BASE_URL}/incident-reports?${queryParams.toString()}`;
+            console.log('Request URL:', url);
+            
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -19,11 +23,17 @@ class IncidentReportService {
                 },
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API error response:', errorData);
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('API success response:', data);
             return data;
         } catch (error) {
             console.error('Error fetching incident reports:', error);
@@ -54,6 +64,8 @@ class IncidentReportService {
 
     async getIncidentReportById(id) {
         try {
+            console.log('Fetching incident report by ID:', id);
+            
             const response = await fetch(`${API_BASE_URL}/incident-reports/${id}`, {
                 method: 'GET',
                 headers: {
@@ -61,11 +73,16 @@ class IncidentReportService {
                 },
             });
 
+            console.log('Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API error response:', errorData);
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('API success response:', data);
             return data;
         } catch (error) {
             console.error('Error fetching incident report:', error);
@@ -96,18 +113,20 @@ class IncidentReportService {
         }
     }
 
-    async updateIncidentReport(id, reportData) {
+    async updateIncidentReport(id, updateData) {
         try {
+            console.log('Updating incident report:', id, updateData);
+            
             const response = await fetch(`${API_BASE_URL}/incident-reports/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(reportData),
+                body: JSON.stringify(updateData),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
@@ -121,6 +140,8 @@ class IncidentReportService {
 
     async deleteIncidentReport(id) {
         try {
+            console.log('Deleting incident report:', id);
+            
             const response = await fetch(`${API_BASE_URL}/incident-reports/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -129,7 +150,7 @@ class IncidentReportService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 

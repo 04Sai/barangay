@@ -98,10 +98,16 @@ const Register = () => {
         });
       }
     } catch (error) {
-      setServerError(
-        error.response?.data?.message ||
-          "Registration failed. Please try again."
-      );
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        setServerError(
+          "Cannot connect to server. Please check your internet connection or try again later."
+        );
+      } else {
+        setServerError(
+          error.response?.data?.message ||
+            "Registration failed. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }

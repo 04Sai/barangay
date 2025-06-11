@@ -99,7 +99,11 @@ const Login = () => {
         }, 1500);
       }
     } catch (error) {
-      if (error.response?.data?.emailNotVerified) {
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        setServerError(
+          "Cannot connect to server. Please check your internet connection or try again later."
+        );
+      } else if (error.response?.data?.emailNotVerified) {
         setServerError(
           error.response.data.message + " " +
           "Check your email for the verification link or request a new one."

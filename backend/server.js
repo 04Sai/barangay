@@ -11,8 +11,16 @@ const port = process.env.PORT || 1337
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:4000'], // Add your frontend URLs
-    credentials: true
+    origin: [
+        'http://localhost:4000', 
+        'http://localhost:3000',
+        'http://localhost:5173',  // Vite default
+        'http://127.0.0.1:4000',
+        'http://127.0.0.1:3000'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
@@ -60,10 +68,26 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((error, req, res, next) => {
-    console.error('Global error handler:', error);
+    console.error('Global error handler:', {
+        message: error.message,
+        stack: error.stack,
+        url: req.url,
+        method: req.method,
+        query: req.query,
+        body: req.body
+    });
+    
     res.status(error.status || 500).json({
+        success: false,
         message: error.message || 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+        ...(process.env.NODE_ENV === 'development' && { 
+            stack: error.stack,
+            details: {
+                url: req.url,
+                method: req.method,
+                query: req.query
+            }
+        })
     });
 });
 

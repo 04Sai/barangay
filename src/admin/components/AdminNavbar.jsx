@@ -29,12 +29,7 @@ const AdminNavbar = () => {
           </div>
           <div className="flex items-center space-x-4">
             {" "}
-            <Link
-              to="/admin/dashboard"
-              className="text-white hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 backdrop-blur-sm"
-            >
-              Dashboard
-            </Link>
+
             <button
               onClick={handleLogout}
               className="bg-red-600/80 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 backdrop-blur-sm"

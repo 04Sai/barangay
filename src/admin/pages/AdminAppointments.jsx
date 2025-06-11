@@ -26,13 +26,13 @@ const AdminAppointments = () => {
       if (response && response.success) {
         setAppointments(response.data || []);
       } else {
-        // Fallback to static data if API fails
-        const { AppointmentsData } = await import("../../client/data/index");
-        setAppointments(AppointmentsData || []);
+        throw new Error(response.message || "Failed to fetch appointments");
       }
     } catch (err) {
-      console.log("Using fallback static data");
+      console.error("Error loading appointments:", err);
       setError(err.message || "Failed to load appointments");
+      
+      // Fallback to static data if API fails
       const { AppointmentsData } = await import("../../client/data/index");
       setAppointments(AppointmentsData || []);
     } finally {

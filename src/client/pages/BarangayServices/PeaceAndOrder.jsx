@@ -1,68 +1,63 @@
 import React, { useState, useEffect } from "react";
-import { FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
-import { NearbyPoliceStationsData } from "../../data";
-import PoliceStationImage from "../../../assets/services/PoliceStation.svg";
+import { FaPhone, FaMapMarkerAlt, FaArrowLeft, FaShieldAlt } from "react-icons/fa";
+import { PeaceAndOrderData } from "../../data";
+import PeaceAndOrderImage from "../../../assets/services/PO.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
 import { API_ENDPOINTS } from "../../../config/api";
 import hotlineService from "../../services/hotlineService";
 
-const PoliceStation = () => {
+const PeaceAndOrder = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [policeStations, setPoliceStations] = useState([]);
+  const [peaceOrderServices, setPeaceOrderServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch user profile data and police stations on component mount
+  // Fetch user profile data and peace & order services on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
-        // If no token, skip profile fetch but still show the page
-        if (token) {
-          try {
-            // Fetch user profile
-            const profileResponse = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            });
-
-            if (profileResponse.ok) {
-              const profileData = await profileResponse.json();
-              setAddress(profileData.user.address || "");
-              setContactNumber(profileData.user.contactNumber || "");
-            }
-          } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
-            // Don't set error for profile fetch failure, just continue
-          }
+        if (!token) {
+          setError("Please log in to access this service");
+          setLoading(false);
+          return;
         }
 
-        // Fetch police stations from backend with fallback
+        // Fetch user profile
+        const profileResponse = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          setAddress(profileData.user.address || "");
+          setContactNumber(profileData.user.contactNumber || "");
+        }
+
+        // Fetch peace & order services from backend
         try {
-          const stationsResponse = await hotlineService.getHotlinesByCategory(
-            "Police & Security"
-          );
-          if (stationsResponse && stationsResponse.success) {
-            setPoliceStations(stationsResponse.data);
+          const servicesResponse = await hotlineService.getHotlinesByCategory('Peace & Order');
+          if (servicesResponse && servicesResponse.success) {
+            setPeaceOrderServices(servicesResponse.data);
           } else {
-            throw new Error("Backend response not successful");
+            setPeaceOrderServices(PeaceAndOrderData);
           }
-        } catch (stationError) {
-          console.error("Error fetching police stations (using static data):", stationError);
-          // Fallback to static data when backend is unavailable
-          setPoliceStations(NearbyPoliceStationsData);
+        } catch (serviceError) {
+          console.error("Error fetching peace & order services:", serviceError);
+          setPeaceOrderServices(PeaceAndOrderData);
         }
+
       } catch (err) {
-        console.error("General error in fetchData:", err);
-        // Use static data as final fallback
-        setPoliceStations(NearbyPoliceStationsData);
+        console.error("Error fetching data:", err);
+        setError("Failed to load data");
+        setPeaceOrderServices(PeaceAndOrderData);
       } finally {
         setLoading(false);
       }
@@ -73,6 +68,19 @@ const PoliceStation = () => {
 
   const handleCall = (contact) => {
     window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
+  };
+
+  const getServiceTypeIcon = (type) => {
+    switch (type) {
+      case 'Barangay Security':
+        return <FaShieldAlt className="text-blue-400" />;
+      case 'Police Outpost':
+        return <FaShieldAlt className="text-red-400" />;
+      case 'Quick Response':
+        return <FaShieldAlt className="text-orange-400" />;
+      default:
+        return <FaShieldAlt className="text-gray-400" />;
+    }
   };
 
   if (loading) {
@@ -98,21 +106,21 @@ const PoliceStation = () => {
             {/* Image positioned on top right */}
             <div className="absolute right-0 top-0">
               <img
-                src={PoliceStationImage}
-                alt="Police Station"
+                src={PeaceAndOrderImage}
+                alt="Peace and Order"
                 className="w-16 h-16 md:w-24 md:h-24 object-contain"
               />
             </div>
 
             <h2 className="text-3xl font-karla font-bold text-white text-shadow-lg">
-              Police Station
+              Peace and Order
             </h2>
             <p className="text-white font-inter">
-              Please provide your information to get police assistance
+              Contact barangay security and peace & order services
             </p>
           </div>
 
-          {/* First Row - User Information Form */}
+          {/* User Information Form */}
           <div className="incident-form mb-8 mt-12 backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
               Your Information
@@ -149,49 +157,61 @@ const PoliceStation = () => {
             </div>
           </div>
 
-          {/* Second Row - Nearby Police Stations */}
+          {/* Peace & Order Services */}
           <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
-              Nearby Police Stations
+              Peace & Order Services
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {policeStations.map((station) => (
+              {peaceOrderServices.map((service) => (
                 <div
-                  key={station._id || station.id}
+                  key={service._id || service.id}
                   className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col"
                 >
-                  <h4 className="text-lg font-bold text-white mb-2 text-shadow">
-                    {station.name}
-                  </h4>
+                  <div className="flex items-center mb-2">
+                    {getServiceTypeIcon(service.type)}
+                    <h4 className="text-lg font-bold text-white ml-2 text-shadow">
+                      {service.name}
+                    </h4>
+                  </div>
 
                   <div className="flex items-start space-x-2 mb-1 text-white">
                     <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
-                    <span>{station.address || station.location?.address}</span>
+                    <span>{service.address || service.location?.address}</span>
                   </div>
 
-                  <div className="flex items-center space-x-2 mb-1 text-white">
+                  <div className="flex items-center space-x-2 mb-2 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{station.contact || station.contactNumbers?.[0]}</span>
+                    <span>{service.contact || service.contactNumbers?.[0]}</span>
                   </div>
 
                   <div className="text-white mb-4">
-                    <span className="font-medium">Distance:</span>{" "}
-                    {station.distance || "Contact for details"}
+                    <span className="font-medium">Type:</span>{" "}
+                    <span className="text-sm bg-white/10 px-2 py-1 rounded">
+                      {service.type || 'Security Service'}
+                    </span>
                   </div>
 
                   <CallButton
-                    onClick={() =>
-                      handleCall(station.contact || station.contactNumbers?.[0])
-                    }
+                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"
-                    type="danger"
+                    type="primary"
                   />
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Emergency Notice */}
+          <div className="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <h4 className="text-red-200 font-bold mb-2">Emergency Notice</h4>
+            <p className="text-red-100 text-sm">
+              For immediate emergency assistance, call 911 or contact your nearest police station directly. 
+              The services listed above are for non-emergency peace and order concerns within the barangay.
+            </p>
           </div>
 
           {/* Add back button at the bottom right */}
@@ -204,4 +224,4 @@ const PoliceStation = () => {
   );
 };
 
-export default PoliceStation;
+export default PeaceAndOrder;

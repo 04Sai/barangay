@@ -53,55 +53,127 @@ const AccountSettings = () => {
 
       const token = getToken();
       if (!token) {
-        setError("No authentication token found. Please login again.");
-        navigate("/login");
+        // If no token, try to get user data from localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUserData(userData);
+          setFormData({
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            middleName: userData.middleName || "",
+            contactNumber: userData.contactNumber || "",
+            civilStatus: userData.civilStatus || "",
+            religion: userData.religion || "",
+            gender: userData.gender || "",
+            address: userData.address || "",
+          });
+          setBirthday({
+            month: userData.birthday?.month || "",
+            day: userData.birthday?.day || "",
+            year: userData.birthday?.year || "",
+          });
+        } else {
+          setError("No authentication token found. Please login again.");
+          navigate("/login");
+        }
         return;
       }
 
-      const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      try {
+        const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        if (response.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-          return;
+        if (!response.ok) {
+          // If backend is offline, try to use localStorage data
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            setUserData(userData);
+            setFormData({
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+              middleName: userData.middleName || "",
+              contactNumber: userData.contactNumber || "",
+              civilStatus: userData.civilStatus || "",
+              religion: userData.religion || "",
+              gender: userData.gender || "",
+              address: userData.address || "",
+            });
+            setBirthday({
+              month: userData.birthday?.month || "",
+              day: userData.birthday?.day || "",
+              year: userData.birthday?.year || "",
+            });
+            return;
+          }
+
+          const errorText = await response.text();
+          if (response.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+            return;
+          }
+          throw new Error(
+            `Failed to fetch profile data: ${response.status} ${errorText}`
+          );
         }
-        throw new Error(
-          `Failed to fetch profile data: ${response.status} ${errorText}`
-        );
+
+        const data = await response.json();
+        const user = data.user;
+
+        setUserData(user);
+        setFormData({
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          middleName: user.middleName || "",
+          contactNumber: user.contactNumber || "",
+          civilStatus: user.civilStatus || "",
+          religion: user.religion || "",
+          gender: user.gender || "",
+          address: user.address || "",
+        });
+
+        setBirthday({
+          month: user.birthday?.month || "",
+          day: user.birthday?.day || "",
+          year: user.birthday?.year || "",
+        });
+      } catch (fetchError) {
+        console.error("Backend offline, using localStorage data:", fetchError);
+        // Try to use localStorage data as fallback
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUserData(userData);
+          setFormData({
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            middleName: userData.middleName || "",
+            contactNumber: userData.contactNumber || "",
+            civilStatus: userData.civilStatus || "",
+            religion: userData.religion || "",
+            gender: userData.gender || "",
+            address: userData.address || "",
+          });
+          setBirthday({
+            month: userData.birthday?.month || "",
+            day: userData.birthday?.day || "",
+            year: userData.birthday?.year || "",
+          });
+        } else {
+          throw fetchError;
+        }
       }
-
-      const data = await response.json();
-      const user = data.user;
-
-      setUserData(user);
-      setFormData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        middleName: user.middleName || "",
-        contactNumber: user.contactNumber || "",
-        civilStatus: user.civilStatus || "",
-        religion: user.religion || "",
-        gender: user.gender || "",
-        address: user.address || "",
-      });
-
-      setBirthday({
-        month: user.birthday?.month || "",
-        day: user.birthday?.day || "",
-        year: user.birthday?.year || "",
-      });
     } catch (err) {
       console.error("Profile fetch error:", err);
-      setError(err.message || "Failed to load profile data");
+      setError("Failed to load profile data. Working in offline mode.");
     } finally {
       setLoading(false);
     }

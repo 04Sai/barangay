@@ -1,100 +1,167 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaCalendarAlt,
-  FaArrowLeft,
-  FaTag,
-  FaChevronLeft,
-  FaChevronRight,
-  FaBullhorn,
-  FaClock,
-} from "react-icons/fa";
-import {
-  HealthCenterScheduleData,
-  HealthServicesAnnouncementsData,
-} from "../../data";
+import { FaPhone, FaMapMarkerAlt, FaArrowLeft, FaClock, FaCalendarAlt } from "react-icons/fa";
+import { HealthCenterScheduleData, HealthServicesAnnouncementsData } from "../../data";
 import HealthServicesImage from "../../../assets/services/HealthService.svg";
 import { useNavigate } from "react-router-dom";
-import Button, { BackButton } from "../../buttons";
+import Button, { BackButton, CallButton } from "../../buttons";
+import { API_ENDPOINTS } from "../../../config/api";
+import hotlineService from "../../services/hotlineService";
+import announcementService from "../../services/announcementService";
 
 const HealthServices = () => {
-  const [activeTab, setActiveTab] = useState("schedule");
-  const [filterCategory, setFilterCategory] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [paginatedAnnouncements, setPaginatedAnnouncements] = useState([]);
-  const announcementsPerPage = 2;
+  const [address, setAddress] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [healthServices, setHealthServices] = useState([]);
+  const [healthAnnouncements, setHealthAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedDay, setSelectedDay] = useState('monday');
   const navigate = useNavigate();
 
-  // For announcements section
-  const categories = [
-    "All",
-    ...new Set(HealthServicesAnnouncementsData.map((item) => item.category)),
-  ];
-
-  const filteredAnnouncements =
-    filterCategory === "All"
-      ? HealthServicesAnnouncementsData
-      : HealthServicesAnnouncementsData.filter(
-          (ann) => ann.category === filterCategory
-        );
-
-  // Calculate total pages
-  const totalPages = Math.ceil(
-    filteredAnnouncements.length / announcementsPerPage
-  );
-
-  // Update paginated announcements when filter or page changes
+  // Fetch user profile data and health services on component mount
   useEffect(() => {
-    const startIndex = (currentPage - 1) * announcementsPerPage;
-    const endIndex = startIndex + announcementsPerPage;
-    setPaginatedAnnouncements(
-      filteredAnnouncements.slice(startIndex, endIndex)
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Please log in to access this service");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch user profile
+        const profileResponse = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          setAddress(profileData.user.address || "");
+          setContactNumber(profileData.user.contactNumber || "");
+        }
+
+        // Fetch health services from backend
+        try {
+          const servicesResponse = await hotlineService.getHotlinesByCategory('Health Services');
+          if (servicesResponse && servicesResponse.success) {
+            setHealthServices(servicesResponse.data);
+          } else {
+            // Fallback to default health center data
+            setHealthServices([
+              {
+                id: 1,
+                name: "Barangay Health Center",
+                address: "Barangay Hall Complex, Main Street",
+                contact: "(046) 123-4567",
+                distance: "0.5 km"
+              }
+            ]);
+          }
+        } catch (serviceError) {
+          console.error("Error fetching health services:", serviceError);
+          setHealthServices([
+            {
+              id: 1,
+              name: "Barangay Health Center",
+              address: "Barangay Hall Complex, Main Street", 
+              contact: "(046) 123-4567",
+              distance: "0.5 km"
+            }
+          ]);
+        }
+
+        // Fetch health-related announcements from backend
+        try {
+          const announcementsResponse = await announcementService.getAllAnnouncements({
+            category: 'Health Service',
+            isActive: true,
+            limit: 5
+          });
+
+          if (announcementsResponse && announcementsResponse.success) {
+            setHealthAnnouncements(announcementsResponse.data || []);
+          } else {
+            // Fallback to static data
+            setHealthAnnouncements(HealthServicesAnnouncementsData || [
+              {
+                id: 1,
+                title: "Regular Health Services Available",
+                date: new Date().toISOString().split('T')[0],
+                content: "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
+                category: "Health Service",
+                priority: "medium"
+              }
+            ]);
+          }
+        } catch (announcementError) {
+          console.error("Error fetching health announcements:", announcementError);
+          setHealthAnnouncements(HealthServicesAnnouncementsData || [
+            {
+              id: 1,
+              title: "Regular Health Services Available",
+              date: new Date().toISOString().split('T')[0],
+              content: "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
+              category: "Health Service",
+              priority: "medium"
+            }
+          ]);
+        }
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data");
+        setHealthServices([]);
+        setHealthAnnouncements([
+          {
+            id: 1,
+            title: "Loading announcements...",
+            date: new Date().toISOString().split('T')[0],
+            content: "Please wait while we load the latest health service announcements from the server.",
+            category: "Health Service",
+            priority: "medium"
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleCall = (contact) => {
+    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
+  };
+
+  const getDaySchedule = (day) => {
+    return HealthCenterScheduleData[day] || [];
+  };
+
+  const formatAnnouncementDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-28 pb-10 px-4 sm:px-6">
+        <div className="screen-max-width mx-auto">
+          <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6">
+            <div className="text-center text-white">
+              <p>Loading your information...</p>
+            </div>
+          </div>
+        </div>
+      </div>
     );
-
-    // Reset to page 1 when filter changes
-    if (
-      currentPage >
-      Math.ceil(filteredAnnouncements.length / announcementsPerPage)
-    ) {
-      setCurrentPage(1);
-    }
-  }, [filterCategory, currentPage, filteredAnnouncements]);
-
-  // Function to format date
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
-
-  // Function to get priority badge class
-  const getPriorityBadgeClass = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-600";
-      case "medium":
-        return "bg-yellow-600";
-      case "low":
-        return "bg-green-600";
-      default:
-        return "bg-blue-600";
-    }
-  };
-
-  // Functions for pagination
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  }
 
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">
@@ -112,196 +179,165 @@ const HealthServices = () => {
             </div>
 
             <h2 className="text-3xl font-karla font-bold text-white text-shadow-lg">
-              Barangay Health Services
+              Health Services
             </h2>
             <p className="text-white font-inter">
-              Health center services schedule and announcements
+              Access barangay health services and information
             </p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-2 mb-6 mt-12">
-            <Button
-              onClick={() => setActiveTab("schedule")}
-              label="Schedule"
-              type={activeTab === "schedule" ? "primary" : "outline"}
-              icon={<FaCalendarAlt />}
-              className={
-                activeTab !== "schedule" ? "text-white border-white/30" : ""
-              }
-            />
-            <Button
-              onClick={() => setActiveTab("announcements")}
-              label="Announcements"
-              type={activeTab === "announcements" ? "primary" : "outline"}
-              icon={<FaBullhorn />}
-              className={
-                activeTab !== "announcements"
-                  ? "text-white border-white/30"
-                  : ""
-              }
-            />
-          </div>
+          {/* User Information Form */}
+          <div className="incident-form mb-8 mt-12 backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+            <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
+              Your Information
+            </h3>
 
-          {/* Schedule Tab Content */}
-          {activeTab === "schedule" && (
-            <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
-              <h3 className="text-xl font-karla font-bold text-white mb-6 text-shadow">
-                Health Center Weekly Schedule
-              </h3>
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-white">
+                {error}
+              </div>
+            )}
 
-              {/* Horizontal Display for Schedule */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {Object.entries(HealthCenterScheduleData).map(
-                  ([day, schedules]) => (
-                    <div
-                      key={day}
-                      className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col h-full"
-                    >
-                      <h4 className="text-lg font-karla font-bold text-white mb-3 capitalize text-shadow text-center bg-blue-600/30 py-2 rounded-lg">
-                        {day}
-                      </h4>
-                      <div className="space-y-3 flex-grow">
-                        {schedules.map((schedule, index) => (
-                          <div
-                            key={index}
-                            className="py-2 border-b border-white/10 last:border-b-0"
-                          >
-                            <div className="flex items-center mb-2">
-                              <FaClock className="text-blue-400 mr-2 flex-shrink-0" />
-                              <span className="text-white font-medium text-sm">
-                                {schedule.time}
-                              </span>
-                            </div>
-                            <span className="text-white block ml-6 text-sm">
-                              {schedule.service}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label htmlFor="address">Your Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter your complete address"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label htmlFor="contactNumber">Your Contact Number</label>
+                <input
+                  type="text"
+                  id="contactNumber"
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  placeholder="Enter your contact number"
+                />
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Announcements Tab Content */}
-          {activeTab === "announcements" && (
-            <>
-              {/* Category Filter */}
-              <div className="mb-6">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-white font-medium mr-2">
-                    Filter by:
-                  </span>
-                  {categories.map((category) => (
-                    <Button
-                      key={category}
-                      onClick={() => setFilterCategory(category)}
-                      label={category}
-                      type={filterCategory === category ? "primary" : "outline"}
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        filterCategory !== category
-                          ? "text-white border-white/30"
-                          : ""
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
+          {/* Health Centers */}
+          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 mb-6">
+            <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
+              Health Centers
+            </h3>
 
-              {/* Announcements List */}
-              <div className="space-y-4">
-                {filteredAnnouncements.length === 0 ? (
-                  <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 text-center text-white">
-                    No announcements found for this category.
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {healthServices.map((service) => (
+                <div
+                  key={service._id || service.id}
+                  className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-4 flex flex-col"
+                >
+                  <h4 className="text-lg font-bold text-white mb-2 text-shadow">
+                    {service.name}
+                  </h4>
+
+                  <div className="flex items-start space-x-2 mb-1 text-white">
+                    <FaMapMarkerAlt className="mt-1 flex-shrink-0" />
+                    <span>{service.address || service.location?.address}</span>
                   </div>
-                ) : (
-                  <>
-                    {paginatedAnnouncements.map((announcement) => (
-                      <div
-                        key={announcement.id}
-                        className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6"
-                      >
-                        <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
-                          <h3 className="text-xl font-karla font-bold text-white text-shadow">
-                            {announcement.title}
-                          </h3>
-                          <div
-                            className={`${getPriorityBadgeClass(
-                              announcement.priority
-                            )} px-3 py-1 rounded-full text-xs font-bold text-white`}
-                          >
-                            {announcement.priority.toUpperCase()}
-                          </div>
-                        </div>
 
-                        <div className="flex items-center text-white mb-2">
-                          <FaCalendarAlt className="mr-2" />
-                          <span>{formatDate(announcement.date)}</span>
-                        </div>
+                  <div className="flex items-center space-x-2 mb-1 text-white">
+                    <FaPhone className="flex-shrink-0" />
+                    <span>{service.contact || service.contactNumbers?.[0]}</span>
+                  </div>
 
-                        <div className="flex items-center text-white mb-4">
-                          <FaTag className="mr-2" />
-                          <span>{announcement.category}</span>
-                        </div>
+                  <div className="text-white mb-4">
+                    <span className="font-medium">Distance:</span>{" "}
+                    {service.distance || "Contact for details"}
+                  </div>
 
-                        <div className="bg-white/5 p-4 rounded-lg border border-white/10 text-white mb-4">
-                          <p>{announcement.content}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <CallButton
+                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
+                    label="Call Now"
+                    icon={<FaPhone />}
+                    className="mt-auto"
+                    type="success"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between mt-8">
-                        {/* Pagination Dots - Bottom Left */}
-                        <div className="flex space-x-2">
-                          {[...Array(totalPages)].map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handlePageChange(index + 1)}
-                              className={`w-3 h-3 rounded-full transition-all ${
-                                currentPage === index + 1
-                                  ? "bg-blue-600 transform scale-125"
-                                  : "bg-white/30 hover:bg-white/50"
-                              }`}
-                              aria-label={`Page ${index + 1}`}
-                            />
-                          ))}
-                        </div>
+          {/* Health Center Schedule */}
+          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 mb-6">
+            <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
+              <FaCalendarAlt className="inline mr-2" />
+              Health Center Schedule
+            </h3>
 
-                        {/* Navigation Buttons */}
-                        <div className="flex space-x-2">
-                          <Button
-                            onClick={handlePrevPage}
-                            disabled={currentPage === 1}
-                            label="Previous"
-                            type="primary"
-                            className={`${
-                              currentPage === 1 ? "opacity-50" : ""
-                            }`}
-                            icon={<FaChevronLeft />}
-                          />
-                          <Button
-                            onClick={handleNextPage}
-                            disabled={currentPage === totalPages}
-                            label="Next"
-                            type="primary"
-                            className={`${
-                              currentPage === totalPages ? "opacity-50" : ""
-                            }`}
-                            icon={<FaChevronRight />}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
+            {/* Day selector */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {Object.keys(HealthCenterScheduleData).map((day) => (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(day)}
+                  className={`px-3 py-1 rounded text-sm capitalize transition-colors ${
+                    selectedDay === day
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+
+            {/* Schedule for selected day */}
+            <div className="space-y-2">
+              {getDaySchedule(selectedDay).map((schedule, index) => (
+                <div key={index} className="flex justify-between items-center bg-white/5 rounded p-3">
+                  <div className="flex items-center text-white">
+                    <FaClock className="mr-2" />
+                    <span className="font-medium">{schedule.time}</span>
+                  </div>
+                  <span className="text-gray-300">{schedule.service}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Health Announcements */}
+          <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
+            <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
+              Health Service Announcements
+            </h3>
+
+            {healthAnnouncements.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-gray-300">No health announcements available at the moment.</p>
+                <p className="text-gray-400 text-sm mt-1">Check back later for updates.</p>
               </div>
-            </>
-          )}
+            ) : (
+              <div className="space-y-3">
+                {healthAnnouncements.map((announcement) => (
+                  <div key={announcement._id || announcement.id} className="bg-white/5 rounded p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-white font-medium">{announcement.title}</h4>
+                      <span className="text-xs text-gray-300">
+                        {formatAnnouncementDate(announcement.date || announcement.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-gray-300 text-sm">{announcement.content}</p>
+                    <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
+                      announcement.priority === 'high' ? 'bg-red-500/20 text-red-200' :
+                      announcement.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-200' :
+                      'bg-green-500/20 text-green-200'
+                    }`}>
+                      {announcement.category || 'Health Service'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Add back button at the bottom right */}
           <div className="flex justify-end mt-6">

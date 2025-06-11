@@ -8,7 +8,6 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
-import { BarangayAnnouncementsData } from "../../data";
 import AnnouncementImage from "../../../assets/services/Announcements.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton } from "../../buttons";
@@ -20,15 +19,24 @@ const Announcement = () => {
   const announcementsPerPage = 3;
   const navigate = useNavigate();
 
+  // Minimal fallback data for this component
+  const fallbackAnnouncementsData = [];
+
   const categories = [
     "All",
-    ...new Set(BarangayAnnouncementsData.map((item) => item.category)),
+    "Community Event",
+    "Utility Advisory",
+    "Health Service",
+    "Health Advisory",
+    "Sports Event",
+    "Emergency",
+    "General",
   ];
 
   const filteredAnnouncements =
     filterCategory === "All"
-      ? BarangayAnnouncementsData
-      : BarangayAnnouncementsData.filter(
+      ? fallbackAnnouncementsData
+      : fallbackAnnouncementsData.filter(
           (ann) => ann.category === filterCategory
         );
 

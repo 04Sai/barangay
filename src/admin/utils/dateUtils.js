@@ -3,22 +3,21 @@
  * @param {string} dateTimeString - The date string to format
  * @returns {string} - Formatted date string
  */
-export const formatDateTime = (dateTimeString) => {
-    if (!dateTimeString) return "Not scheduled";
-
-    try {
-        const options = {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        };
-        return new Date(dateTimeString).toLocaleString("en-US", options);
-    } catch (error) {
-        console.error("Error formatting date:", error);
-        return dateTimeString;
-    }
+export const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short", 
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch (error) {
+    return 'Invalid Date';
+  }
 };
 
 /**
@@ -27,19 +26,67 @@ export const formatDateTime = (dateTimeString) => {
  * @returns {string} - Formatted date string
  */
 export const formatDate = (dateString) => {
-    if (!dateString) return "Not specified";
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long", 
+      day: "numeric"
+    });
+  } catch (error) {
+    return 'Invalid Date';
+  }
+};
 
-    try {
-        const options = {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        };
-        return new Date(dateString).toLocaleDateString("en-US", options);
-    } catch (error) {
-        console.error("Error formatting date:", error);
-        return dateString;
+/**
+ * Format a date string (time only)
+ * @param {string} dateString - The date string to format
+ * @returns {string} - Formatted time string
+ */
+export const formatTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch (error) {
+    return 'Invalid Time';
+  }
+};
+
+/**
+ * Get relative time from now
+ * @param {string} dateString - The date string to compare with current time
+ * @returns {string} - Relative time string
+ */
+export const getRelativeTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else if (diffMinutes > 0) {
+      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    } else {
+      return 'Just now';
     }
+  } catch (error) {
+    return 'Unknown';
+  }
 };
 
 /**
