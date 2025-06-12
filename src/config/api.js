@@ -8,6 +8,9 @@ export const API_ENDPOINTS = {
     PROFILE: `${API_BASE_URL}/api/auth/profile`,
     VERIFY_EMAIL: `${API_BASE_URL}/api/auth/verify-email`,
     RESEND_VERIFICATION: `${API_BASE_URL}/api/auth/resend-verification`,
+    FORGOT_PASSWORD: `${API_BASE_URL}/api/auth/forgot-password`,
+    RESET_PASSWORD: `${API_BASE_URL}/api/auth/reset-password`,
+    RESET_PASSWORD_VERIFY: (token) => `${API_BASE_URL}/api/auth/reset-password/${token}`,
   }
 };
 

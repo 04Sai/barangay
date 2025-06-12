@@ -22,6 +22,9 @@ const Login = () => {
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -141,6 +144,32 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail.trim()) {
+      setServerError("Please enter your email address");
+      return;
+    }
+
+    setIsSendingReset(true);
+    setServerError("");
+    
+    try {
+      await axios.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { 
+        email: forgotPasswordEmail 
+      });
+      setSuccessMessage("Password reset instructions have been sent to your email.");
+      setShowForgotPassword(false);
+      setForgotPasswordEmail("");
+    } catch (error) {
+      setServerError(
+        error.response?.data?.message || "Failed to send password reset email."
+      );
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   const handleGoBack = () => {
     navigate("/");
   };
@@ -201,12 +230,13 @@ const Login = () => {
             />
 
             <div className="text-sm">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
                 className="font-medium text-blue-400 hover:text-blue-300"
               >
                 Forgot your password?
-              </a>
+              </button>
             </div>
           </div>
 
@@ -220,6 +250,44 @@ const Login = () => {
             </button>
           </div>
         </form>
+
+        {/* Forgot Password Modal */}
+        {showForgotPassword && (
+          <div className="mt-6 p-4 border border-gray-600 rounded-lg bg-gray-700">
+            <h3 className="text-lg font-medium mb-4">Reset Password</h3>
+            <form onSubmit={handleForgotPassword}>
+              <FormInput
+                id="forgotPasswordEmail"
+                label="Email"
+                name="forgotPasswordEmail"
+                type="email"
+                value={forgotPasswordEmail}
+                onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                placeholder="Enter your email address"
+              />
+              <div className="flex space-x-3 mt-4">
+                <button
+                  type="submit"
+                  disabled={isSendingReset}
+                  className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                >
+                  {isSendingReset ? "Sending..." : "Send Reset Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail("");
+                    setServerError("");
+                  }}
+                  className="flex-1 py-2 px-4 border border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {showResendVerification && (
           <div className="mt-4">

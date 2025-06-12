@@ -15,6 +15,7 @@ import Register from "./client/Register";
 import Login from "./client/Login";
 import Account from "./client/pages/AccountPage";
 import EmailVerification from "./client/components/EmailVerification";
+import PasswordReset from "./client/PasswordReset";
 import PageNotFound from "./client/PageNotFound";
 
 // Admin imports
@@ -115,7 +116,6 @@ const Layout = () => {
     <div className="bg-black w-full overflow-hidden">
       {!isAccountPage && !isAdminPage && <NavBar />}
       <Routes>
-        {/* Public routes that should redirect authenticated users */}
         <Route
           path="/login"
           element={
@@ -133,7 +133,7 @@ const Layout = () => {
           }
         />
         <Route path="/verify-email" element={<EmailVerification />} />
-        {/* Protected routes */}
+        <Route path="/reset-password/:token" element={<PasswordReset />} />
         <Route
           path="/account/*"
           element={
@@ -142,7 +142,6 @@ const Layout = () => {
             </ProtectedRoute>
           }
         />
-        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -171,9 +170,9 @@ const Layout = () => {
           <Route path="hotlines" element={<AdminHotlines />} />
           <Route path="incident-reports" element={<AdminIncidentReports />} />
           <Route path="appointments" element={<AdminAppointments />} />
-          <Route path="residents" element={<AdminResidents />} />{" "}
+          <Route path="residents" element={<AdminResidents />} />
           <Route path="settings" element={<AdminSettings />} />
-        </Route>{" "}
+        </Route>
         {/* Root route with authentication check */}
         <Route
           path="/"

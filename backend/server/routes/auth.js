@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
-const { sendEmailVerification, sendWelcomeEmail } = require('../services/emailService');
+const { sendEmailVerification, sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -209,6 +209,83 @@ router.post('/resend-verification', async (req, res) => {
     } catch (error) {
         console.error('Resend verification error:', error);
         res.status(500).json({ message: 'Failed to resend verification email', error: error.message });
+    }
+});
+
+// Forgot password route
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            // Don't reveal if user exists or not for security
+            return res.json({ 
+                message: 'If an account with this email exists, a password reset link has been sent.' 
+            });
+        }
+
+        // Generate password reset token
+        const resetToken = user.generatePasswordResetToken();
+        await user.save();
+
+        // Send password reset email
+        try {
+            await sendPasswordResetEmail(email, user.firstName, resetToken);
+        } catch (emailError) {
+            console.error('Failed to send password reset email:', emailError);
+        }
+
+        res.json({ 
+            message: 'If an account with this email exists, a password reset link has been sent.' 
+        });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: 'Failed to process forgot password request' });
+    }
+});
+
+// Reset password route
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ 
+                message: 'Token and new password are required' 
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                message: 'Password must be at least 6 characters long' 
+            });
+        }
+
+        // Find user with valid reset token
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ 
+                message: 'Invalid or expired password reset token' 
+            });
+        }
+
+        // Update password and clear reset token
+        user.password = newPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.json({ 
+            message: 'Password has been reset successfully. You can now log in with your new password.' 
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Failed to reset password' });
     }
 });
 

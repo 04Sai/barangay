@@ -51,6 +51,13 @@ const userSchema = new mongoose.Schema({
     emailVerificationExpires: {
         type: Date
     },
+    // Password reset fields
+    passwordResetToken: {
+        type: String
+    },
+    passwordResetExpires: {
+        type: Date
+    },
     // Additional profile fields
     civilStatus: {
         type: String,
@@ -141,6 +148,14 @@ userSchema.methods.generateEmailVerificationToken = function() {
     const token = crypto.randomBytes(32).toString('hex');
     this.emailVerificationToken = token;
     this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    return token;
+};
+
+// Method to generate password reset token
+userSchema.methods.generatePasswordResetToken = function() {
+    const token = crypto.randomBytes(32).toString('hex');
+    this.passwordResetToken = token;
+    this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
     return token;
 };
 
