@@ -468,9 +468,9 @@ const AccountSettings = () => {
                     <div className="profile-image">
                       {imagePreview ? (
                         <div className="relative w-full h-full">
-                          <img 
-                            src={imagePreview} 
-                            alt="Profile" 
+                          <img
+                            src={imagePreview}
+                            alt="Profile"
                             className="w-full h-full object-cover rounded-full"
                           />
                           <button
@@ -501,7 +501,7 @@ const AccountSettings = () => {
                       disabled={uploadingImage}
                     />
                   </label>
-                  
+
                   <div className="upload-text-container">
                     {uploadingImage ? (
                       <div className="flex items-center justify-center text-blue-400">
@@ -511,7 +511,9 @@ const AccountSettings = () => {
                     ) : (
                       <div className="text-center">
                         <div className="font-medium cursor-pointer transition-colors duration-200">
-                          {imagePreview ? 'Click to change picture' : 'Click to upload picture'}
+                          {imagePreview
+                            ? "Click to change picture"
+                            : "Click to upload picture"}
                         </div>
                         <div className="text-xs mt-1">
                           Max 5MB • JPG, PNG, GIF

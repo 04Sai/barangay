@@ -20,7 +20,7 @@ const PoliceStation = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         // If no token, skip profile fetch but still show the page
         if (token) {
           try {
@@ -39,7 +39,10 @@ const PoliceStation = () => {
               setContactNumber(profileData.user.contactNumber || "");
             }
           } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
+            console.error(
+              "Error fetching profile (backend offline):",
+              profileError
+            );
             // Don't set error for profile fetch failure, just continue
           }
         }
@@ -55,7 +58,10 @@ const PoliceStation = () => {
             throw new Error("Backend response not successful");
           }
         } catch (stationError) {
-          console.error("Error fetching police stations (using static data):", stationError);
+          console.error(
+            "Error fetching police stations (using static data):",
+            stationError
+          );
           // Fallback to static data when backend is unavailable
           setPoliceStations(NearbyPoliceStationsData);
         }
@@ -172,7 +178,9 @@ const PoliceStation = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{station.contact || station.contactNumbers?.[0]}</span>
+                    <span>
+                      {station.contact || station.contactNumbers?.[0]}
+                    </span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -195,7 +203,7 @@ const PoliceStation = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

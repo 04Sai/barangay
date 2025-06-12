@@ -20,7 +20,7 @@ const FireStation = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         // If no token, skip profile fetch but still show the page
         if (token) {
           try {
@@ -39,25 +39,32 @@ const FireStation = () => {
               setContactNumber(profileData.user.contactNumber || "");
             }
           } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
+            console.error(
+              "Error fetching profile (backend offline):",
+              profileError
+            );
             // Don't set error for profile fetch failure, just continue
           }
         }
 
         // Fetch fire stations from backend with fallback
         try {
-          const stationsResponse = await hotlineService.getHotlinesByCategory('Fire Department');
+          const stationsResponse = await hotlineService.getHotlinesByCategory(
+            "Fire Department"
+          );
           if (stationsResponse && stationsResponse.success) {
             setFireStations(stationsResponse.data);
           } else {
             throw new Error("Backend response not successful");
           }
         } catch (stationError) {
-          console.error("Error fetching fire stations (using static data):", stationError);
+          console.error(
+            "Error fetching fire stations (using static data):",
+            stationError
+          );
           // Fallback to static data when backend is unavailable
           setFireStations(NearbyFireStationsData);
         }
-
       } catch (err) {
         console.error("General error in fetchData:", err);
         // Use static data as final fallback
@@ -171,7 +178,9 @@ const FireStation = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{station.contact || station.contactNumbers?.[0]}</span>
+                    <span>
+                      {station.contact || station.contactNumbers?.[0]}
+                    </span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -180,7 +189,9 @@ const FireStation = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(station.contact || station.contactNumbers?.[0])}
+                    onClick={() =>
+                      handleCall(station.contact || station.contactNumbers?.[0])
+                    }
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"
@@ -192,7 +203,7 @@ const FireStation = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>
