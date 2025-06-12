@@ -254,11 +254,4 @@ const Announcements = () => {
   );
 };
 
-
-export default Announcements;
-    </div>
-  );
-};
-
-
 export default Announcements;

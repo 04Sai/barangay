@@ -250,11 +250,4 @@ const BarangayAnnouncements = () => {
     </div>
   );
 };
-
-export default BarangayAnnouncements;
-      </div>
-    </div>
-  );
-};
-
 export default BarangayAnnouncements;
