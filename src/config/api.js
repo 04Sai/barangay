@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
     RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
     REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
+    PROFILE: `${API_BASE_URL}/auth/profile`,  // Updated proper profile endpoint
+    UPDATE_PROFILE: `${API_BASE_URL}/auth/profile`,  // Endpoint for updating profile
   },
 
   // Admin endpoints

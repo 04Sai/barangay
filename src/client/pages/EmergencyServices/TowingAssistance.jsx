@@ -34,6 +34,26 @@ const TowingAssistance = () => {
               },
             });
 
+            // Check for HTML response which indicates server error page
+            const contentType = profileResponse.headers.get("content-type");
+            if (contentType && contentType.includes("text/html")) {
+              console.error(
+                "Server returned HTML instead of JSON - likely offline"
+              );
+              // Try to get user data from localStorage
+              const storedUser = localStorage.getItem("user");
+              if (storedUser) {
+                try {
+                  const userData = JSON.parse(storedUser);
+                  setAddress(userData.address || "");
+                  setContactNumber(userData.contactNumber || "");
+                } catch (parseError) {
+                  console.error("Error parsing user data:", parseError);
+                }
+              }
+              return;
+            }
+
             if (profileResponse.ok) {
               const profileData = await profileResponse.json();
               setAddress(profileData.user.address || "");
@@ -44,7 +64,17 @@ const TowingAssistance = () => {
               "Error fetching profile (backend offline):",
               profileError
             );
-            // Don't set error for profile fetch failure, just continue
+            // Try to get user data from localStorage
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                setAddress(userData.address || "");
+                setContactNumber(userData.contactNumber || "");
+              } catch (parseError) {
+                console.error("Error parsing user data:", parseError);
+              }
+            }
           }
         }
 
