@@ -21,7 +21,7 @@ const TowingAssistance = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         // If no token, skip profile fetch but still show the page
         if (token) {
           try {
@@ -34,31 +34,68 @@ const TowingAssistance = () => {
               },
             });
 
+            // Check for HTML response which indicates server error page
+            const contentType = profileResponse.headers.get("content-type");
+            if (contentType && contentType.includes("text/html")) {
+              console.error(
+                "Server returned HTML instead of JSON - likely offline"
+              );
+              // Try to get user data from localStorage
+              const storedUser = localStorage.getItem("user");
+              if (storedUser) {
+                try {
+                  const userData = JSON.parse(storedUser);
+                  setAddress(userData.address || "");
+                  setContactNumber(userData.contactNumber || "");
+                } catch (parseError) {
+                  console.error("Error parsing user data:", parseError);
+                }
+              }
+              return;
+            }
+
             if (profileResponse.ok) {
               const profileData = await profileResponse.json();
               setAddress(profileData.user.address || "");
               setContactNumber(profileData.user.contactNumber || "");
             }
           } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
-            // Don't set error for profile fetch failure, just continue
+            console.error(
+              "Error fetching profile (backend offline):",
+              profileError
+            );
+            // Try to get user data from localStorage
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                setAddress(userData.address || "");
+                setContactNumber(userData.contactNumber || "");
+              } catch (parseError) {
+                console.error("Error parsing user data:", parseError);
+              }
+            }
           }
         }
 
         // Fetch towing services from backend with fallback
         try {
-          const servicesResponse = await hotlineService.getHotlinesByCategory('Towing & Recovery');
+          const servicesResponse = await hotlineService.getHotlinesByCategory(
+            "Towing & Recovery"
+          );
           if (servicesResponse && servicesResponse.success) {
             setTowingServices(servicesResponse.data);
           } else {
             throw new Error("Backend response not successful");
           }
         } catch (serviceError) {
-          console.error("Error fetching towing services (using static data):", serviceError);
+          console.error(
+            "Error fetching towing services (using static data):",
+            serviceError
+          );
           // Fallback to static data when backend is unavailable
           setTowingServices(TowingServicesData);
         }
-
       } catch (err) {
         console.error("General error in fetchData:", err);
         // Use static data as final fallback
@@ -183,7 +220,9 @@ const TowingAssistance = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0]}</span>
+                    <span>
+                      {service.contact || service.contactNumbers?.[0]}
+                    </span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -192,7 +231,9 @@ const TowingAssistance = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
+                    onClick={() =>
+                      handleCall(service.contact || service.contactNumbers?.[0])
+                    }
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"
@@ -204,7 +245,7 @@ const TowingAssistance = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

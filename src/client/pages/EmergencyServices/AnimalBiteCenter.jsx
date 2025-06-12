@@ -21,7 +21,7 @@ const AnimalBiteCenter = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         // If no token, skip profile fetch but still show the page
         if (token) {
           try {
@@ -40,7 +40,10 @@ const AnimalBiteCenter = () => {
               setContactNumber(profileData.user.contactNumber || "");
             }
           } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
+            console.error(
+              "Error fetching profile (backend offline):",
+              profileError
+            );
             // Don't set error for profile fetch failure, just continue
           }
         }
@@ -56,7 +59,10 @@ const AnimalBiteCenter = () => {
             throw new Error("Backend response not successful");
           }
         } catch (centerError) {
-          console.error("Error fetching animal bite centers (using static data):", centerError);
+          console.error(
+            "Error fetching animal bite centers (using static data):",
+            centerError
+          );
           // Fallback to static data when backend is unavailable
           setAnimalBiteCenters(AnimalBiteCentersData);
         }
@@ -197,7 +203,7 @@ const AnimalBiteCenter = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

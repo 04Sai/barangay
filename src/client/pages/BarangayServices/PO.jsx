@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { FaPhone, FaMapMarkerAlt, FaArrowLeft, FaShieldAlt } from "react-icons/fa";
+import {
+  FaPhone,
+  FaMapMarkerAlt,
+  FaArrowLeft,
+  FaShieldAlt,
+} from "react-icons/fa";
 import { PeaceAndOrderData } from "../../data";
 import POImage from "../../../assets/services/PO.svg";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +27,7 @@ const PO = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         // If no token, skip profile fetch but still show the page
         if (token) {
           try {
@@ -41,25 +46,32 @@ const PO = () => {
               setContactNumber(profileData.user.contactNumber || "");
             }
           } catch (profileError) {
-            console.error("Error fetching profile (backend offline):", profileError);
+            console.error(
+              "Error fetching profile (backend offline):",
+              profileError
+            );
             // Don't set error for profile fetch failure, just continue
           }
         }
 
         // Fetch peace and order services from backend with fallback
         try {
-          const servicesResponse = await hotlineService.getHotlinesByCategory('Police & Security');
+          const servicesResponse = await hotlineService.getHotlinesByCategory(
+            "Police & Security"
+          );
           if (servicesResponse && servicesResponse.success) {
             setPeaceOrderServices(servicesResponse.data);
           } else {
             throw new Error("Backend response not successful");
           }
         } catch (serviceError) {
-          console.error("Error fetching peace and order services (using static data):", serviceError);
+          console.error(
+            "Error fetching peace and order services (using static data):",
+            serviceError
+          );
           // Fallback to static data when backend is unavailable
           setPeaceOrderServices(PeaceAndOrderData);
         }
-
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load data");
@@ -78,11 +90,11 @@ const PO = () => {
 
   const getServiceTypeIcon = (type) => {
     switch (type) {
-      case 'Barangay Security':
+      case "Barangay Security":
         return <FaShieldAlt className="text-blue-400" />;
-      case 'Police Outpost':
+      case "Police Outpost":
         return <FaShieldAlt className="text-red-400" />;
-      case 'Quick Response':
+      case "Quick Response":
         return <FaShieldAlt className="text-orange-400" />;
       default:
         return <FaShieldAlt className="text-gray-400" />;
@@ -214,15 +226,26 @@ const PO = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0] || service.phoneNumber}</span>
+                    <span>
+                      {service.contact ||
+                        service.contactNumbers?.[0] ||
+                        service.phoneNumber}
+                    </span>
                   </div>
 
                   <div className="text-white mb-4">
-                    <span className="font-medium">Type:</span> {service.type || service.category}
+                    <span className="font-medium">Type:</span>{" "}
+                    {service.type || service.category}
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0] || service.phoneNumber)}
+                    onClick={() =>
+                      handleCall(
+                        service.contact ||
+                          service.contactNumbers?.[0] ||
+                          service.phoneNumber
+                      )
+                    }
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"
@@ -234,7 +257,7 @@ const PO = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

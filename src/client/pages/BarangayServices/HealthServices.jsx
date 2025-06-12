@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { FaPhone, FaMapMarkerAlt, FaArrowLeft, FaClock, FaCalendarAlt } from "react-icons/fa";
-import { HealthCenterScheduleData, HealthServicesAnnouncementsData } from "../../data";
+import {
+  FaPhone,
+  FaMapMarkerAlt,
+  FaArrowLeft,
+  FaClock,
+  FaCalendarAlt,
+} from "react-icons/fa";
+import {
+  HealthCenterScheduleData,
+  HealthServicesAnnouncementsData,
+} from "../../data";
 import HealthServicesImage from "../../../assets/services/HealthService.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton, CallButton } from "../../buttons";
@@ -15,7 +24,7 @@ const HealthServices = () => {
   const [healthAnnouncements, setHealthAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedDay, setSelectedDay] = useState('monday');
+  const [selectedDay, setSelectedDay] = useState("monday");
   const navigate = useNavigate();
 
   // Fetch user profile data and health services on component mount
@@ -46,7 +55,9 @@ const HealthServices = () => {
 
         // Fetch health services from backend
         try {
-          const servicesResponse = await hotlineService.getHotlinesByCategory('Health Services');
+          const servicesResponse = await hotlineService.getHotlinesByCategory(
+            "Health Services"
+          );
           if (servicesResponse && servicesResponse.success) {
             setHealthServices(servicesResponse.data);
           } else {
@@ -57,8 +68,8 @@ const HealthServices = () => {
                 name: "Barangay Health Center",
                 address: "Barangay Hall Complex, Main Street",
                 contact: "(046) 123-4567",
-                distance: "0.5 km"
-              }
+                distance: "0.5 km",
+              },
             ]);
           }
         } catch (serviceError) {
@@ -67,50 +78,59 @@ const HealthServices = () => {
             {
               id: 1,
               name: "Barangay Health Center",
-              address: "Barangay Hall Complex, Main Street", 
+              address: "Barangay Hall Complex, Main Street",
               contact: "(046) 123-4567",
-              distance: "0.5 km"
-            }
+              distance: "0.5 km",
+            },
           ]);
         }
 
         // Fetch health-related announcements from backend
         try {
-          const announcementsResponse = await announcementService.getAllAnnouncements({
-            category: 'Health Service',
-            isActive: true,
-            limit: 5
-          });
+          const announcementsResponse =
+            await announcementService.getAllAnnouncements({
+              category: "Health Service",
+              isActive: true,
+              limit: 5,
+            });
 
           if (announcementsResponse && announcementsResponse.success) {
             setHealthAnnouncements(announcementsResponse.data || []);
           } else {
             // Fallback to static data
-            setHealthAnnouncements(HealthServicesAnnouncementsData || [
+            setHealthAnnouncements(
+              HealthServicesAnnouncementsData || [
+                {
+                  id: 1,
+                  title: "Regular Health Services Available",
+                  date: new Date().toISOString().split("T")[0],
+                  content:
+                    "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
+                  category: "Health Service",
+                  priority: "medium",
+                },
+              ]
+            );
+          }
+        } catch (announcementError) {
+          console.error(
+            "Error fetching health announcements:",
+            announcementError
+          );
+          setHealthAnnouncements(
+            HealthServicesAnnouncementsData || [
               {
                 id: 1,
                 title: "Regular Health Services Available",
-                date: new Date().toISOString().split('T')[0],
-                content: "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
+                date: new Date().toISOString().split("T")[0],
+                content:
+                  "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
                 category: "Health Service",
-                priority: "medium"
-              }
-            ]);
-          }
-        } catch (announcementError) {
-          console.error("Error fetching health announcements:", announcementError);
-          setHealthAnnouncements(HealthServicesAnnouncementsData || [
-            {
-              id: 1,
-              title: "Regular Health Services Available",
-              date: new Date().toISOString().split('T')[0],
-              content: "Basic health services are available at the Barangay Health Center from Monday to Friday, 8:00 AM to 5:00 PM.",
-              category: "Health Service",
-              priority: "medium"
-            }
-          ]);
+                priority: "medium",
+              },
+            ]
+          );
         }
-
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load data");
@@ -119,11 +139,12 @@ const HealthServices = () => {
           {
             id: 1,
             title: "Loading announcements...",
-            date: new Date().toISOString().split('T')[0],
-            content: "Please wait while we load the latest health service announcements from the server.",
+            date: new Date().toISOString().split("T")[0],
+            content:
+              "Please wait while we load the latest health service announcements from the server.",
             category: "Health Service",
-            priority: "medium"
-          }
+            priority: "medium",
+          },
         ]);
       } finally {
         setLoading(false);
@@ -246,7 +267,9 @@ const HealthServices = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0]}</span>
+                    <span>
+                      {service.contact || service.contactNumbers?.[0]}
+                    </span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -255,7 +278,9 @@ const HealthServices = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
+                    onClick={() =>
+                      handleCall(service.contact || service.contactNumbers?.[0])
+                    }
                     label="Call Now"
                     icon={<FaPhone />}
                     className="mt-auto"
@@ -281,8 +306,8 @@ const HealthServices = () => {
                   onClick={() => setSelectedDay(day)}
                   className={`px-3 py-1 rounded text-sm capitalize transition-colors ${
                     selectedDay === day
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
+                      ? "bg-blue-500 text-white"
+                      : "bg-white/10 text-white hover:bg-white/20"
                   }`}
                 >
                   {day}
@@ -293,7 +318,10 @@ const HealthServices = () => {
             {/* Schedule for selected day */}
             <div className="space-y-2">
               {getDaySchedule(selectedDay).map((schedule, index) => (
-                <div key={index} className="flex justify-between items-center bg-white/5 rounded p-3">
+                <div
+                  key={index}
+                  className="flex justify-between items-center bg-white/5 rounded p-3"
+                >
                   <div className="flex items-center text-white">
                     <FaClock className="mr-2" />
                     <span className="font-medium">{schedule.time}</span>
@@ -312,26 +340,43 @@ const HealthServices = () => {
 
             {healthAnnouncements.length === 0 ? (
               <div className="text-center py-6">
-                <p className="text-gray-300">No health announcements available at the moment.</p>
-                <p className="text-gray-400 text-sm mt-1">Check back later for updates.</p>
+                <p className="text-gray-300">
+                  No health announcements available at the moment.
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Check back later for updates.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {healthAnnouncements.map((announcement) => (
-                  <div key={announcement._id || announcement.id} className="bg-white/5 rounded p-4">
+                  <div
+                    key={announcement._id || announcement.id}
+                    className="bg-white/5 rounded p-4"
+                  >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-white font-medium">{announcement.title}</h4>
+                      <h4 className="text-white font-medium">
+                        {announcement.title}
+                      </h4>
                       <span className="text-xs text-gray-300">
-                        {formatAnnouncementDate(announcement.date || announcement.createdAt)}
+                        {formatAnnouncementDate(
+                          announcement.date || announcement.createdAt
+                        )}
                       </span>
                     </div>
-                    <p className="text-gray-300 text-sm">{announcement.content}</p>
-                    <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
-                      announcement.priority === 'high' ? 'bg-red-500/20 text-red-200' :
-                      announcement.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-200' :
-                      'bg-green-500/20 text-green-200'
-                    }`}>
-                      {announcement.category || 'Health Service'}
+                    <p className="text-gray-300 text-sm">
+                      {announcement.content}
+                    </p>
+                    <span
+                      className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
+                        announcement.priority === "high"
+                          ? "bg-red-500/20 text-red-200"
+                          : announcement.priority === "medium"
+                          ? "bg-yellow-500/20 text-yellow-200"
+                          : "bg-green-500/20 text-green-200"
+                      }`}
+                    >
+                      {announcement.category || "Health Service"}
                     </span>
                   </div>
                 ))}
@@ -340,7 +385,7 @@ const HealthServices = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

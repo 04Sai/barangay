@@ -396,12 +396,7 @@ const DocumentServices = () => {
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
-            <Button
-              onClick={handleBack}
-              label="Back"
-              type="secondary"
-              icon={<FaArrowLeft />}
-            />
+            <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
 
             {step === 1 ? (
               <Button

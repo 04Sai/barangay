@@ -34,7 +34,7 @@ const AccountNav = () => {
         <div>
           <img src={logo} alt="BSERS Logo" width={100} height={100} />
         </div>
-        <h3 className="font-karla font-bold text-white text-xl">
+        <h3 className="font-karla  font-bold text-white text-xl">
           Barangay Dulong Bayan
         </h3>
         <div className="flex items-center space-x-6">

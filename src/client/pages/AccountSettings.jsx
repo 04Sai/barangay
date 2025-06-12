@@ -131,26 +131,36 @@ const AccountSettings = () => {
         // If no token, try to get user data from localStorage
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUserData(userData);
-          setFormData({
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            middleName: userData.middleName || "",
-            contactNumber: userData.contactNumber || "",
-            civilStatus: userData.civilStatus || "",
-            religion: userData.religion || "",
-            gender: userData.gender || "",
-            address: userData.address || "",
-            profilePicture: userData.profilePicture || null,
-          });
-          setBirthday({
-            month: userData.birthday?.month || "",
-            day: userData.birthday?.day || "",
-            year: userData.birthday?.year || "",
-          });
-          if (userData.profilePicture?.data) {
-            setImagePreview(userData.profilePicture.data);
+          try {
+            const userData = JSON.parse(storedUser);
+            setUserData(userData);
+            setFormData({
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+              middleName: userData.middleName || "",
+              contactNumber: userData.contactNumber || "",
+              civilStatus: userData.civilStatus || "",
+              religion: userData.religion || "",
+              gender: userData.gender || "",
+              address: userData.address || "",
+              profilePicture: userData.profilePicture || null,
+            });
+            setBirthday({
+              month: userData.birthday?.month || "",
+              day: userData.birthday?.day || "",
+              year: userData.birthday?.year || "",
+            });
+            if (userData.profilePicture?.data) {
+              setImagePreview(userData.profilePicture.data);
+            }
+          } catch (parseError) {
+            console.error(
+              "Error parsing user data from localStorage:",
+              parseError
+            );
+            setError("Saved user data is corrupted. Please login again.");
+            navigate("/login");
+            return;
           }
         } else {
           setError("No authentication token found. Please login again.");
@@ -169,6 +179,14 @@ const AccountSettings = () => {
         });
 
         if (!response.ok) {
+          // Check specifically for HTML response which indicates server error page
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("text/html")) {
+            throw new Error(
+              "Server returned HTML instead of JSON (likely offline)"
+            );
+          }
+
           // If backend is offline, try to use localStorage data
           const storedUser = localStorage.getItem("user");
           if (storedUser) {
@@ -193,6 +211,9 @@ const AccountSettings = () => {
             if (userData.profilePicture?.data) {
               setImagePreview(userData.profilePicture.data);
             }
+            setError(
+              "Using locally stored data (server offline). Updates will be saved when server is available."
+            );
             return;
           }
 
@@ -239,26 +260,39 @@ const AccountSettings = () => {
         // Try to use localStorage data as fallback
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUserData(userData);
-          setFormData({
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            middleName: userData.middleName || "",
-            contactNumber: userData.contactNumber || "",
-            civilStatus: userData.civilStatus || "",
-            religion: userData.religion || "",
-            gender: userData.gender || "",
-            address: userData.address || "",
-            profilePicture: userData.profilePicture || null,
-          });
-          setBirthday({
-            month: userData.birthday?.month || "",
-            day: userData.birthday?.day || "",
-            year: userData.birthday?.year || "",
-          });
-          if (userData.profilePicture?.data) {
-            setImagePreview(userData.profilePicture.data);
+          try {
+            const userData = JSON.parse(storedUser);
+            setUserData(userData);
+            setFormData({
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+              middleName: userData.middleName || "",
+              contactNumber: userData.contactNumber || "",
+              civilStatus: userData.civilStatus || "",
+              religion: userData.religion || "",
+              gender: userData.gender || "",
+              address: userData.address || "",
+              profilePicture: userData.profilePicture || null,
+            });
+            setBirthday({
+              month: userData.birthday?.month || "",
+              day: userData.birthday?.day || "",
+              year: userData.birthday?.year || "",
+            });
+            if (userData.profilePicture?.data) {
+              setImagePreview(userData.profilePicture.data);
+            }
+            setError(
+              "Using locally stored data (server offline). Updates will be saved when server is available."
+            );
+          } catch (parseError) {
+            console.error(
+              "Error parsing user data from localStorage:",
+              parseError
+            );
+            setError(
+              "Saved user data is corrupted and server is offline. Some features may be limited."
+            );
           }
         } else {
           throw fetchError;
@@ -468,9 +502,9 @@ const AccountSettings = () => {
                     <div className="profile-image">
                       {imagePreview ? (
                         <div className="relative w-full h-full">
-                          <img 
-                            src={imagePreview} 
-                            alt="Profile" 
+                          <img
+                            src={imagePreview}
+                            alt="Profile"
                             className="w-full h-full object-cover rounded-full"
                           />
                           <button
@@ -501,7 +535,7 @@ const AccountSettings = () => {
                       disabled={uploadingImage}
                     />
                   </label>
-                  
+
                   <div className="upload-text-container">
                     {uploadingImage ? (
                       <div className="flex items-center justify-center text-blue-400">
@@ -511,7 +545,9 @@ const AccountSettings = () => {
                     ) : (
                       <div className="text-center">
                         <div className="font-medium cursor-pointer transition-colors duration-200">
-                          {imagePreview ? 'Click to change picture' : 'Click to upload picture'}
+                          {imagePreview
+                            ? "Click to change picture"
+                            : "Click to upload picture"}
                         </div>
                         <div className="text-xs mt-1">
                           Max 5MB • JPG, PNG, GIF
