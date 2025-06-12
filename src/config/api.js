@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
     RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
     REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
+    RESEND_VERIFICATION: `${API_BASE_URL}/auth/resend-verification`,
+    PROFILE: `${API_BASE_URL}/auth/profile`,
   },
 
   // Admin endpoints

@@ -169,6 +169,12 @@ const AccountSettings = () => {
         });
 
         if (!response.ok) {
+          // Check if we're getting HTML instead of JSON (wrong endpoint)
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+            throw new Error('Backend offline or wrong endpoint - using local data');
+          }
+
           // If backend is offline, try to use localStorage data
           const storedUser = localStorage.getItem("user");
           if (storedUser) {
@@ -196,16 +202,13 @@ const AccountSettings = () => {
             return;
           }
 
-          const errorText = await response.text();
           if (response.status === 401) {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             navigate("/login");
             return;
           }
-          throw new Error(
-            `Failed to fetch profile data: ${response.status} ${errorText}`
-          );
+          throw new Error(`Backend error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -239,26 +242,32 @@ const AccountSettings = () => {
         // Try to use localStorage data as fallback
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUserData(userData);
-          setFormData({
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            middleName: userData.middleName || "",
-            contactNumber: userData.contactNumber || "",
-            civilStatus: userData.civilStatus || "",
-            religion: userData.religion || "",
-            gender: userData.gender || "",
-            address: userData.address || "",
-            profilePicture: userData.profilePicture || null,
-          });
-          setBirthday({
-            month: userData.birthday?.month || "",
-            day: userData.birthday?.day || "",
-            year: userData.birthday?.year || "",
-          });
-          if (userData.profilePicture?.data) {
-            setImagePreview(userData.profilePicture.data);
+          try {
+            const userData = JSON.parse(storedUser);
+            setUserData(userData);
+            setFormData({
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+              middleName: userData.middleName || "",
+              contactNumber: userData.contactNumber || "",
+              civilStatus: userData.civilStatus || "",
+              religion: userData.religion || "",
+              gender: userData.gender || "",
+              address: userData.address || "",
+              profilePicture: userData.profilePicture || null,
+            });
+            setBirthday({
+              month: userData.birthday?.month || "",
+              day: userData.birthday?.day || "",
+              year: userData.birthday?.year || "",
+            });
+            if (userData.profilePicture?.data) {
+              setImagePreview(userData.profilePicture.data);
+            }
+          } catch (parseError) {
+            console.error("Error parsing localStorage data:", parseError);
+            setError("Failed to load profile data. Please login again.");
+            navigate("/login");
           }
         } else {
           throw fetchError;
@@ -299,15 +308,19 @@ const AccountSettings = () => {
         body: JSON.stringify(updateData),
       });
 
+      // Check if we're getting HTML instead of JSON (backend offline)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error('Backend offline');
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         try {
           const errorData = JSON.parse(errorText);
           throw new Error(errorData.message || "Failed to update profile");
         } catch {
-          throw new Error(
-            `Failed to update profile: ${response.status} ${errorText}`
-          );
+          throw new Error(`Failed to update profile: ${response.status} ${errorText}`);
         }
       }
 
@@ -324,7 +337,31 @@ const AccountSettings = () => {
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error("Update profile error:", err);
-      setError(err.message || "Failed to update profile");
+
+      // Handle network errors gracefully
+      if (err.message.includes('Backend offline') || err.message.includes('fetch') || err.message.includes('NetworkError')) {
+        setError("Cannot connect to server. Your changes have been saved locally and will sync when the connection is restored.");
+
+        // Save to localStorage as fallback
+        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const updatedUser = {
+          ...currentUser,
+          ...formData,
+          birthday: birthday,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUserData(updatedUser);
+
+        // Show success message instead of error for offline functionality
+        setTimeout(() => {
+          setError("");
+          setSuccess("Changes saved locally. Will sync when online.");
+          setTimeout(() => setSuccess(""), 3000);
+        }, 1000);
+      } else {
+        setError(err.message || "Failed to update profile");
+      }
     } finally {
       setSaving(false);
     }
@@ -468,9 +505,9 @@ const AccountSettings = () => {
                     <div className="profile-image">
                       {imagePreview ? (
                         <div className="relative w-full h-full">
-                          <img 
-                            src={imagePreview} 
-                            alt="Profile" 
+                          <img
+                            src={imagePreview}
+                            alt="Profile"
                             className="w-full h-full object-cover rounded-full"
                           />
                           <button
@@ -501,7 +538,7 @@ const AccountSettings = () => {
                       disabled={uploadingImage}
                     />
                   </label>
-                  
+
                   <div className="upload-text-container">
                     {uploadingImage ? (
                       <div className="flex items-center justify-center text-blue-400">

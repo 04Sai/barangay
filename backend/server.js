@@ -17,18 +17,26 @@ app.use(cors({
         'http://localhost:3000',
         'http://localhost:5173',  // Vite default
         'http://127.0.0.1:4000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5173'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }))
+
+// Handle preflight requests
+app.options('*', cors())
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Request logging middleware (for debugging)
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    if (req.method !== 'GET') {
+        console.log('Request body:', req.body);
+    }
     next();
 });
 
@@ -112,7 +120,17 @@ app.use(express.static(path.join(__dirname, '../dist')))
 
 // API 404 handler - only for API routes
 app.use('/api/*', (req, res) => {
-    res.status(404).json({ message: `API route ${req.method} ${req.path} not found` })
+    console.log(`API 404: ${req.method} ${req.path}`);
+    res.status(404).json({
+        success: false,
+        message: `API route ${req.method} ${req.path} not found`,
+        availableRoutes: [
+            'GET /api/auth/profile',
+            'PUT /api/auth/profile',
+            'POST /api/auth/login',
+            'POST /api/auth/register'
+        ]
+    })
 })
 
 // Catch-all handler: send back React's index.html file for client-side routing
