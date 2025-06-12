@@ -7,46 +7,53 @@ const router = express.Router();
 // Get all hotlines with advanced filtering
 router.get('/', async (req, res) => {
     try {
-        const { 
-            category, 
-            priority, 
-            availability, 
-            isActive, 
-            isVerified, 
-            search, 
-            limit, 
+        const {
+            category,
+            priority,
+            availability,
+            isActive,
+            isVerified,
+            search,
+            limit,
             page,
             sortBy,
-            sortOrder 
+            sortOrder
         } = req.query;
-        
+
+        console.log('Hotlines query params:', req.query); // Debug log
+
         // Build filter object
         const filter = {};
-        
-        if (category && category !== 'All') {
+
+        // Only apply filters if they have meaningful values
+        if (category && category !== 'All' && category !== '') {
             filter.category = category;
         }
-        if (priority && priority !== 'All') {
+        if (priority && priority !== 'All' && priority !== '') {
             filter.priority = priority;
         }
-        if (availability && availability !== 'All') {
+        if (availability && availability !== 'All' && availability !== '') {
             filter.availability = availability;
         }
-        if (isActive !== undefined) {
+
+        // Handle boolean filters more carefully
+        if (isActive !== undefined && isActive !== '' && isActive !== 'All') {
             filter.isActive = isActive === 'true';
         }
-        if (isVerified !== undefined) {
+        if (isVerified !== undefined && isVerified !== '' && isVerified !== 'All') {
             filter.isVerified = isVerified === 'true';
         }
 
         // Text search
-        if (search) {
+        if (search && search.trim()) {
             filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $in: [new RegExp(search, 'i')] } }
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { description: { $regex: search.trim(), $options: 'i' } },
+                { tags: { $in: [new RegExp(search.trim(), 'i')] } }
             ];
         }
+
+        console.log('Applied filter:', filter); // Debug log
 
         // Pagination
         const pageNumber = parseInt(page) || 1;
@@ -54,35 +61,29 @@ router.get('/', async (req, res) => {
         const skip = (pageNumber - 1) * pageSize;
 
         // Sorting
-        const sort = {};
-        const sortField = sortBy || 'priority';
+        let sortOptions = {};
+        const sortField = sortBy || 'createdAt';
         const sortDirection = sortOrder === 'desc' ? -1 : 1;
-        
+
         if (sortField === 'priority') {
-            // Custom sort for priority
-            sort.priority = { Critical: 1, High: 2, Medium: 3, Low: 4 };
+            // Custom sort for priority: Critical, High, Medium, Low
+            sortOptions = {
+                priority: 1, // This will sort alphabetically, but we'll handle priority custom sorting
+                name: 1
+            };
         } else {
-            sort[sortField] = sortDirection;
+            sortOptions[sortField] = sortDirection;
         }
 
-        let query = Hotline.find(filter);
-
-        // Apply custom priority sorting
-        if (sortField === 'priority') {
-            query = query.sort({ 
-                priority: sortDirection,
-                name: 1 
-            });
-        } else {
-            query = query.sort(sort);
-        }
-
-        const hotlines = await query
+        const hotlines = await Hotline.find(filter)
             .populate('createdBy', 'firstName lastName email')
+            .sort(sortOptions)
             .skip(skip)
             .limit(pageSize);
 
         const total = await Hotline.countDocuments(filter);
+
+        console.log(`Found ${hotlines.length} hotlines out of ${total} total`); // Debug log
 
         // Group by category for enhanced response
         const categories = await Hotline.aggregate([
@@ -112,10 +113,10 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Get hotlines error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch hotlines', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch hotlines',
+            error: error.message
         });
     }
 });
@@ -142,10 +143,10 @@ router.get('/emergency', async (req, res) => {
         });
     } catch (error) {
         console.error('Get emergency hotlines error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch emergency hotlines', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch emergency hotlines',
+            error: error.message
         });
     }
 });
@@ -155,11 +156,11 @@ router.get('/:id', async (req, res) => {
     try {
         const hotline = await Hotline.findById(req.params.id)
             .populate('createdBy', 'firstName lastName email');
-        
+
         if (!hotline) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Hotline not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Hotline not found'
             });
         }
 
@@ -169,10 +170,10 @@ router.get('/:id', async (req, res) => {
         });
     } catch (error) {
         console.error('Get hotline error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch hotline', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch hotline',
+            error: error.message
         });
     }
 });
@@ -208,16 +209,16 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Create hotline error:', error);
         if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Validation error', 
+                message: 'Validation error',
                 errors: Object.values(error.errors).map(e => e.message)
             });
         }
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create hotline', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create hotline',
+            error: error.message
         });
     }
 });
@@ -238,9 +239,9 @@ router.put('/:id', async (req, res) => {
         ).populate('createdBy', 'firstName lastName email');
 
         if (!hotline) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Hotline not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Hotline not found'
             });
         }
 
@@ -252,16 +253,16 @@ router.put('/:id', async (req, res) => {
     } catch (error) {
         console.error('Update hotline error:', error);
         if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Validation error', 
+                message: 'Validation error',
                 errors: Object.values(error.errors).map(e => e.message)
             });
         }
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update hotline', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update hotline',
+            error: error.message
         });
     }
 });
@@ -273,8 +274,8 @@ router.put('/verify/bulk', async (req, res) => {
 
         const result = await Hotline.updateMany(
             { _id: { $in: hotlineIds } },
-            { 
-                isVerified, 
+            {
+                isVerified,
                 lastVerified: new Date(),
                 updatedAt: new Date()
             }
@@ -287,10 +288,10 @@ router.put('/verify/bulk', async (req, res) => {
         });
     } catch (error) {
         console.error('Bulk verify hotlines error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update verification status', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update verification status',
+            error: error.message
         });
     }
 });
@@ -301,9 +302,9 @@ router.delete('/:id', async (req, res) => {
         const hotline = await Hotline.findByIdAndDelete(req.params.id);
 
         if (!hotline) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Hotline not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Hotline not found'
             });
         }
 
@@ -314,10 +315,10 @@ router.delete('/:id', async (req, res) => {
         });
     } catch (error) {
         console.error('Delete hotline error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to delete hotline', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete hotline',
+            error: error.message
         });
     }
 });
@@ -358,10 +359,10 @@ router.get('/stats/overview', async (req, res) => {
         });
     } catch (error) {
         console.error('Get hotlines stats error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch statistics', 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch statistics',
+            error: error.message
         });
     }
 });
