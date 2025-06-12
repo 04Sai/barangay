@@ -312,6 +312,19 @@ export const HealthServicesAnnouncementsData = [
     }
 ];
 
+export const DefaultAnnouncementsData = [
+    {
+        id: 'default-1',
+        title: "Welcome to Barangay Services",
+        date: new Date().toISOString(),
+        content: "This is a placeholder announcement. Real announcements will be loaded from the server.",
+        category: "General",
+        priority: "medium",
+        source: "System",
+        isActive: true
+    }
+];
+
 export const PeaceAndOrderData = [
     {
         id: 1,

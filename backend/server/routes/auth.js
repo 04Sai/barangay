@@ -238,6 +238,27 @@ router.put('/profile', authenticateToken, async (req, res) => {
         delete updateData.emailVerificationToken;
         delete updateData.emailVerificationExpires;
 
+        // Handle profile picture upload
+        if (updateData.profilePicture && updateData.profilePicture.data) {
+            // Validate image data
+            if (!updateData.profilePicture.data.startsWith('data:image/')) {
+                return res.status(400).json({ 
+                    message: 'Invalid image format. Please provide a valid base64 image.' 
+                });
+            }
+            
+            // Validate file size (max 5MB when base64 decoded)
+            const base64Data = updateData.profilePicture.data.split(',')[1];
+            const sizeInBytes = (base64Data.length * 3) / 4;
+            if (sizeInBytes > 5 * 1024 * 1024) {
+                return res.status(400).json({ 
+                    message: 'Image size should be less than 5MB' 
+                });
+            }
+
+            updateData.profilePicture.uploadedAt = new Date();
+        }
+
         const user = await User.findByIdAndUpdate(
             userId,
             { ...updateData, updatedAt: new Date() },

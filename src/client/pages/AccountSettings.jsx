@@ -10,6 +10,9 @@ import {
   FaMapMarkerAlt,
   FaCheck,
   FaSpinner,
+  FaCamera,
+  FaUpload,
+  FaTimes,
 } from "react-icons/fa";
 import "../../AccountSettings.css";
 import {
@@ -33,17 +36,89 @@ const AccountSettings = () => {
     religion: "",
     gender: "",
     address: "",
+    profilePicture: null,
   });
   const [birthday, setBirthday] = useState({ month: "", day: "", year: "" });
   const [currentDate, setCurrentDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
   const navigate = useNavigate();
 
   // Get token from localStorage
   const getToken = () => localStorage.getItem("token");
+
+  // Convert file to base64
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Handle profile picture upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      setError("");
+
+      const base64 = await convertToBase64(file);
+
+      const profilePicture = {
+        filename: `profile_${Date.now()}_${file.name}`,
+        originalName: file.name,
+        data: base64,
+        size: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: profilePicture,
+      }));
+
+      setImagePreview(base64);
+      setSuccess("Profile picture uploaded successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Error converting image:", err);
+      setError("Failed to process image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Remove profile picture
+  const removeProfilePicture = () => {
+    setFormData((prev) => ({
+      ...prev,
+      profilePicture: null,
+    }));
+    setImagePreview(null);
+    setSuccess("Profile picture removed. Don't forget to save changes.");
+    setTimeout(() => setSuccess(""), 3000);
+  };
 
   // Fetch user profile from backend
   const fetchUserProfile = useCallback(async () => {
@@ -67,12 +142,16 @@ const AccountSettings = () => {
             religion: userData.religion || "",
             gender: userData.gender || "",
             address: userData.address || "",
+            profilePicture: userData.profilePicture || null,
           });
           setBirthday({
             month: userData.birthday?.month || "",
             day: userData.birthday?.day || "",
             year: userData.birthday?.year || "",
           });
+          if (userData.profilePicture?.data) {
+            setImagePreview(userData.profilePicture.data);
+          }
         } else {
           setError("No authentication token found. Please login again.");
           navigate("/login");
@@ -104,12 +183,16 @@ const AccountSettings = () => {
               religion: userData.religion || "",
               gender: userData.gender || "",
               address: userData.address || "",
+              profilePicture: userData.profilePicture || null,
             });
             setBirthday({
               month: userData.birthday?.month || "",
               day: userData.birthday?.day || "",
               year: userData.birthday?.year || "",
             });
+            if (userData.profilePicture?.data) {
+              setImagePreview(userData.profilePicture.data);
+            }
             return;
           }
 
@@ -138,6 +221,7 @@ const AccountSettings = () => {
           religion: user.religion || "",
           gender: user.gender || "",
           address: user.address || "",
+          profilePicture: user.profilePicture || null,
         });
 
         setBirthday({
@@ -145,6 +229,11 @@ const AccountSettings = () => {
           day: user.birthday?.day || "",
           year: user.birthday?.year || "",
         });
+
+        // Set image preview if profile picture exists
+        if (user.profilePicture?.data) {
+          setImagePreview(user.profilePicture.data);
+        }
       } catch (fetchError) {
         console.error("Backend offline, using localStorage data:", fetchError);
         // Try to use localStorage data as fallback
@@ -161,12 +250,16 @@ const AccountSettings = () => {
             religion: userData.religion || "",
             gender: userData.gender || "",
             address: userData.address || "",
+            profilePicture: userData.profilePicture || null,
           });
           setBirthday({
             month: userData.birthday?.month || "",
             day: userData.birthday?.day || "",
             year: userData.birthday?.year || "",
           });
+          if (userData.profilePicture?.data) {
+            setImagePreview(userData.profilePicture.data);
+          }
         } else {
           throw fetchError;
         }
@@ -371,11 +464,61 @@ const AccountSettings = () => {
 
                 {/* Profile picture (right side) */}
                 <div className="profile-upload">
-                  <div className="profile-image">
-                    <FaUser />
+                  <label className="profile-image-container cursor-pointer group">
+                    <div className="profile-image">
+                      {imagePreview ? (
+                        <div className="relative w-full h-full">
+                          <img 
+                            src={imagePreview} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              removeProfilePicture();
+                            }}
+                            className="absolute"
+                            title="Remove picture"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-full text-blue-300 group-hover:text-blue-200 transition-all duration-300">
+                          <FaUser className="text-5xl mb-3 transition-transform duration-300 group-hover:scale-105" />
+                          <FaCamera className="text-xl transition-transform duration-300 group-hover:-translate-y-1" />
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                  
+                  <div className="upload-text-container">
+                    {uploadingImage ? (
+                      <div className="flex items-center justify-center text-blue-400">
+                        <FaSpinner className="animate-spin mr-2 text-lg" />
+                        <span className="font-medium">Uploading...</span>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <div className="font-medium cursor-pointer transition-colors duration-200">
+                          {imagePreview ? 'Click to change picture' : 'Click to upload picture'}
+                        </div>
+                        <div className="text-xs mt-1">
+                          Max 5MB • JPG, PNG, GIF
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className="upload-text">Upload New Picture</span>
-                  <span className="upload-text text-xs">(Coming soon)</span>
                 </div>
               </div>
 

@@ -38,10 +38,21 @@ class AnnouncementService {
 
             const data = await response.json();
             console.log('Announcements API success response:', data);
-            return data;
+            
+            // Return consistent structure regardless of backend response format
+            return {
+                success: true,
+                data: data.data || data,
+                pagination: data.pagination,
+                filters: data.filters
+            };
         } catch (error) {
             console.error('Error fetching announcements:', error);
-            throw error;
+            return {
+                success: false,
+                error: error.message,
+                data: []
+            };
         }
     }
 

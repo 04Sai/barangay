@@ -84,6 +84,28 @@ const userSchema = new mongoose.Schema({
             match: [/^\d{4}$/, 'Year must be in YYYY format']
         }
     },
+    profilePicture: {
+        filename: {
+            type: String
+        },
+        originalName: {
+            type: String
+        },
+        data: {
+            type: String // Base64 encoded image data
+        },
+        size: {
+            type: Number
+        },
+        mimeType: {
+            type: String,
+            match: /^image\//
+        },
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now
