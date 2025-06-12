@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"  # Your frontend build command
+  publish = "dist"          # Your build output folder
+
+# Redirect all API requests to your DigitalOcean backend
+[[redirects]]
+  from = "/api/*"
+  to = "http://139.59.250.140/:splat"  # Your backend IP and port
+  status = 200
+  force = false

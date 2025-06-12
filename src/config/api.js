@@ -1,5 +1,5 @@
 // API Base URL - this can be updated based on environment
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:1337/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://139.59.250.140/api';
 
 // Define all API endpoints
 export const API_ENDPOINTS = {

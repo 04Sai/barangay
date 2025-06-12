@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:1337/api';
+const API_BASE_URL = 'http://139.59.250.140/api';
 
 class ResidentService {
     async getAllResidents(params = {}) {
