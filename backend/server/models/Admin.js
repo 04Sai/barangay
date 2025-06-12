@@ -57,6 +57,16 @@ const adminSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    loginAttempts: {
+        type: Number,
+        default: 0
+    },
+    lockUntil: {
+        type: Date
+    },
+    lastLogin: {
+        type: Date
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'
@@ -70,6 +80,10 @@ const adminSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+// Constants for account locking
+adminSchema.statics.MAX_LOGIN_ATTEMPTS = 5;
+adminSchema.statics.LOCK_TIME = 2 * 60 * 60 * 1000; // 2 hours
 
 // Hash password before saving
 adminSchema.pre('save', async function (next) {
@@ -89,6 +103,48 @@ adminSchema.pre('save', async function (next) {
 // Method to compare password
 adminSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to check if account is locked
+adminSchema.methods.isLocked = function () {
+    return !!(this.lockUntil && this.lockUntil > Date.now());
+};
+
+// Method to increment login attempts
+adminSchema.methods.incLoginAttempts = async function () {
+    // If we have a previous lock that has expired, restart at 1
+    if (this.lockUntil && this.lockUntil < Date.now()) {
+        return this.updateOne({
+            $unset: {
+                lockUntil: 1
+            },
+            $set: {
+                loginAttempts: 1
+            }
+        });
+    }
+
+    const updates = { $inc: { loginAttempts: 1 } };
+
+    // If we have MAX_LOGIN_ATTEMPTS and no lock, lock the account
+    if (this.loginAttempts + 1 >= this.constructor.MAX_LOGIN_ATTEMPTS && !this.isLocked()) {
+        updates.$set = { lockUntil: Date.now() + this.constructor.LOCK_TIME };
+    }
+
+    return this.updateOne(updates);
+};
+
+// Method to reset login attempts
+adminSchema.methods.resetLoginAttempts = async function () {
+    return this.updateOne({
+        $unset: {
+            loginAttempts: 1,
+            lockUntil: 1
+        },
+        $set: {
+            lastLogin: new Date()
+        }
+    });
 };
 
 const Admin = mongoose.model('Admin', adminSchema);
