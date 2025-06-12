@@ -225,6 +225,7 @@ router.get('/profile', authenticateAdmin, async (req, res) => {
                 firstName: req.admin.firstName,
                 lastName: req.admin.lastName,
                 email: req.admin.email,
+                contactNumber: req.admin.contactNumber,
                 role: req.admin.role,
                 permissions: req.admin.permissions,
                 lastLogin: req.admin.lastLogin,
@@ -236,5 +237,119 @@ router.get('/profile', authenticateAdmin, async (req, res) => {
         res.status(500).json({ message: 'Error fetching admin profile', error: error.message })
     }
 })
+
+// Update admin profile
+router.put('/profile', authenticateAdmin, async (req, res) => {
+    try {
+        const { firstName, lastName, email, contactNumber } = req.body;
+
+        // Check if email is being changed and already exists
+        if (email !== req.admin.email) {
+            const existingEmail = await Admin.findOne({ email, _id: { $ne: req.admin._id } });
+            if (existingEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email is already in use by another account'
+                });
+            }
+        }
+
+        // Update admin
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            req.admin._id,
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    email,
+                    contactNumber,
+                    updatedAt: new Date()
+                }
+            },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedAdmin) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            admin: {
+                id: updatedAdmin._id,
+                username: updatedAdmin.username,
+                firstName: updatedAdmin.firstName,
+                lastName: updatedAdmin.lastName,
+                email: updatedAdmin.email,
+                contactNumber: updatedAdmin.contactNumber,
+                role: updatedAdmin.role,
+                permissions: updatedAdmin.permissions,
+                lastLogin: updatedAdmin.lastLogin,
+                updatedAt: updatedAdmin.updatedAt
+            }
+        });
+    } catch (error) {
+        console.error('Update admin profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update profile',
+            error: error.message
+        });
+    }
+});
+
+// Change admin password
+router.put('/change-password', authenticateAdmin, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password and new password are required'
+            });
+        }
+
+        // Get admin with password
+        const admin = await Admin.findById(req.admin._id);
+
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin not found'
+            });
+        }
+
+        // Verify current password
+        const isValidPassword = await admin.comparePassword(currentPassword);
+
+        if (!isValidPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Update password
+        admin.password = newPassword;
+        await admin.save();
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to change password',
+            error: error.message
+        });
+    }
+});
 
 module.exports = router

@@ -54,7 +54,7 @@ const NonAuthRoute = ({ children }) => {
       try {
         const user = JSON.parse(userData);
         if (user.firstName && user.email) {
-          return <Navigate to="/account/dashboard" replace />;
+          return <Navigate to="/account" replace />;
         }
       } catch (error) {
         // Invalid user data, clear it

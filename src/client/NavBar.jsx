@@ -33,7 +33,7 @@ const NavBar = () => {
             setIsAdmin(true);
           }
         } catch (error) {
-          console.error('Invalid admin data:', error);
+          console.error("Invalid admin data:", error);
           // Clear invalid admin data
           localStorage.removeItem("admin");
         }
@@ -48,7 +48,7 @@ const NavBar = () => {
             setIsAdmin(false);
           }
         } catch (error) {
-          console.error('Invalid user data:', error);
+          console.error("Invalid user data:", error);
           // Clear invalid user data
           localStorage.removeItem("user");
         }
@@ -71,7 +71,10 @@ const NavBar = () => {
   };
 
   // Don't render navbar on admin pages
-  if (location.pathname.startsWith('/admin')) {
+  if (
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/account")
+  ) {
     return null;
   }
 
@@ -84,40 +87,21 @@ const NavBar = () => {
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          {/* Only show client session info, never admin */}
-          {isLoggedIn && !isAdmin ? (
-            <>
-              <Link
-                to="/account/dashboard"
-                className="text-white hover:text-blue-300"
-              >
-                Dashboard
-              </Link>
-              <span className="text-white">Welcome, {user?.firstName}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <LoginButton onClick={() => navigate("/login")} />
-              <Link
-                to="/register"
-                className="text-white hover:text-blue-400 ml-4"
-              >
-                Register
-              </Link>
-              <Link
-                to="/admin/login"
-                className="text-yellow-400 hover:text-yellow-300 ml-4"
-              >
-                Admin
-              </Link>
-            </>
-          )}
+          <>
+            <LoginButton onClick={() => navigate("/login")} />
+            <Link
+              to="/register"
+              className="text-white hover:text-blue-400 ml-4"
+            >
+              Register
+            </Link>
+            <Link
+              to="/admin/login"
+              className="text-yellow-400 hover:text-yellow-300 ml-4"
+            >
+              Admin
+            </Link>
+          </>
         </div>
       </nav>
     </header>

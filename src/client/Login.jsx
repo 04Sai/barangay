@@ -82,13 +82,10 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(
-        API_ENDPOINTS.AUTH.LOGIN,
-        {
-          email: formData.email,
-          password: formData.password,
-        }
-      );
+      const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, {
+        email: formData.email,
+        password: formData.password,
+      });
 
       if (response.status === 200) {
         // Clear any existing admin session data
@@ -103,18 +100,22 @@ const Login = () => {
         setSuccessMessage("Login successful! Redirecting to your account...");
 
         setTimeout(() => {
-          navigate("/account/dashboard");
+          navigate("/account");
         }, 1500);
       }
     } catch (error) {
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      if (
+        error.code === "ERR_NETWORK" ||
+        error.message.includes("Network Error")
+      ) {
         setServerError(
           "Cannot connect to server. Please check your internet connection or try again later."
         );
       } else if (error.response?.data?.emailNotVerified) {
         setServerError(
-          error.response.data.message + " " +
-          "Check your email for the verification link or request a new one."
+          error.response.data.message +
+            " " +
+            "Check your email for the verification link or request a new one."
         );
         // Show resend verification option
         setShowResendVerification(true);
@@ -122,7 +123,7 @@ const Login = () => {
       } else {
         setServerError(
           error.response?.data?.message ||
-          "Login failed. Please check your credentials and try again."
+            "Login failed. Please check your credentials and try again."
         );
       }
     } finally {
@@ -136,7 +137,7 @@ const Login = () => {
     setIsResendingVerification(true);
     try {
       await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, {
-        email: userEmail
+        email: userEmail,
       });
       setSuccessMessage("Verification email sent! Please check your inbox.");
       setShowResendVerification(false);
@@ -161,9 +162,11 @@ const Login = () => {
 
     try {
       await axios.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
-        email: forgotPasswordEmail
+        email: forgotPasswordEmail,
       });
-      setSuccessMessage("Password reset instructions have been sent to your email.");
+      setSuccessMessage(
+        "Password reset instructions have been sent to your email."
+      );
       setShowForgotPassword(false);
       setForgotPasswordEmail("");
     } catch (error) {
@@ -188,10 +191,11 @@ const Login = () => {
 
         {successMessage && (
           <div
-            className={`${loginSuccess
-              ? "bg-green-900/50 border border-green-500 text-green-300"
-              : "bg-green-900/50 border border-green-500 text-green-300"
-              } px-4 py-3 rounded mb-4`}
+            className={`${
+              loginSuccess
+                ? "bg-green-900/50 border border-green-500 text-green-300"
+                : "bg-green-900/50 border border-green-500 text-green-300"
+            } px-4 py-3 rounded mb-4`}
           >
             {successMessage}
           </div>
@@ -300,7 +304,9 @@ const Login = () => {
               disabled={isResendingVerification}
               className="w-full flex justify-center py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-blue-400 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
-              {isResendingVerification ? "Sending..." : "Resend Verification Email"}
+              {isResendingVerification
+                ? "Sending..."
+                : "Resend Verification Email"}
             </button>
           </div>
         )}
