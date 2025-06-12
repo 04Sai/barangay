@@ -4,13 +4,23 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all announcements
+// Get all announcements with filtering
 router.get('/', async (req, res) => {
     try {
-        const { category, isActive, limit, page } = req.query;
+        console.log('Received announcements request with query:', req.query);
+        
+        const { 
+            category, 
+            isActive, 
+            limit, 
+            page,
+            sortBy,
+            sortOrder 
+        } = req.query;
         
         // Build filter object
         const filter = {};
+        
         if (category && category !== 'All') {
             filter.category = category;
         }
@@ -18,18 +28,30 @@ router.get('/', async (req, res) => {
             filter.isActive = isActive === 'true';
         }
 
+        console.log('Applied filter:', JSON.stringify(filter, null, 2));
+
         // Pagination
         const pageNumber = parseInt(page) || 1;
-        const pageSize = parseInt(limit) || 50;
+        const pageSize = Math.min(parseInt(limit) || 25, 100);
         const skip = (pageNumber - 1) * pageSize;
 
+        // Sorting
+        const sort = {};
+        const sortField = sortBy || 'createdAt';
+        const sortDirection = sortOrder === 'asc' ? 1 : -1;
+        sort[sortField] = sortDirection;
+
+        // Execute the query
         const announcements = await Announcement.find(filter)
             .populate('createdBy', 'firstName lastName email')
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
-            .limit(pageSize);
+            .limit(pageSize)
+            .lean();
 
         const total = await Announcement.countDocuments(filter);
+
+        console.log(`Found ${announcements.length} announcements out of ${total} total`);
 
         res.json({
             success: true,
@@ -39,6 +61,10 @@ router.get('/', async (req, res) => {
                 total: Math.ceil(total / pageSize),
                 count: announcements.length,
                 totalItems: total
+            },
+            filters: {
+                category,
+                isActive
             }
         });
     } catch (error) {
@@ -81,23 +107,9 @@ router.get('/:id', async (req, res) => {
 // Create new announcement
 router.post('/', async (req, res) => {
     try {
-        const { title, content, category, date, source, isActive } = req.body;
-
-        const announcement = new Announcement({
-            title,
-            content,
-            category,
-            date: date || new Date(),
-            source: source || 'Admin',
-            isActive: isActive !== undefined ? isActive : true,
-            // createdBy: req.user?._id // Optional for now
-        });
-
+        const announcement = new Announcement(req.body);
         await announcement.save();
-
-        // Populate the created announcement
-        await announcement.populate('createdBy', 'firstName lastName email');
-
+        
         res.status(201).json({
             success: true,
             message: 'Announcement created successfully',
@@ -123,29 +135,19 @@ router.post('/', async (req, res) => {
 // Update announcement
 router.put('/:id', async (req, res) => {
     try {
-        const { title, content, category, date, source, isActive } = req.body;
-
         const announcement = await Announcement.findByIdAndUpdate(
             req.params.id,
-            {
-                title,
-                content,
-                category,
-                date,
-                source,
-                isActive,
-                updatedAt: new Date()
-            },
+            req.body,
             { new: true, runValidators: true }
-        ).populate('createdBy', 'firstName lastName email');
-
+        );
+        
         if (!announcement) {
             return res.status(404).json({ 
                 success: false, 
                 message: 'Announcement not found' 
             });
         }
-
+        
         res.json({
             success: true,
             message: 'Announcement updated successfully',
@@ -153,13 +155,6 @@ router.put('/:id', async (req, res) => {
         });
     } catch (error) {
         console.error('Update announcement error:', error);
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
-                success: false,
-                message: 'Validation error', 
-                errors: Object.values(error.errors).map(e => e.message)
-            });
-        }
         res.status(500).json({ 
             success: false, 
             message: 'Failed to update announcement', 
@@ -172,18 +167,17 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const announcement = await Announcement.findByIdAndDelete(req.params.id);
-
+        
         if (!announcement) {
             return res.status(404).json({ 
                 success: false, 
                 message: 'Announcement not found' 
             });
         }
-
+        
         res.json({
             success: true,
-            message: 'Announcement deleted successfully',
-            data: announcement
+            message: 'Announcement deleted successfully'
         });
     } catch (error) {
         console.error('Delete announcement error:', error);

@@ -212,18 +212,18 @@ const AdminResidents = () => {
   const filteredResidents =
     searchTerm && !filter.search
       ? residents.filter(
-          (resident) =>
-            resident.firstName
-              ?.toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            resident.lastName
-              ?.toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            resident.address
-              ?.toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            resident.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        (resident) =>
+          resident.firstName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          resident.lastName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          resident.address
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          resident.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
       : residents;
 
   // Sort residents based on sort field and direction
@@ -246,14 +246,14 @@ const AdminResidents = () => {
     <div className={containerStyles.mainContainer}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">
-          Residents Information
+          All Barangay Residents
         </h2>
         <button
           onClick={handleAddResident}
           className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors mt-4 md:mt-0"
         >
           <FaUserPlus className="mr-2" />
-          Insert New Resident Data
+          Register New Resident
         </button>
       </div>
 
@@ -315,11 +315,11 @@ const AdminResidents = () => {
               </th>
               <th
                 className="px-4 py-3 text-left cursor-pointer"
-                onClick={() => handleSort("address")}
+                onClick={() => handleSort("occupation")}
               >
                 <div className="flex items-center">
-                  Address
-                  {getSortIcon("address")}
+                  Role/Occupation
+                  {getSortIcon("occupation")}
                 </div>
               </th>
               <th
@@ -331,16 +331,25 @@ const AdminResidents = () => {
                   {getSortIcon("phoneNumber")}
                 </div>
               </th>
+              <th
+                className="px-4 py-3 text-left cursor-pointer"
+                onClick={() => handleSort("userType")}
+              >
+                <div className="flex items-center">
+                  Type
+                  {getSortIcon("userType")}
+                </div>
+              </th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {sortedResidents.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-4 py-6 text-center text-gray-300">
+                <td colSpan="7" className="px-4 py-6 text-center text-gray-300">
                   {loading
                     ? "Loading residents..."
-                    : "No residents found. Add a new resident to get started."}
+                    : "No residents found. Register a new resident to get started."}
                 </td>
               </tr>
             ) : (
@@ -350,14 +359,33 @@ const AdminResidents = () => {
                   className="border-b border-white/10 hover:bg-white/5"
                 >
                   <td className="px-4 py-3">
-                    {resident.lastName}, {resident.firstName}
+                    <div className="flex items-center">
+                      <span>
+                        {resident.lastName}, {resident.firstName}
+                      </span>
+                      {resident.userType === "staff" && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-blue-500/20 text-blue-200 rounded-full">
+                          Staff
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">{resident.gender}</td>
                   <td className="px-4 py-3">
                     {calculateAge(resident.birthdate)}
                   </td>
-                  <td className="px-4 py-3">{resident.address}</td>
+                  <td className="px-4 py-3">{resident.occupation}</td>
                   <td className="px-4 py-3">{resident.phoneNumber}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${resident.userType === "staff"
+                          ? "bg-purple-500/20 text-purple-200"
+                          : "bg-green-500/20 text-green-200"
+                        }`}
+                    >
+                      {resident.userType === "staff" ? "Staff" : "Resident"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <button
@@ -369,22 +397,26 @@ const AdminResidents = () => {
                       >
                         <FaEye />
                       </button>
-                      <button
-                        onClick={() => handleEdit(resident._id || resident.id)}
-                        className="p-1.5 text-white hover:bg-white/10 rounded"
-                        title="Edit resident"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(resident._id || resident.id)
-                        }
-                        className="p-1.5 text-red-400 hover:bg-white/10 rounded"
-                        title="Delete resident"
-                      >
-                        <FaTrash />
-                      </button>
+                      {resident.userType === "resident" && (
+                        <>
+                          <button
+                            onClick={() => handleEdit(resident._id || resident.id)}
+                            className="p-1.5 text-white hover:bg-white/10 rounded"
+                            title="Edit resident"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDelete(resident._id || resident.id)
+                            }
+                            className="p-1.5 text-red-400 hover:bg-white/10 rounded"
+                            title="Delete resident"
+                          >
+                            <FaTrash />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -409,11 +441,10 @@ const AdminResidents = () => {
                 <button
                   key={page}
                   onClick={() => setFilter({ ...filter, page: page })}
-                  className={`px-3 py-1 rounded-md ${
-                    filter.page === page
+                  className={`px-3 py-1 rounded-md ${filter.page === page
                       ? "bg-blue-500 text-white"
                       : "bg-white/10 text-white"
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>

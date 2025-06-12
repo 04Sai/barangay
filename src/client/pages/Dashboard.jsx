@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FaBullhorn,
+  FaSpinner,
+  FaArrowRight,
+  FaCalendarAlt,
+  FaExclamationCircle,
+  FaInfoCircle,
+} from "react-icons/fa";
 import { EmgergencyServicesData, BarangayServicesData } from "../data";
 
 // Import images directly to ensure they're available
@@ -14,10 +22,16 @@ import HealthServices from "../../assets/services/HealthService.svg";
 import PO from "../../assets/services/PO.svg";
 import DocSer from "../../assets/services/DocSer.svg";
 import Appt from "../../assets/services/Appt.svg";
+import AnnouncementCard from "../components/AnnouncementCard";
+import announcementService from "../services/announcementService";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
+  const [recentAnnouncements, setRecentAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Image mapping objects for both service types
   const emergencyImages = {
@@ -351,6 +365,59 @@ const Dashboard = () => {
     }
   };
 
+  // Add the missing category icons
+  const categoryIcons = {
+    "Community Event": <FaBullhorn className="text-blue-400" />,
+    "Health Service": <FaInfoCircle className="text-green-400" />,
+    "Health Advisory": <FaExclamationCircle className="text-yellow-400" />,
+    "Emergency": <FaExclamationCircle className="text-red-400" />,
+    Default: <FaBullhorn className="text-blue-400" />,
+  };
+
+  const getCategoryIcon = (category) => {
+    return categoryIcons[category] || categoryIcons.Default;
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
+
+  // Fetch recent announcements
+  useEffect(() => {
+    const fetchRecentAnnouncements = async () => {
+      try {
+        console.log('Dashboard: Fetching recent announcements');
+        const response = await announcementService.getAllAnnouncements({
+          isActive: true,
+          limit: 5,
+          sortBy: 'createdAt',
+          sortOrder: 'desc'
+        });
+
+        if (response.success) {
+          console.log('Dashboard: Successfully fetched announcements:', response.data?.length || 0);
+          setRecentAnnouncements(response.data || []);
+        } else {
+          console.error('Dashboard: Failed to fetch announcements:', response.error);
+          setRecentAnnouncements([]);
+        }
+      } catch (error) {
+        console.error('Dashboard: Error fetching announcements:', error);
+        setRecentAnnouncements([]);
+      }
+    };
+
+    fetchRecentAnnouncements();
+  }, []);
+
   useEffect(() => {
     // Get user data from localStorage
     const storedUser = localStorage.getItem("user");
@@ -372,8 +439,19 @@ const Dashboard = () => {
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">
       <div className="screen-max-width mx-auto">
+        {/* Hero Section */}
+        <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-8 mb-8">
+          <h1 className="text-4xl font-karla font-bold text-white text-shadow-lg mb-4">
+            Welcome to Barangay Portal
+          </h1>
+          <p className="text-white font-inter text-lg">
+            Access emergency services, barangay services, and stay updated with
+            the latest announcements.
+          </p>
+        </div>
+
         {/* Glassmorphism container */}
-        <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6">
+        <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6 mt-8">
           <div className="space-y-2">
             <h2 className="text-2xl font-karla font-bold text-white">
               Welcome, {userData?.firstName || "User"}

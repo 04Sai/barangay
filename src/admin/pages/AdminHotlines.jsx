@@ -36,11 +36,11 @@ const AdminHotlines = () => {
   // Filters and search
   const [filters, setFilters] = useState({
     search: "",
-    category: "All",
-    priority: "All",
-    availability: "All",
-    isActive: "true",
-    isVerified: "All",
+    category: "",
+    priority: "",
+    availability: "",
+    isActive: "",
+    isVerified: "",
   });
 
   const categories = [
@@ -96,16 +96,33 @@ const AdminHotlines = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await hotlineService.getAllHotlines(filters);
+
+      console.log('Loading hotlines with filters:', filters); // Debug log
+
+      // Clean filters - remove empty and 'All' values
+      const cleanFilters = {};
+      Object.keys(filters).forEach(key => {
+        const value = filters[key];
+        if (value && value !== 'All' && value !== '') {
+          cleanFilters[key] = value;
+        }
+      });
+
+      console.log('Clean filters:', cleanFilters); // Debug log
+
+      const response = await hotlineService.getAllHotlines(cleanFilters);
+      console.log('Hotlines service response:', response); // Debug log
 
       if (response.success) {
-        setHotlines(response.data);
+        setHotlines(response.data || []);
+        console.log('Set hotlines:', response.data); // Debug log
       } else {
         throw new Error(response.message || "Failed to load hotlines");
       }
     } catch (error) {
       console.error("Error loading hotlines:", error);
       setError(error.message);
+      setHotlines([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -398,7 +415,7 @@ const AdminHotlines = () => {
             className={dropdownStyles.select}
             style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All" style={dropdownStyles.option}>
+            <option value="" style={dropdownStyles.option}>
               All Categories
             </option>
             {categories.map((cat) => (
@@ -415,7 +432,7 @@ const AdminHotlines = () => {
             className={dropdownStyles.select}
             style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All" style={dropdownStyles.option}>
+            <option value="" style={dropdownStyles.option}>
               All Priorities
             </option>
             {priorities.map((priority) => (
@@ -436,7 +453,7 @@ const AdminHotlines = () => {
             className={dropdownStyles.select}
             style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All" style={dropdownStyles.option}>
+            <option value="" style={dropdownStyles.option}>
               All Availability
             </option>
             {availabilities.map((avail) => (
@@ -471,7 +488,7 @@ const AdminHotlines = () => {
             className={dropdownStyles.select}
             style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="All" style={dropdownStyles.option}>
+            <option value="" style={dropdownStyles.option}>
               All Verification
             </option>
             <option value="true" style={dropdownStyles.option}>
@@ -576,11 +593,10 @@ const AdminHotlines = () => {
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs ${
-                          hotline.isActive
+                        className={`inline-block px-2 py-1 rounded-full text-xs ${hotline.isActive
                             ? "bg-green-500/30 text-green-300"
                             : "bg-red-500/30 text-red-300"
-                        }`}
+                          }`}
                       >
                         {hotline.isActive ? "Active" : "Inactive"}
                       </span>

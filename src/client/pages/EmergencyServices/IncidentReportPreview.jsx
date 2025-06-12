@@ -41,7 +41,7 @@ const IncidentReportPreview = () => {
       localStorage.removeItem("completeIncidentData");
 
       alert("Incident report submitted successfully!");
-      navigate("/account");
+      navigate("/account"); // Fixed: Redirect to /account instead of /account
     }, 1000);
   };
 

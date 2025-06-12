@@ -15,6 +15,7 @@ import Register from "./client/Register";
 import Login from "./client/Login";
 import Account from "./client/pages/AccountPage";
 import EmailVerification from "./client/components/EmailVerification";
+import PasswordReset from "./client/PasswordReset";
 import PageNotFound from "./client/PageNotFound";
 
 // Admin imports
@@ -26,33 +27,40 @@ import AdminIncidentReports from "./admin/pages/AdminIncidentReports";
 import AdminAppointments from "./admin/pages/AdminAppointments";
 import AdminResidents from "./admin/pages/AdminResidents";
 import AdminSettings from "./admin/pages/AdminSettings";
-
-// Protected route component to check authentication
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const location = useLocation();
-
-  // If not authenticated, navigate to login
-  if (!isAuthenticated) {
-    // Use replace to prevent going back to protected routes after logout
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-};
+import AdminLogin from "./admin/pages/AdminLogin";
 
 // Non-auth route component to redirect authenticated users away from public pages
 const NonAuthRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const token = localStorage.getItem("token");
+  const adminData = localStorage.getItem("admin");
+  const userData = localStorage.getItem("user");
 
-  if (isAuthenticated) {
-    // Redirect authenticated users to their appropriate dashboard
-    return isAdmin ? (
-      <Navigate to="/admin/dashboard" replace />
-    ) : (
-      <Navigate to="/account" replace />
-    );
+  if (token) {
+    // If admin session exists, redirect to admin dashboard
+    if (adminData) {
+      try {
+        const admin = JSON.parse(adminData);
+        if (admin.role && admin.username) {
+          return <Navigate to="/admin/dashboard" replace />;
+        }
+      } catch (error) {
+        // Invalid admin data, clear it
+        localStorage.removeItem("admin");
+      }
+    }
+
+    // If user session exists, redirect to user dashboard
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.firstName && user.email) {
+          return <Navigate to="/account" replace />;
+        }
+      } catch (error) {
+        // Invalid user data, clear it
+        localStorage.removeItem("user");
+      }
+    }
   }
 
   return children;
@@ -60,15 +68,62 @@ const NonAuthRoute = ({ children }) => {
 
 // Admin route component to check admin authentication
 const AdminRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const token = localStorage.getItem("token");
+  const adminData = localStorage.getItem("admin");
 
-  // For temporary access - remove this for production
-  const allowTempAccess = true;
+  // Check if user has valid admin session
+  if (!token || !adminData) {
+    return <Navigate to="/admin/login" replace />;
+  }
 
-  // If not authenticated or not admin, navigate to login
-  if (!allowTempAccess && (!isAuthenticated || !isAdmin)) {
-    // Use replace to prevent going back to admin routes after logout
+  // Parse admin data to verify it's actually admin data
+  try {
+    const admin = JSON.parse(adminData);
+    if (!admin.role || !admin.username) {
+      // Invalid admin data structure
+      localStorage.removeItem("admin");
+      localStorage.removeItem("token");
+      return <Navigate to="/admin/login" replace />;
+    }
+  } catch (error) {
+    // Invalid JSON in admin data
+    localStorage.removeItem("admin");
+    localStorage.removeItem("token");
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return children;
+};
+
+// Protected route component to check CLIENT authentication
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const userData = localStorage.getItem("user");
+  const adminData = localStorage.getItem("admin");
+
+  // If admin session exists, redirect to admin
+  if (adminData && token) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  // Check if user has valid client session
+  if (!token || !userData) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Parse user data to verify it's actually user data
+  try {
+    const user = JSON.parse(userData);
+    if (!user.firstName || !user.email) {
+      // Invalid user data structure
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      return <Navigate to="/login" replace />;
+    }
+  } catch (error) {
+    // Invalid JSON in user data
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     return <Navigate to="/login" replace />;
   }
 
@@ -96,9 +151,9 @@ const Layout = () => {
 
   return (
     <div className="bg-black w-full overflow-hidden">
-      {!isAccountPage && !isAdminPage && <NavBar />}
+      {/* Only show NavBar on public pages and client pages, never on admin pages */}
+      {!isAdminPage && <NavBar />}
       <Routes>
-        {/* Public routes that should redirect authenticated users */}
         <Route
           path="/login"
           element={
@@ -116,7 +171,15 @@ const Layout = () => {
           }
         />
         <Route path="/verify-email" element={<EmailVerification />} />
-        {/* Protected routes */}
+        <Route path="/reset-password/:token" element={<PasswordReset />} />
+        <Route
+          path="/admin/login"
+          element={
+            <NonAuthRoute>
+              <AdminLogin />
+            </NonAuthRoute>
+          }
+        />
         <Route
           path="/account/*"
           element={
@@ -125,7 +188,6 @@ const Layout = () => {
             </ProtectedRoute>
           }
         />
-        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -154,9 +216,9 @@ const Layout = () => {
           <Route path="hotlines" element={<AdminHotlines />} />
           <Route path="incident-reports" element={<AdminIncidentReports />} />
           <Route path="appointments" element={<AdminAppointments />} />
-          <Route path="residents" element={<AdminResidents />} />{" "}
+          <Route path="residents" element={<AdminResidents />} />
           <Route path="settings" element={<AdminSettings />} />
-        </Route>{" "}
+        </Route>
         {/* Root route with authentication check */}
         <Route
           path="/"

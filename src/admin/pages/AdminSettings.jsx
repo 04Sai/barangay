@@ -1,51 +1,189 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCog,
   FaUser,
   FaLock,
-  FaDatabase,
   FaServer,
   FaSave,
+  FaExclamationTriangle,
+  FaCheck,
 } from "react-icons/fa";
+import {
+  getAdminProfile,
+  updateAdminProfile,
+  changeAdminPassword,
+} from "../services/adminApi";
 import { containerStyles } from "../utils/formStyles";
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState("account");
-  const [formData, setFormData] = useState({
-    firstName: "Admin",
-    lastName: "User",
-    email: "admin@example.com",
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [profileData, setProfileData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    contactNumber: "",
+    role: "",
+  });
+
+  const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+
+  const [systemData, setSystemData] = useState({
     theme: "default",
     dataRetentionPeriod: "1 year",
     backupFrequency: "daily",
   });
 
-  const handleInputChange = (e) => {
+  // Fetch admin profile on component mount
+  useEffect(() => {
+    fetchAdminProfile();
+  }, []);
+
+  const fetchAdminProfile = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getAdminProfile();
+      if (response.success && response.admin) {
+        setProfileData({
+          firstName: response.admin.firstName || "",
+          lastName: response.admin.lastName || "",
+          email: response.admin.email || "",
+          username: response.admin.username || "",
+          contactNumber: response.admin.contactNumber || "",
+          role: response.admin.role || "staff",
+        });
+      }
+    } catch (err) {
+      setError(err.message || "Failed to fetch admin profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [name]: value,
+    });
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const handleSystemChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setSystemData({
+      ...systemData,
       [name]: type === "checkbox" ? checked : value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    // Simulating form submission success
-    alert("Settings saved successfully!");
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await updateAdminProfile(profileData);
+      if (response.success) {
+        setSuccess("Profile updated successfully");
+        // Refresh profile data
+        fetchAdminProfile();
+      }
+    } catch (err) {
+      setError(err.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    // Validate passwords match
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError("New passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await changeAdminPassword(passwordData);
+      if (response.success) {
+        setSuccess("Password changed successfully");
+        // Clear password fields
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (err) {
+      setError(err.message || "Failed to change password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSystemSubmit = (e) => {
+    e.preventDefault();
+    // Currently system settings are not connected to backend
+    setSuccess("System settings saved (frontend only)");
+  };
+
+  // Displays message (error or success)
+  const MessageDisplay = ({ message, type }) => {
+    if (!message) return null;
+
+    const bgColor =
+      type === "error"
+        ? "bg-red-900/50 border-red-500 text-red-300"
+        : "bg-green-900/50 border-green-500 text-green-300";
+    const Icon = type === "error" ? FaExclamationTriangle : FaCheck;
+
+    return (
+      <div
+        className={`${bgColor} border px-4 py-3 rounded mb-4 flex items-center`}
+      >
+        <Icon className="mr-2" />
+        {message}
+      </div>
+    );
   };
 
   return (
     <div className={containerStyles.mainContainer}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-karla font-bold text-white">Settings</h2>
-        <div className="flex items-center text-white bg-blue-500/30 px-3 py-1.5 rounded-lg border border-blue-500/50">
-          <FaCog className="mr-2" />
-          <span>System Configuration</span>
-        </div>
       </div>
+
+      {loading && (
+        <div className="backdrop-blur-md bg-white/5 rounded-lg border border-white/20 p-4 mb-6">
+          <p className="text-white">Loading...</p>
+        </div>
+      )}
+
+      <MessageDisplay message={error} type="error" />
+      <MessageDisplay message={success} type="success" />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1">
@@ -75,16 +213,6 @@ const AdminSettings = () => {
                 <FaLock className="mr-2" /> Security
               </button>
               <button
-                onClick={() => setActiveTab("data")}
-                className={`w-full text-left px-4 py-2 rounded-lg mb-1 flex items-center ${
-                  activeTab === "data"
-                    ? "bg-blue-500/30 text-white"
-                    : "text-gray-300 hover:bg-white/5"
-                }`}
-              >
-                <FaDatabase className="mr-2" /> Data Management
-              </button>
-              <button
                 onClick={() => setActiveTab("system")}
                 className={`w-full text-left px-4 py-2 rounded-lg flex items-center ${
                   activeTab === "system"
@@ -103,7 +231,7 @@ const AdminSettings = () => {
             className={`backdrop-blur-md bg-white/5 rounded-lg border border-white/20 shadow-lg p-6 min-h-[500px]`}
           >
             {activeTab === "account" && (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleProfileSubmit}>
                 <h3 className="text-xl font-karla font-bold text-white mb-4">
                   Account Settings
                 </h3>
@@ -116,8 +244,8 @@ const AdminSettings = () => {
                       <input
                         type="text"
                         name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
+                        value={profileData.firstName}
+                        onChange={handleProfileChange}
                         className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
@@ -127,30 +255,76 @@ const AdminSettings = () => {
                       <input
                         type="text"
                         name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
+                        value={profileData.lastName}
+                        onChange={handleProfileChange}
                         className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white mb-1">Username</label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={profileData.username}
+                        onChange={handleProfileChange}
+                        disabled={true}
+                        className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner opacity-70
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <small className="text-gray-400">
+                        Username cannot be changed
+                      </small>
+                    </div>
+                    <div>
+                      <label className="block text-white mb-1">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={profileData.email}
+                        onChange={handleProfileChange}
+                        className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-white mb-1">
+                        Contact Number
+                      </label>
+                      <input
+                        type="text"
+                        name="contactNumber"
+                        value={profileData.contactNumber}
+                        onChange={handleProfileChange}
+                        className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white mb-1">Role</label>
+                      <input
+                        type="text"
+                        value={profileData.role.replace("_", " ").toUpperCase()}
+                        disabled
+                        className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner opacity-70
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      disabled={loading}
+                      className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                     >
                       <FaSave className="mr-2" /> Save Changes
                     </button>
@@ -160,7 +334,7 @@ const AdminSettings = () => {
             )}
 
             {activeTab === "security" && (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handlePasswordSubmit}>
                 <h3 className="text-xl font-karla font-bold text-white mb-4">
                   Security Settings
                 </h3>
@@ -172,8 +346,8 @@ const AdminSettings = () => {
                     <input
                       type="password"
                       name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleInputChange}
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
                       className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -185,8 +359,8 @@ const AdminSettings = () => {
                     <input
                       type="password"
                       name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleInputChange}
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
                       className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -198,8 +372,8 @@ const AdminSettings = () => {
                     <input
                       type="password"
                       name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
                       className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -207,67 +381,10 @@ const AdminSettings = () => {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      disabled={loading}
+                      className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                     >
                       <FaSave className="mr-2" /> Update Password
-                    </button>
-                  </div>
-                </div>
-              </form>
-            )}
-
-            {activeTab === "data" && (
-              <form onSubmit={handleSubmit}>
-                <h3 className="text-xl font-karla font-bold text-white mb-4">
-                  Data Management Settings
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-white mb-1">
-                      Data Retention Period
-                    </label>
-                    <select
-                      name="dataRetentionPeriod"
-                      value={formData.dataRetentionPeriod}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="1 month">1 Month</option>
-                      <option value="3 months">3 Months</option>
-                      <option value="6 months">6 Months</option>
-                      <option value="1 year">1 Year</option>
-                      <option value="forever">Forever</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-white mb-1">
-                      Backup Frequency
-                    </label>
-                    <select
-                      name="backupFrequency"
-                      value={formData.backupFrequency}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                    </select>
-                  </div>
-                  <div className="p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                    <p className="text-yellow-200 text-sm">
-                      Caution: Changes to data retention policies might affect
-                      historical data availability.
-                    </p>
-                  </div>
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                      <FaSave className="mr-2" /> Save Changes
                     </button>
                   </div>
                 </div>
@@ -287,16 +404,32 @@ const AdminSettings = () => {
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-300">Last Updated</span>
-                      <span className="text-white">June 10, 2025</span>
+                      <span className="text-white">
+                        {new Date().toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-gray-300">Database Size</span>
-                      <span className="text-white">24.5 MB</span>
+                      <span className="text-gray-300">Database Status</span>
+                      <span className="text-green-400">Connected</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between mb-2">
                       <span className="text-gray-300">Server Status</span>
                       <span className="text-green-400">Online</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Current User</span>
+                      <span className="text-white">
+                        {profileData.firstName} {profileData.lastName} (
+                        {profileData.role})
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg mt-4">
+                    <p className="text-blue-200 text-sm">
+                      This section displays read-only system information.
+                      Contact the system administrator for any issues.
+                    </p>
                   </div>
                 </div>
               </div>

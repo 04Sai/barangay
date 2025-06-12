@@ -4,14 +4,18 @@ class HotlineService {
     async getAllHotlines(params = {}) {
         try {
             const queryParams = new URLSearchParams();
-            
+
+            // Only add non-empty, non-default parameters
             Object.keys(params).forEach(key => {
-                if (params[key] !== undefined && params[key] !== '') {
-                    queryParams.append(key, params[key]);
+                const value = params[key];
+                if (value !== undefined && value !== '' && value !== 'All') {
+                    queryParams.append(key, value);
                 }
             });
 
-            const url = `${API_BASE_URL}/hotlines?${queryParams.toString()}`;
+            const url = `${API_BASE_URL}/hotlines${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            console.log('Fetching hotlines from:', url); // Debug log
+
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -20,10 +24,12 @@ class HotlineService {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('Hotlines response:', data); // Debug log
             return data;
         } catch (error) {
             console.error('Error fetching hotlines:', error);

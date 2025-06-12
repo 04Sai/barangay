@@ -11,8 +11,15 @@ const authenticateToken = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Get user from database
+
+        // Check if this is an admin token trying to access user routes
+        if (decoded.type === 'admin') {
+            return res.status(403).json({
+                message: 'Admin token cannot be used for user routes'
+            });
+        }
+
+        // Get user from database with profile picture data
         const user = await User.findById(decoded.userId).select('-password');
         if (!user) {
             return res.status(401).json({ message: 'Invalid token' });
@@ -20,9 +27,9 @@ const authenticateToken = async (req, res, next) => {
 
         // Check if email is verified for protected routes
         if (!user.isEmailVerified) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 message: 'Email not verified. Please verify your email to access this resource.',
-                emailNotVerified: true 
+                emailNotVerified: true
             });
         }
 

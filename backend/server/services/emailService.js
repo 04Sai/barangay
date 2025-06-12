@@ -208,9 +208,97 @@ const sendWelcomeEmail = async (email, firstName) => {
     }
 };
 
+// Send password reset email
+const sendPasswordResetEmail = async (email, firstName, resetToken) => {
+    try {
+        console.log('Attempting to send password reset email to:', email);
+        
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:4000'}/reset-password/${resetToken}`;
+        
+        const msg = {
+            to: email,
+            from: 'ic.mharbhibrando.delatorre@cvsu.edu.ph',
+            subject: 'Password Reset Request - Barangay Dulong Bayan',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Password Reset</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; text-align: center; padding: 30px; border-radius: 10px 10px 0 0; }
+                        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .button { display: inline-block; background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+                        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔒 Password Reset Request</h1>
+                        </div>
+                        <div class="content">
+                            <h2>Hello, ${firstName}!</h2>
+                            <p>We received a request to reset your password for your Barangay Smart Emergency Response System account.</p>
+                            
+                            <p>Click the button below to reset your password:</p>
+                            
+                            <div style="text-align: center;">
+                                <a href="${resetUrl}" class="button">Reset Password</a>
+                            </div>
+                            
+                            <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
+                            <p style="word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 5px;">${resetUrl}</p>
+                            
+                            <div class="warning">
+                                <strong>⚠️ Important:</strong> This password reset link will expire in 1 hour. If you didn't request this password reset, please ignore this email and your password will remain unchanged.
+                            </div>
+                            
+                            <p>For security reasons, if you continue to receive unwanted password reset emails, please contact our support team.</p>
+                            
+                            <p>Best regards,<br>Barangay Dulong Bayan Team</p>
+                        </div>
+                        <div class="footer">
+                            <p>© 2024 Barangay Dulong Bayan. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+
+        console.log('Sending password reset email with config:', {
+            to: msg.to,
+            from: msg.from,
+            subject: msg.subject
+        });
+
+        const result = await sgMail.send(msg);
+        console.log('Password reset email sent successfully:', result[0].statusCode);
+        return { success: true, messageId: result[0].headers['x-message-id'] };
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        
+        // Log detailed error information
+        if (error.response && error.response.body && error.response.body.errors) {
+            console.error('SendGrid Error Details:', error.response.body.errors);
+            error.response.body.errors.forEach((err, index) => {
+                console.error(`Error ${index + 1}:`, err);
+            });
+        }
+        
+        throw new Error('Failed to send password reset email');
+    }
+};
+
 module.exports = {
     sendEmailVerification,
     sendWelcomeEmail,
     checkUserVerificationStatus,
-    getVerificationResponse
+    getVerificationResponse,
+    sendPasswordResetEmail
 };

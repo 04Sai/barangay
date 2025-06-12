@@ -5,7 +5,7 @@ const incidentReportSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Title is required'],
         trim: true,
-        maxlength: [150, 'Title cannot exceed 150 characters']
+        maxlength: [200, 'Title cannot exceed 200 characters']
     },
     description: {
         type: String,
@@ -15,69 +15,73 @@ const incidentReportSchema = new mongoose.Schema({
     },
     incidentTypes: [{
         type: String,
+        required: true,
         enum: [
-            'Accident',
-            'Crime',
-            'Fire',
             'Medical Emergency',
+            'Fire',
+            'Crime',
+            'Traffic Accident',
             'Natural Disaster',
-            'Public Disturbance',
-            'Infrastructure Issue',
-            'Environmental Hazard',
-            'Traffic Incident',
-            'Domestic Violence',
-            'Theft/Robbery',
-            'Vandalism',
-            'Noise Complaint',
-            'Animal Related',
-            'Drug Related',
+            'Utility Problem',
+            'Public Safety',
+            'Environmental Issue',
+            'Infrastructure Problem',
             'Other'
         ]
     }],
+    severity: {
+        type: String,
+        enum: ['Low', 'Medium', 'High', 'Critical'],
+        default: 'Medium'
+    },
+    priority: {
+        type: String,
+        enum: ['Low', 'Normal', 'High', 'Urgent'],
+        default: 'Normal'
+    },
+    status: {
+        type: String,
+        enum: ['Pending', 'Investigating', 'In Progress', 'Resolved', 'Closed', 'Cancelled'],
+        default: 'Pending'
+    },
     location: {
         address: {
             type: String,
-            required: [true, 'Location address is required'],
             trim: true,
-            maxlength: [200, 'Address cannot exceed 200 characters']
+            maxlength: [300, 'Address cannot exceed 300 characters']
         },
-        coordinates: {
-            latitude: {
-                type: Number,
-                min: [-90, 'Latitude must be between -90 and 90'],
-                max: [90, 'Latitude must be between -90 and 90']
+        // Store coordinates as separate fields for easier access
+        latitude: {
+            type: Number,
+            min: [-90, 'Latitude must be between -90 and 90'],
+            max: [90, 'Latitude must be between -90 and 90']
+        },
+        longitude: {
+            type: Number,
+            min: [-180, 'Longitude must be between -180 and 180'],
+            max: [180, 'Longitude must be between -180 and 180']
+        },
+        // GeoJSON Point for geospatial queries (optional)
+        geoPoint: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point'
             },
-            longitude: {
-                type: Number,
-                min: [-180, 'Longitude must be between -180 and 180'],
-                max: [180, 'Longitude must be between -180 and 180']
+            coordinates: {
+                type: [Number], // [longitude, latitude]
+                index: '2dsphere'
             }
-        },
-        landmark: {
-            type: String,
-            trim: true
-        }
-    },
-    dateTime: {
-        occurred: {
-            type: Date,
-            required: [true, 'Incident date and time is required']
-        },
-        reported: {
-            type: Date,
-            default: Date.now
         }
     },
     reporter: {
         name: {
             type: String,
-            required: [true, 'Reporter name is required'],
             trim: true,
-            maxlength: [100, 'Reporter name cannot exceed 100 characters']
+            maxlength: [100, 'Name cannot exceed 100 characters']
         },
         contactNumber: {
             type: String,
-            required: [true, 'Contact number is required'],
             trim: true,
             match: [/^[\+]?[\d\s\-\(\)]+$/, 'Please provide a valid contact number']
         },
@@ -86,150 +90,90 @@ const incidentReportSchema = new mongoose.Schema({
             trim: true,
             lowercase: true,
             match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email address']
-        },
-        address: {
-            type: String,
-            trim: true
-        },
-        relationship: {
-            type: String,
-            enum: ['Victim', 'Witness', 'Concerned Citizen', 'Official', 'Anonymous'],
-            default: 'Concerned Citizen'
         }
     },
-    affectedPersons: [{
-        name: {
-            type: String,
-            trim: true
+    dateTime: {
+        occurred: {
+            type: Date,
+            default: Date.now
         },
-        age: {
+        reported: {
+            type: Date,
+            default: Date.now
+        },
+        lastModified: {
+            type: Date,
+            default: Date.now
+        }
+    },
+    attachments: [{
+        filename: {
+            type: String,
+            required: true
+        },
+        originalName: {
+            type: String,
+            required: true
+        },
+        data: {
+            type: String, // Base64 encoded image data
+            required: true
+        },
+        size: {
             type: Number,
-            min: [0, 'Age cannot be negative'],
-            max: [150, 'Age cannot exceed 150']
+            required: true
         },
-        gender: {
+        mimeType: {
             type: String,
-            enum: ['Male', 'Female', 'Other', 'Prefer not to say']
+            required: true,
+            match: /^image\//
         },
-        condition: {
-            type: String,
-            enum: ['Unharmed', 'Minor Injury', 'Serious Injury', 'Critical', 'Deceased', 'Unknown']
-        },
-        relationship: {
-            type: String,
-            trim: true
+        uploadedAt: {
+            type: Date,
+            default: Date.now
         }
-    }],
-    severity: {
-        type: String,
-        enum: ['Low', 'Medium', 'High', 'Critical'],
-        required: [true, 'Severity level is required'],
-        default: 'Medium'
-    },
-    status: {
-        type: String,
-        enum: ['Pending', 'Under Investigation', 'In Progress', 'Resolved', 'Closed', 'Rejected'],
-        default: 'Pending'
-    },
-    priority: {
-        type: String,
-        enum: ['Low', 'Normal', 'High', 'Urgent'],
-        default: 'Normal'
-    },
-    assignedTo: {
-        department: {
-            type: String,
-            enum: [
-                'Barangay Security',
-                'Police',
-                'Fire Department',
-                'Medical Services',
-                'Public Works',
-                'Environmental Office',
-                'Social Services',
-                'Traffic Management',
-                'Other'
-            ]
-        },
-        officer: {
-            type: String,
-            trim: true
-        },
-        contactInfo: {
-            type: String,
-            trim: true
-        }
-    },
-    evidence: {
-        photos: [{
-            url: String,
-            description: String,
-            uploadedAt: { type: Date, default: Date.now }
-        }],
-        documents: [{
-            url: String,
-            filename: String,
-            description: String,
-            uploadedAt: { type: Date, default: Date.now }
-        }],
-        witnesses: [{
-            name: String,
-            contactNumber: String,
-            statement: String
-        }]
-    },
-    followUp: {
-        required: {
-            type: Boolean,
-            default: false
-        },
-        scheduledDate: Date,
-        notes: String
-    },
-    resolution: {
-        summary: {
-            type: String,
-            trim: true,
-            maxlength: [1000, 'Resolution summary cannot exceed 1000 characters']
-        },
-        actionsTaken: [{
-            action: String,
-            takenBy: String,
-            date: { type: Date, default: Date.now },
-            notes: String
-        }],
-        resolvedDate: Date,
-        resolvedBy: String
-    },
-    tags: [{
-        type: String,
-        trim: true
     }],
     isEmergency: {
         type: Boolean,
         default: false
     },
-    isPublic: {
-        type: Boolean,
-        default: false
+    assignedTo: {
+        official: String,
+        department: {
+            type: String,
+            enum: [
+                'Barangay Captain',
+                'Secretary', 
+                'Kagawad',
+                'SK Chairman',
+                'Health Officer',
+                'Peace and Order',
+                'Emergency Response',
+                'Public Works',
+                'Social Services',
+                'Other'
+            ]
+        },
+        assignedDate: Date
     },
-    confidentialityLevel: {
-        type: String,
-        enum: ['Public', 'Restricted', 'Confidential', 'Classified'],
-        default: 'Restricted'
-    },
-    relatedIncidents: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'IncidentReport'
-    }],
     updates: [{
-        message: String,
+        message: {
+            type: String,
+            required: true
+        },
+        updateDate: {
+            type: Date,
+            default: Date.now
+        },
         updatedBy: String,
-        updateDate: { type: Date, default: Date.now },
         statusChange: {
             from: String,
             to: String
         }
+    }],
+    tags: [{
+        type: String,
+        trim: true
     }],
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -249,21 +193,28 @@ const incidentReportSchema = new mongoose.Schema({
     }
 });
 
-// Indexes for better search performance
-incidentReportSchema.index({ 
-    title: 'text', 
-    description: 'text', 
-    'location.address': 'text',
-    'reporter.name': 'text'
-});
-incidentReportSchema.index({ status: 1, priority: 1, severity: 1 });
+// Indexes for better search performance (simplified to avoid conflicts)
+incidentReportSchema.index({ title: 'text', description: 'text' });
+incidentReportSchema.index({ status: 1 });
+incidentReportSchema.index({ severity: 1 });
+incidentReportSchema.index({ priority: 1 });
 incidentReportSchema.index({ 'dateTime.occurred': -1 });
 incidentReportSchema.index({ incidentTypes: 1 });
-incidentReportSchema.index({ 'location.coordinates': '2dsphere' });
+incidentReportSchema.index({ isEmergency: 1 });
+incidentReportSchema.index({ createdAt: -1 });
 
-// Update the updatedAt field before saving
+// Pre-save middleware to handle coordinates
 incidentReportSchema.pre('save', function(next) {
     this.updatedAt = new Date();
+    this.dateTime.lastModified = new Date();
+    
+    // Create GeoJSON point if coordinates are provided
+    if (this.location && this.location.latitude && this.location.longitude) {
+        this.location.geoPoint = {
+            type: 'Point',
+            coordinates: [this.location.longitude, this.location.latitude] // [lng, lat] for GeoJSON
+        };
+    }
     
     // Auto-generate tags based on incident types and location
     if (this.isNew) {
@@ -271,13 +222,24 @@ incidentReportSchema.pre('save', function(next) {
         if (this.incidentTypes) {
             autoTags.push(...this.incidentTypes.map(type => type.toLowerCase()));
         }
-        if (this.location.address) {
+        if (this.location && this.location.address) {
             autoTags.push(...this.location.address.toLowerCase().split(' ').filter(word => word.length > 2));
         }
         this.tags = [...(this.tags || []), ...autoTags].filter((tag, index, self) => self.indexOf(tag) === index);
     }
     
     next();
+});
+
+// Virtual for backward compatibility with coordinates object
+incidentReportSchema.virtual('location.coordinates').get(function() {
+    if (this.location && this.location.latitude && this.location.longitude) {
+        return {
+            latitude: this.location.latitude,
+            longitude: this.location.longitude
+        };
+    }
+    return null;
 });
 
 // Virtual for incident age

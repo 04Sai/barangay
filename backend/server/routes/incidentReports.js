@@ -7,6 +7,8 @@ const router = express.Router();
 // Get all incident reports with advanced filtering
 router.get('/', async (req, res) => {
     try {
+        console.log('Received incident reports request with query:', req.query);
+        
         const { 
             status, 
             severity, 
@@ -23,45 +25,56 @@ router.get('/', async (req, res) => {
             sortOrder 
         } = req.query;
         
-        // Build filter object
+        // Build filter object safely
         const filter = {};
         
-        if (status && status !== 'All') {
+        // Handle status filter
+        if (status && status !== 'All' && status !== 'undefined') {
             if (status.includes(',')) {
                 filter.status = { $in: status.split(',') };
             } else {
                 filter.status = status;
             }
         }
-        if (severity && severity !== 'All') {
+        
+        // Handle severity filter
+        if (severity && severity !== 'All' && severity !== 'undefined') {
             filter.severity = severity;
         }
-        if (priority && priority !== 'All') {
+        
+        // Handle priority filter
+        if (priority && priority !== 'All' && priority !== 'undefined') {
             filter.priority = priority;
         }
-        if (incidentTypes && incidentTypes !== 'All') {
+        
+        // Handle incident types filter
+        if (incidentTypes && incidentTypes !== 'All' && incidentTypes !== 'undefined') {
             filter.incidentTypes = { $in: [incidentTypes] };
         }
-        if (assignedDepartment && assignedDepartment !== 'All') {
+        
+        // Handle assigned department filter
+        if (assignedDepartment && assignedDepartment !== 'All' && assignedDepartment !== 'undefined') {
             filter['assignedTo.department'] = assignedDepartment;
         }
-        if (isEmergency !== undefined) {
+        
+        // Handle emergency filter
+        if (isEmergency !== undefined && isEmergency !== 'undefined') {
             filter.isEmergency = isEmergency === 'true';
         }
 
-        // Date range filter
+        // Handle date range filter
         if (dateFrom || dateTo) {
             filter['dateTime.occurred'] = {};
-            if (dateFrom) {
+            if (dateFrom && dateFrom !== 'undefined') {
                 filter['dateTime.occurred'].$gte = new Date(dateFrom);
             }
-            if (dateTo) {
+            if (dateTo && dateTo !== 'undefined') {
                 filter['dateTime.occurred'].$lte = new Date(dateTo + 'T23:59:59.999Z');
             }
         }
 
-        // Text search
-        if (search) {
+        // Handle text search
+        if (search && search !== 'undefined' && search.trim() !== '') {
             filter.$or = [
                 { title: { $regex: search, $options: 'i' } },
                 { description: { $regex: search, $options: 'i' } },
@@ -71,9 +84,11 @@ router.get('/', async (req, res) => {
             ];
         }
 
+        console.log('Applied filter:', JSON.stringify(filter, null, 2));
+
         // Pagination
         const pageNumber = parseInt(page) || 1;
-        const pageSize = parseInt(limit) || 25;
+        const pageSize = Math.min(parseInt(limit) || 25, 100); // Cap at 100 items
         const skip = (pageNumber - 1) * pageSize;
 
         // Sorting
@@ -82,36 +97,57 @@ router.get('/', async (req, res) => {
         const sortDirection = sortOrder === 'asc' ? 1 : -1;
         sort[sortField] = sortDirection;
 
+        console.log('Executing query with pagination:', { skip, limit: pageSize, sort });
+
+        // Execute the query
         const incidentReports = await IncidentReport.find(filter)
             .populate('createdBy', 'firstName lastName email')
             .populate('lastModifiedBy', 'firstName lastName email')
-            .populate('relatedIncidents', 'title status')
             .sort(sort)
             .skip(skip)
-            .limit(pageSize);
+            .limit(pageSize)
+            .lean(); // Use lean() for better performance
 
         const total = await IncidentReport.countDocuments(filter);
 
-        // Get aggregated statistics
-        const statusStats = await IncidentReport.aggregate([
-            { $match: filter },
-            { $group: { _id: '$status', count: { $sum: 1 } } },
-            { $sort: { _id: 1 } }
-        ]);
+        console.log(`Found ${incidentReports.length} incident reports out of ${total} total`);
 
-        const severityStats = await IncidentReport.aggregate([
-            { $match: filter },
-            { $group: { _id: '$severity', count: { $sum: 1 } } },
-            { $sort: { _id: 1 } }
-        ]);
+        // Get aggregated statistics (only if needed)
+        const includeStats = req.query.includeStats === 'true';
+        let statistics = null;
 
-        const typeStats = await IncidentReport.aggregate([
-            { $match: filter },
-            { $unwind: '$incidentTypes' },
-            { $group: { _id: '$incidentTypes', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 }
-        ]);
+        if (includeStats) {
+            try {
+                const [statusStats, severityStats, typeStats] = await Promise.all([
+                    IncidentReport.aggregate([
+                        { $match: filter },
+                        { $group: { _id: '$status', count: { $sum: 1 } } },
+                        { $sort: { _id: 1 } }
+                    ]),
+                    IncidentReport.aggregate([
+                        { $match: filter },
+                        { $group: { _id: '$severity', count: { $sum: 1 } } },
+                        { $sort: { _id: 1 } }
+                    ]),
+                    IncidentReport.aggregate([
+                        { $match: filter },
+                        { $unwind: '$incidentTypes' },
+                        { $group: { _id: '$incidentTypes', count: { $sum: 1 } } },
+                        { $sort: { count: -1 } },
+                        { $limit: 10 }
+                    ])
+                ]);
+
+                statistics = {
+                    status: statusStats,
+                    severity: severityStats,
+                    types: typeStats
+                };
+            } catch (statsError) {
+                console.error('Error generating statistics:', statsError);
+                // Continue without statistics
+            }
+        }
 
         res.json({
             success: true,
@@ -120,13 +156,11 @@ router.get('/', async (req, res) => {
                 current: pageNumber,
                 total: Math.ceil(total / pageSize),
                 count: incidentReports.length,
-                totalItems: total
+                totalItems: total,
+                hasNext: pageNumber < Math.ceil(total / pageSize),
+                hasPrev: pageNumber > 1
             },
-            statistics: {
-                status: statusStats,
-                severity: severityStats,
-                types: typeStats
-            },
+            ...(statistics && { statistics }),
             filters: {
                 status,
                 severity,
@@ -141,10 +175,16 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Get incident reports error:', error);
+        console.error('Error stack:', error.stack);
+        
         res.status(500).json({ 
             success: false, 
             message: 'Failed to fetch incident reports', 
-            error: error.message 
+            error: error.message,
+            ...(process.env.NODE_ENV === 'development' && { 
+                stack: error.stack,
+                query: req.query 
+            })
         });
     }
 });
@@ -177,27 +217,42 @@ router.get('/emergency', async (req, res) => {
     }
 });
 
-// Get single incident report
+// Get a specific incident report by ID
 router.get('/:id', async (req, res) => {
     try {
-        const incidentReport = await IncidentReport.findById(req.params.id)
-            .populate('createdBy', 'firstName lastName email')
-            .populate('lastModifiedBy', 'firstName lastName email')
-            .populate('relatedIncidents', 'title status dateTime.occurred');
+        const { id } = req.params;
         
-        if (!incidentReport) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Incident report not found' 
+        console.log('Fetching incident report by ID:', id);
+        
+        // Validate ObjectId format
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid incident report ID format'
             });
         }
+
+        const incidentReport = await IncidentReport.findById(id)
+            .populate('createdBy', 'firstName lastName email')
+            .populate('lastModifiedBy', 'firstName lastName email')
+            .lean();
+
+        if (!incidentReport) {
+            return res.status(404).json({
+                success: false,
+                message: 'Incident report not found'
+            });
+        }
+
+        console.log('Found incident report:', incidentReport.title);
 
         res.json({
             success: true,
             data: incidentReport
         });
     } catch (error) {
-        console.error('Get incident report error:', error);
+        console.error('Get incident report by ID error:', error);
+        
         res.status(500).json({ 
             success: false, 
             message: 'Failed to fetch incident report', 
@@ -209,18 +264,47 @@ router.get('/:id', async (req, res) => {
 // Create new incident report
 router.post('/', async (req, res) => {
     try {
+        console.log('Received incident report data:', JSON.stringify(req.body, null, 2));
+        
         const incidentData = req.body;
 
+        // Validate required fields
+        if (!incidentData.title || !incidentData.description || !incidentData.incidentTypes || incidentData.incidentTypes.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: title, description, and incidentTypes are required'
+            });
+        }
+
+        // Transform coordinates structure if needed
+        const transformedData = { ...incidentData };
+        if (incidentData.location && incidentData.location.coordinates) {
+            transformedData.location = {
+                ...incidentData.location,
+                latitude: incidentData.location.coordinates.latitude,
+                longitude: incidentData.location.coordinates.longitude
+            };
+            // Remove the old coordinates object to avoid conflicts
+            delete transformedData.location.coordinates;
+        }
+
         const incidentReport = new IncidentReport({
-            ...incidentData,
+            ...transformedData,
             dateTime: {
-                occurred: new Date(incidentData.dateTime?.occurred || Date.now()),
+                occurred: new Date(transformedData.dateTime?.occurred || Date.now()),
                 reported: new Date()
-            }
+            },
+            status: transformedData.status || 'Pending'
         });
 
+        console.log('Creating incident report with transformed data:', JSON.stringify(incidentReport.toObject(), null, 2));
+
         await incidentReport.save();
+        
+        // Populate references if needed
         await incidentReport.populate('createdBy', 'firstName lastName email');
+
+        console.log('Incident report saved successfully:', incidentReport._id);
 
         res.status(201).json({
             success: true,
@@ -229,13 +313,16 @@ router.post('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Create incident report error:', error);
+        
         if (error.name === 'ValidationError') {
             return res.status(400).json({ 
                 success: false,
                 message: 'Validation error', 
-                errors: Object.values(error.errors).map(e => e.message)
+                errors: Object.values(error.errors).map(e => e.message),
+                details: error.errors
             });
         }
+        
         res.status(500).json({ 
             success: false, 
             message: 'Failed to create incident report', 
@@ -247,43 +334,56 @@ router.post('/', async (req, res) => {
 // Update incident report
 router.put('/:id', async (req, res) => {
     try {
-        const incidentData = req.body;
-        const currentReport = await IncidentReport.findById(req.params.id);
-
-        if (!currentReport) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Incident report not found' 
+        const { id } = req.params;
+        const updateData = req.body;
+        
+        console.log('Updating incident report:', id, updateData);
+        
+        // Validate ObjectId format
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid incident report ID format'
             });
         }
 
-        // Track status changes
-        const statusChanged = currentReport.status !== incidentData.status;
-        const updateData = {
-            ...incidentData,
-            updatedAt: new Date()
-        };
+        // Add update timestamp
+        updateData.updatedAt = new Date();
+        updateData['dateTime.lastModified'] = new Date();
 
-        // Add update log if status changed
-        if (statusChanged) {
-            updateData.$push = {
-                updates: {
-                    message: `Status changed from ${currentReport.status} to ${incidentData.status}`,
+        // If status is being updated, add to updates array
+        if (updateData.status) {
+            const currentReport = await IncidentReport.findById(id);
+            if (currentReport && currentReport.status !== updateData.status) {
+                const statusUpdate = {
+                    message: `Status changed from ${currentReport.status} to ${updateData.status}`,
                     updateDate: new Date(),
+                    updatedBy: 'Admin', // You can update this with actual user info
                     statusChange: {
                         from: currentReport.status,
-                        to: incidentData.status
+                        to: updateData.status
                     }
-                }
-            };
+                };
+                
+                updateData.$push = { updates: statusUpdate };
+            }
         }
 
         const incidentReport = await IncidentReport.findByIdAndUpdate(
-            req.params.id,
+            id,
             updateData,
             { new: true, runValidators: true }
         ).populate('createdBy', 'firstName lastName email')
          .populate('lastModifiedBy', 'firstName lastName email');
+
+        if (!incidentReport) {
+            return res.status(404).json({
+                success: false,
+                message: 'Incident report not found'
+            });
+        }
+
+        console.log('Updated incident report:', incidentReport.title);
 
         res.json({
             success: true,
@@ -292,6 +392,7 @@ router.put('/:id', async (req, res) => {
         });
     } catch (error) {
         console.error('Update incident report error:', error);
+        
         if (error.name === 'ValidationError') {
             return res.status(400).json({ 
                 success: false,
@@ -299,6 +400,7 @@ router.put('/:id', async (req, res) => {
                 errors: Object.values(error.errors).map(e => e.message)
             });
         }
+        
         res.status(500).json({ 
             success: false, 
             message: 'Failed to update incident report', 
@@ -307,67 +409,40 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Bulk update status
-router.put('/status/bulk', async (req, res) => {
-    try {
-        const { reportIds, status, assignedTo } = req.body;
-
-        const updateData = { 
-            status, 
-            updatedAt: new Date()
-        };
-
-        if (assignedTo) {
-            updateData.assignedTo = assignedTo;
-        }
-
-        const result = await IncidentReport.updateMany(
-            { _id: { $in: reportIds } },
-            {
-                ...updateData,
-                $push: {
-                    updates: {
-                        message: `Bulk status update to ${status}`,
-                        updateDate: new Date()
-                    }
-                }
-            }
-        );
-
-        res.json({
-            success: true,
-            message: `${result.modifiedCount} incident reports updated`,
-            modifiedCount: result.modifiedCount
-        });
-    } catch (error) {
-        console.error('Bulk update error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update incident reports', 
-            error: error.message 
-        });
-    }
-});
-
 // Delete incident report
 router.delete('/:id', async (req, res) => {
     try {
-        const incidentReport = await IncidentReport.findByIdAndDelete(req.params.id);
-
-        if (!incidentReport) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Incident report not found' 
+        const { id } = req.params;
+        
+        console.log('Deleting incident report:', id);
+        
+        // Validate ObjectId format
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid incident report ID format'
             });
         }
+
+        const incidentReport = await IncidentReport.findByIdAndDelete(id);
+
+        if (!incidentReport) {
+            return res.status(404).json({
+                success: false,
+                message: 'Incident report not found'
+            });
+        }
+
+        console.log('Deleted incident report:', incidentReport.title);
 
         res.json({
             success: true,
             message: 'Incident report deleted successfully',
-            data: incidentReport
+            data: { id }
         });
     } catch (error) {
         console.error('Delete incident report error:', error);
+        
         res.status(500).json({ 
             success: false, 
             message: 'Failed to delete incident report', 

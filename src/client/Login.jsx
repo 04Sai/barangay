@@ -22,6 +22,9 @@ const Login = () => {
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -79,15 +82,17 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(
-        API_ENDPOINTS.AUTH.LOGIN,
-        {
-          email: formData.email,
-          password: formData.password,
-        }
-      );
+      const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, {
+        email: formData.email,
+        password: formData.password,
+      });
 
       if (response.status === 200) {
+        // Clear any existing admin session data
+        localStorage.removeItem("admin");
+        localStorage.removeItem("isAdmin");
+
+        // Set client session data
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
@@ -99,10 +104,18 @@ const Login = () => {
         }, 1500);
       }
     } catch (error) {
-      if (error.response?.data?.emailNotVerified) {
+      if (
+        error.code === "ERR_NETWORK" ||
+        error.message.includes("Network Error")
+      ) {
         setServerError(
-          error.response.data.message + " " +
-          "Check your email for the verification link or request a new one."
+          "Cannot connect to server. Please check your internet connection or try again later."
+        );
+      } else if (error.response?.data?.emailNotVerified) {
+        setServerError(
+          error.response.data.message +
+            " " +
+            "Check your email for the verification link or request a new one."
         );
         // Show resend verification option
         setShowResendVerification(true);
@@ -123,8 +136,8 @@ const Login = () => {
 
     setIsResendingVerification(true);
     try {
-      await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, { 
-        email: userEmail 
+      await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, {
+        email: userEmail,
       });
       setSuccessMessage("Verification email sent! Please check your inbox.");
       setShowResendVerification(false);
@@ -134,6 +147,34 @@ const Login = () => {
       );
     } finally {
       setIsResendingVerification(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail.trim()) {
+      setServerError("Please enter your email address");
+      return;
+    }
+
+    setIsSendingReset(true);
+    setServerError("");
+
+    try {
+      await axios.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+        email: forgotPasswordEmail,
+      });
+      setSuccessMessage(
+        "Password reset instructions have been sent to your email."
+      );
+      setShowForgotPassword(false);
+      setForgotPasswordEmail("");
+    } catch (error) {
+      setServerError(
+        error.response?.data?.message || "Failed to send password reset email."
+      );
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -197,12 +238,13 @@ const Login = () => {
             />
 
             <div className="text-sm">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
                 className="font-medium text-blue-400 hover:text-blue-300"
               >
                 Forgot your password?
-              </a>
+              </button>
             </div>
           </div>
 
@@ -217,6 +259,44 @@ const Login = () => {
           </div>
         </form>
 
+        {/* Forgot Password Modal */}
+        {showForgotPassword && (
+          <div className="mt-6 p-4 border border-gray-600 rounded-lg bg-gray-700">
+            <h3 className="text-lg font-medium mb-4">Reset Password</h3>
+            <form onSubmit={handleForgotPassword}>
+              <FormInput
+                id="forgotPasswordEmail"
+                label="Email"
+                name="forgotPasswordEmail"
+                type="email"
+                value={forgotPasswordEmail}
+                onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                placeholder="Enter your email address"
+              />
+              <div className="flex space-x-3 mt-4">
+                <button
+                  type="submit"
+                  disabled={isSendingReset}
+                  className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+                >
+                  {isSendingReset ? "Sending..." : "Send Reset Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail("");
+                    setServerError("");
+                  }}
+                  className="flex-1 py-2 px-4 border border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {showResendVerification && (
           <div className="mt-4">
             <button
@@ -224,7 +304,9 @@ const Login = () => {
               disabled={isResendingVerification}
               className="w-full flex justify-center py-2 px-4 border border-blue-500 rounded-md shadow-sm text-sm font-medium text-blue-400 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
-              {isResendingVerification ? "Sending..." : "Resend Verification Email"}
+              {isResendingVerification
+                ? "Sending..."
+                : "Resend Verification Email"}
             </button>
           </div>
         )}
@@ -239,9 +321,9 @@ const Login = () => {
               Register
             </Link>
           </p>
-            <div className="flex justify-center mt-4">
-              <BackButton onClick={handleGoBack} />
-            </div>
+          <div className="flex justify-center mt-4">
+            <BackButton onClick={handleGoBack} />
+          </div>
         </div>
       </div>
     </div>

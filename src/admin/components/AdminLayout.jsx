@@ -29,7 +29,7 @@ const AdminLayout = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      <AdminNavbar />{" "}
+      <AdminNavbar />
       <div className="pt-20 px-4 sm:px-6 pb-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[calc(100vh-100px)]">
@@ -45,7 +45,9 @@ const AdminLayout = () => {
                 <h1 className="text-2xl my-2 font-karla font-bold text-white">
                   {getPageTitle()}
                 </h1>
-                <Outlet />
+                <div className="mt-4">
+                  <Outlet />
+                </div>
               </div>
             </div>
           </div>

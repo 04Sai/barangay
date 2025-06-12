@@ -42,7 +42,7 @@ const IncidentReport2 = () => {
   };
 
   const handleBack = () => {
-    navigate("/account/incident-report");
+    navigate("/account/incident-report"); // This should be correct already
   };
 
   const handleSubmit = (e) => {
@@ -57,7 +57,7 @@ const IncidentReport2 = () => {
     localStorage.setItem("completeIncidentData", JSON.stringify(completeData));
 
     // Navigate to preview page
-    navigate("/account/incident-report/preview");
+    navigate("/account/incident-report/preview"); // This should be correct already
   };
 
   if (!formData)
