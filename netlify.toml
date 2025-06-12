@@ -5,6 +5,6 @@
 # Redirect all API requests to your DigitalOcean backend
 [[redirects]]
   from = "/api/*"
-  to = "http://139.59.250.140/:splat"  # Your backend IP and port
+  to = "https://139.59.250.140/:splat"  # Your backend IP and port
   status = 200
   force = false
