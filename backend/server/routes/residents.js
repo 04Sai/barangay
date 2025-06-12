@@ -1,10 +1,11 @@
 const express = require('express');
-const Resident = require('../models/Resident');
+const User = require('../models/User');
+const Admin = require('../models/Admin');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all residents with advanced filtering
+// Get all residents (users + admins) with advanced filtering
 router.get('/', async (req, res) => {
     try {
         const {
@@ -18,70 +19,140 @@ router.get('/', async (req, res) => {
             page
         } = req.query;
 
-        // Build filter object
-        const filter = {};
+        // Build filter object for users
+        const userFilter = { isEmailVerified: true }; // Only verified users
+        const adminFilter = { isActive: true }; // Only active admins
 
         if (gender && gender !== 'All') {
-            filter.gender = gender;
+            userFilter.gender = gender.toLowerCase();
+            adminFilter.gender = gender.toLowerCase();
         }
 
-        // Age filtering requires date calculation
-        if (ageMin || ageMax) {
-            filter.birthdate = {};
-
-            if (ageMax) {
-                // People younger than ageMax
-                const minDate = new Date();
-                minDate.setFullYear(minDate.getFullYear() - parseInt(ageMax) - 1);
-                filter.birthdate.$gt = minDate;
-            }
-
-            if (ageMin) {
-                // People older than ageMin
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() - parseInt(ageMin));
-                filter.birthdate.$lte = maxDate;
-            }
-        }
-
-        // Text search
+        // Text search for users
         if (search) {
-            filter.$or = [
+            userFilter.$or = [
                 { firstName: { $regex: search, $options: 'i' } },
                 { lastName: { $regex: search, $options: 'i' } },
                 { middleName: { $regex: search, $options: 'i' } },
                 { address: { $regex: search, $options: 'i' } },
                 { email: { $regex: search, $options: 'i' } },
-                { phoneNumber: { $regex: search, $options: 'i' } }
+                { contactNumber: { $regex: search, $options: 'i' } }
+            ];
+
+            adminFilter.$or = [
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { contactNumber: { $regex: search, $options: 'i' } }
             ];
         }
+
+        // Fetch users and admins
+        const users = await User.find(userFilter).select('-password -emailVerificationToken -passwordResetToken');
+        const admins = await Admin.find(adminFilter).select('-password');
+
+        // Combine and normalize data
+        let allResidents = [];
+
+        // Add users as residents
+        users.forEach(user => {
+            const birthdate = user.birthday && user.birthday.year && user.birthday.month && user.birthday.day
+                ? new Date(`${user.birthday.year}-${user.birthday.month}-${user.birthday.day}`)
+                : null;
+
+            allResidents.push({
+                _id: user._id,
+                firstName: user.firstName,
+                middleName: user.middleName,
+                lastName: user.lastName,
+                email: user.email,
+                phoneNumber: user.contactNumber,
+                address: user.address || 'Not specified',
+                gender: user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : 'Not specified',
+                birthdate: birthdate,
+                civilStatus: user.civilStatus ? user.civilStatus.charAt(0).toUpperCase() + user.civilStatus.slice(1) : 'Not specified',
+                occupation: 'Resident',
+                userType: 'resident',
+                voterStatus: false,
+                registeredDate: user.createdAt,
+                isActive: user.isEmailVerified
+            });
+        });
+
+        // Add admins as residents
+        admins.forEach(admin => {
+            allResidents.push({
+                _id: admin._id,
+                firstName: admin.firstName,
+                middleName: '',
+                lastName: admin.lastName,
+                email: admin.email,
+                phoneNumber: admin.contactNumber || 'Not specified',
+                address: 'Barangay Office',
+                gender: admin.gender ? admin.gender.charAt(0).toUpperCase() + admin.gender.slice(1) : 'Not specified',
+                birthdate: admin.birthdate || null,
+                civilStatus: 'Not specified',
+                occupation: admin.role === 'super_admin' ? 'Barangay Captain' : 'Barangay Staff',
+                userType: 'staff',
+                voterStatus: true,
+                registeredDate: admin.createdAt,
+                isActive: admin.isActive
+            });
+        });
+
+        // Apply age filtering
+        if (ageMin || ageMax) {
+            allResidents = allResidents.filter(resident => {
+                if (!resident.birthdate) return false;
+
+                const today = new Date();
+                const birthDate = new Date(resident.birthdate);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (ageMin && age < parseInt(ageMin)) return false;
+                if (ageMax && age > parseInt(ageMax)) return false;
+
+                return true;
+            });
+        }
+
+        // Sorting
+        const sortField = sortBy || 'lastName';
+        const sortDirection = sortOrder === 'desc' ? -1 : 1;
+
+        allResidents.sort((a, b) => {
+            let valueA = a[sortField] || '';
+            let valueB = b[sortField] || '';
+
+            if (sortField === 'birthdate' || sortField === 'registeredDate') {
+                valueA = new Date(valueA || 0);
+                valueB = new Date(valueB || 0);
+            }
+
+            if (valueA < valueB) return sortDirection === 1 ? -1 : 1;
+            if (valueA > valueB) return sortDirection === 1 ? 1 : -1;
+            return 0;
+        });
 
         // Pagination
         const pageNumber = parseInt(page) || 1;
         const pageSize = parseInt(limit) || 20;
         const skip = (pageNumber - 1) * pageSize;
-
-        // Sorting
-        const sort = {};
-        const sortField = sortBy || 'lastName';
-        const sortDirection = sortOrder === 'desc' ? -1 : 1;
-        sort[sortField] = sortDirection;
-
-        const residents = await Resident.find(filter)
-            .sort(sort)
-            .skip(skip)
-            .limit(pageSize);
-
-        const total = await Resident.countDocuments(filter);
+        const paginatedResidents = allResidents.slice(skip, skip + pageSize);
 
         res.json({
             success: true,
-            data: residents,
+            data: paginatedResidents,
             pagination: {
                 current: pageNumber,
-                total: Math.ceil(total / pageSize),
-                count: residents.length,
-                totalItems: total
+                total: Math.ceil(allResidents.length / pageSize),
+                count: paginatedResidents.length,
+                totalItems: allResidents.length
             }
         });
     } catch (error) {
@@ -94,10 +165,16 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get single resident
+// Get single resident (user or admin)
 router.get('/:id', async (req, res) => {
     try {
-        const resident = await Resident.findById(req.params.id);
+        let resident = await User.findById(req.params.id).select('-password -emailVerificationToken -passwordResetToken');
+        let userType = 'resident';
+
+        if (!resident) {
+            resident = await Admin.findById(req.params.id).select('-password');
+            userType = 'staff';
+        }
 
         if (!resident) {
             return res.status(404).json({
@@ -106,9 +183,54 @@ router.get('/:id', async (req, res) => {
             });
         }
 
+        // Normalize data structure
+        let normalizedResident;
+
+        if (userType === 'resident') {
+            const birthdate = resident.birthday && resident.birthday.year && resident.birthday.month && resident.birthday.day
+                ? new Date(`${resident.birthday.year}-${resident.birthday.month}-${resident.birthday.day}`)
+                : null;
+
+            normalizedResident = {
+                _id: resident._id,
+                firstName: resident.firstName,
+                middleName: resident.middleName,
+                lastName: resident.lastName,
+                email: resident.email,
+                phoneNumber: resident.contactNumber,
+                address: resident.address || 'Not specified',
+                gender: resident.gender ? resident.gender.charAt(0).toUpperCase() + resident.gender.slice(1) : 'Not specified',
+                birthdate: birthdate,
+                civilStatus: resident.civilStatus ? resident.civilStatus.charAt(0).toUpperCase() + resident.civilStatus.slice(1) : 'Not specified',
+                occupation: 'Resident',
+                userType: 'resident',
+                voterStatus: false,
+                registeredDate: resident.createdAt,
+                isActive: resident.isEmailVerified
+            };
+        } else {
+            normalizedResident = {
+                _id: resident._id,
+                firstName: resident.firstName,
+                middleName: '',
+                lastName: resident.lastName,
+                email: resident.email,
+                phoneNumber: resident.contactNumber || 'Not specified',
+                address: 'Barangay Office',
+                gender: resident.gender ? resident.gender.charAt(0).toUpperCase() + resident.gender.slice(1) : 'Not specified',
+                birthdate: resident.birthdate || null,
+                civilStatus: 'Not specified',
+                occupation: resident.role === 'super_admin' ? 'Barangay Captain' : 'Barangay Staff',
+                userType: 'staff',
+                voterStatus: true,
+                registeredDate: resident.createdAt,
+                isActive: resident.isActive
+            };
+        }
+
         res.json({
             success: true,
-            data: resident
+            data: normalizedResident
         });
     } catch (error) {
         console.error('Get resident error:', error);
@@ -120,11 +242,11 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Create new resident
+// Create new resident (user)
 router.post('/', async (req, res) => {
     try {
         const residentData = req.body;
-        const resident = new Resident(residentData);
+        const resident = new User(residentData);
         await resident.save();
 
         res.status(201).json({
@@ -149,15 +271,25 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Update resident
+// Update resident (user or admin)
 router.put('/:id', async (req, res) => {
     try {
         const residentData = req.body;
-        const resident = await Resident.findByIdAndUpdate(
+        let resident = await User.findByIdAndUpdate(
             req.params.id,
             residentData,
             { new: true, runValidators: true }
         );
+        let userType = 'resident';
+
+        if (!resident) {
+            resident = await Admin.findByIdAndUpdate(
+                req.params.id,
+                residentData,
+                { new: true, runValidators: true }
+            );
+            userType = 'staff';
+        }
 
         if (!resident) {
             return res.status(404).json({
@@ -188,10 +320,14 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete resident
+// Delete resident (user or admin)
 router.delete('/:id', async (req, res) => {
     try {
-        const resident = await Resident.findByIdAndDelete(req.params.id);
+        let resident = await User.findByIdAndDelete(req.params.id);
+
+        if (!resident) {
+            resident = await Admin.findByIdAndDelete(req.params.id);
+        }
 
         if (!resident) {
             return res.status(404).json({
@@ -218,15 +354,30 @@ router.delete('/:id', async (req, res) => {
 // Get resident statistics
 router.get('/stats/overview', async (req, res) => {
     try {
-        // Total count
-        const totalResidents = await Resident.countDocuments();
+        // Get counts from both collections
+        const totalUsers = await User.countDocuments({ isEmailVerified: true });
+        const totalAdmins = await Admin.countDocuments({ isActive: true });
+        const totalResidents = totalUsers + totalAdmins;
 
-        // Gender distribution
-        const genderDistribution = await Resident.aggregate([
+        // Gender distribution from both collections
+        const userGenderDist = await User.aggregate([
+            { $match: { isEmailVerified: true, gender: { $exists: true } } },
             { $group: { _id: '$gender', count: { $sum: 1 } } }
         ]);
 
-        // Age distribution - calculate ages from birthdates
+        const adminGenderDist = await Admin.aggregate([
+            { $match: { isActive: true, gender: { $exists: true } } },
+            { $group: { _id: '$gender', count: { $sum: 1 } } }
+        ]);
+
+        // Combine gender distributions
+        const genderDistribution = {};
+        [...userGenderDist, ...adminGenderDist].forEach(item => {
+            const gender = item._id.charAt(0).toUpperCase() + item._id.slice(1);
+            genderDistribution[gender] = (genderDistribution[gender] || 0) + item.count;
+        });
+
+        // Age distribution calculation
         const ageDistribution = {
             'Under 18': 0,
             '18-30': 0,
@@ -235,13 +386,17 @@ router.get('/stats/overview', async (req, res) => {
             'Over 60': 0
         };
 
-        const allResidents = await Resident.find({}, 'birthdate');
+        // Calculate ages from users
+        const allUsers = await User.find({ isEmailVerified: true }, 'birthday');
+        const allAdmins = await Admin.find({ isActive: true }, 'birthdate');
+
         const today = new Date();
 
-        allResidents.forEach(resident => {
-            if (!resident.birthdate) return;
+        // Process user ages
+        allUsers.forEach(user => {
+            if (!user.birthday || !user.birthday.year) return;
 
-            const birthDate = new Date(resident.birthdate);
+            const birthDate = new Date(`${user.birthday.year}-${user.birthday.month || '01'}-${user.birthday.day || '01'}`);
             let age = today.getFullYear() - birthDate.getFullYear();
             const monthDiff = today.getMonth() - birthDate.getMonth();
 
@@ -256,18 +411,40 @@ router.get('/stats/overview', async (req, res) => {
             else ageDistribution['Over 60']++;
         });
 
-        // Civil status distribution
-        const civilStatusDistribution = await Resident.aggregate([
+        // Process admin ages
+        allAdmins.forEach(admin => {
+            if (!admin.birthdate) return;
+
+            const birthDate = new Date(admin.birthdate);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            if (age < 18) ageDistribution['Under 18']++;
+            else if (age <= 30) ageDistribution['18-30']++;
+            else if (age <= 45) ageDistribution['31-45']++;
+            else if (age <= 60) ageDistribution['46-60']++;
+            else ageDistribution['Over 60']++;
+        });
+
+        // Civil status distribution (mainly from users)
+        const civilStatusDistribution = await User.aggregate([
+            { $match: { isEmailVerified: true, civilStatus: { $exists: true } } },
             { $group: { _id: '$civilStatus', count: { $sum: 1 } } }
         ]);
 
-        // Voter status count
-        const voterCount = await Resident.countDocuments({ voterStatus: true });
+        // All admins are considered voters, some users might be
+        const voterCount = totalAdmins; // All staff are voters
 
         res.json({
             success: true,
             data: {
                 totalResidents,
+                totalUsers,
+                totalStaff: totalAdmins,
                 genderDistribution,
                 ageDistribution,
                 civilStatusDistribution,
