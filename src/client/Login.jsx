@@ -91,6 +91,11 @@ const Login = () => {
       );
 
       if (response.status === 200) {
+        // Clear any existing admin session data
+        localStorage.removeItem("admin");
+        localStorage.removeItem("isAdmin");
+
+        // Set client session data
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
@@ -98,7 +103,7 @@ const Login = () => {
         setSuccessMessage("Login successful! Redirecting to your account...");
 
         setTimeout(() => {
-          navigate("/account");
+          navigate("/account/dashboard");
         }, 1500);
       }
     } catch (error) {
@@ -117,7 +122,7 @@ const Login = () => {
       } else {
         setServerError(
           error.response?.data?.message ||
-            "Login failed. Please check your credentials and try again."
+          "Login failed. Please check your credentials and try again."
         );
       }
     } finally {
@@ -130,8 +135,8 @@ const Login = () => {
 
     setIsResendingVerification(true);
     try {
-      await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, { 
-        email: userEmail 
+      await axios.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, {
+        email: userEmail
       });
       setSuccessMessage("Verification email sent! Please check your inbox.");
       setShowResendVerification(false);
@@ -153,10 +158,10 @@ const Login = () => {
 
     setIsSendingReset(true);
     setServerError("");
-    
+
     try {
-      await axios.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { 
-        email: forgotPasswordEmail 
+      await axios.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+        email: forgotPasswordEmail
       });
       setSuccessMessage("Password reset instructions have been sent to your email.");
       setShowForgotPassword(false);
@@ -183,11 +188,10 @@ const Login = () => {
 
         {successMessage && (
           <div
-            className={`${
-              loginSuccess
-                ? "bg-green-900/50 border border-green-500 text-green-300"
-                : "bg-green-900/50 border border-green-500 text-green-300"
-            } px-4 py-3 rounded mb-4`}
+            className={`${loginSuccess
+              ? "bg-green-900/50 border border-green-500 text-green-300"
+              : "bg-green-900/50 border border-green-500 text-green-300"
+              } px-4 py-3 rounded mb-4`}
           >
             {successMessage}
           </div>
@@ -311,9 +315,9 @@ const Login = () => {
               Register
             </Link>
           </p>
-            <div className="flex justify-center mt-4">
-              <BackButton onClick={handleGoBack} />
-            </div>
+          <div className="flex justify-center mt-4">
+            <BackButton onClick={handleGoBack} />
+          </div>
         </div>
       </div>
     </div>

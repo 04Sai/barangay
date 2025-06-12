@@ -27,49 +27,40 @@ import AdminIncidentReports from "./admin/pages/AdminIncidentReports";
 import AdminAppointments from "./admin/pages/AdminAppointments";
 import AdminResidents from "./admin/pages/AdminResidents";
 import AdminSettings from "./admin/pages/AdminSettings";
-
-// Protected route component to check authentication
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  
-  // For development: Allow access when backend is offline
-  const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
-  
-  // If not authenticated and not in development, navigate to login
-  if (!isAuthenticated && !isDevelopment) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // In development, if no token but user data exists, allow access
-  if (!isAuthenticated && isDevelopment) {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      // Create dummy user data for development
-      const dummyUser = {
-        id: "dev-user",
-        firstName: "Development",
-        lastName: "User",
-        email: "dev@example.com"
-      };
-      localStorage.setItem("user", JSON.stringify(dummyUser));
-    }
-  }
-
-  return children;
-};
+import AdminLogin from "./admin/pages/AdminLogin";
 
 // Non-auth route component to redirect authenticated users away from public pages
 const NonAuthRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const token = localStorage.getItem("token");
+  const adminData = localStorage.getItem("admin");
+  const userData = localStorage.getItem("user");
 
-  if (isAuthenticated) {
-    // Redirect authenticated users to their appropriate dashboard
-    return isAdmin ? (
-      <Navigate to="/admin/dashboard" replace />
-    ) : (
-      <Navigate to="/account" replace />
-    );
+  if (token) {
+    // If admin session exists, redirect to admin dashboard
+    if (adminData) {
+      try {
+        const admin = JSON.parse(adminData);
+        if (admin.role && admin.username) {
+          return <Navigate to="/admin/dashboard" replace />;
+        }
+      } catch (error) {
+        // Invalid admin data, clear it
+        localStorage.removeItem("admin");
+      }
+    }
+
+    // If user session exists, redirect to user dashboard
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.firstName && user.email) {
+          return <Navigate to="/account/dashboard" replace />;
+        }
+      } catch (error) {
+        // Invalid user data, clear it
+        localStorage.removeItem("user");
+      }
+    }
   }
 
   return children;
@@ -77,17 +68,63 @@ const NonAuthRoute = ({ children }) => {
 
 // Admin route component to check admin authentication
 const AdminRoute = ({ children }) => {
-  // For development: Allow temporary access
-  const allowTempAccess = true;
+  const token = localStorage.getItem("token");
+  const adminData = localStorage.getItem("admin");
 
-  // In production, check authentication
-  if (!allowTempAccess) {
-    const isAuthenticated = localStorage.getItem("token") !== null;
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
-    
-    if (!isAuthenticated || !isAdmin) {
+  // Check if user has valid admin session
+  if (!token || !adminData) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Parse admin data to verify it's actually admin data
+  try {
+    const admin = JSON.parse(adminData);
+    if (!admin.role || !admin.username) {
+      // Invalid admin data structure
+      localStorage.removeItem("admin");
+      localStorage.removeItem("token");
+      return <Navigate to="/admin/login" replace />;
+    }
+  } catch (error) {
+    // Invalid JSON in admin data
+    localStorage.removeItem("admin");
+    localStorage.removeItem("token");
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return children;
+};
+
+// Protected route component to check CLIENT authentication
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const userData = localStorage.getItem("user");
+  const adminData = localStorage.getItem("admin");
+
+  // If admin session exists, redirect to admin
+  if (adminData && token) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  // Check if user has valid client session
+  if (!token || !userData) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Parse user data to verify it's actually user data
+  try {
+    const user = JSON.parse(userData);
+    if (!user.firstName || !user.email) {
+      // Invalid user data structure
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
       return <Navigate to="/login" replace />;
     }
+  } catch (error) {
+    // Invalid JSON in user data
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -114,7 +151,8 @@ const Layout = () => {
 
   return (
     <div className="bg-black w-full overflow-hidden">
-      {!isAccountPage && !isAdminPage && <NavBar />}
+      {/* Only show NavBar on public pages and client pages, never on admin pages */}
+      {!isAdminPage && <NavBar />}
       <Routes>
         <Route
           path="/login"
@@ -134,6 +172,14 @@ const Layout = () => {
         />
         <Route path="/verify-email" element={<EmailVerification />} />
         <Route path="/reset-password/:token" element={<PasswordReset />} />
+        <Route
+          path="/admin/login"
+          element={
+            <NonAuthRoute>
+              <AdminLogin />
+            </NonAuthRoute>
+          }
+        />
         <Route
           path="/account/*"
           element={
