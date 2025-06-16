@@ -88,6 +88,7 @@ const AppointmentEditModal = ({
     "Medical Checkup",
     "Certificate",
     "Document Processing",
+    "Document Request",
     "Counseling",
     "Community Service",
     "Business Permit",
@@ -105,6 +106,14 @@ const AppointmentEditModal = ({
       error={error}
       size="medium"
     >
+      {appointment?.isDocumentRequest && (
+        <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+          <p className="text-blue-300 text-sm font-medium">
+            Note: This is a document request appointment. Some fields may not be editable.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-white mb-1">Title *</label>
@@ -208,18 +217,37 @@ const AppointmentEditModal = ({
             className={dropdownStyles.select}
             style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="Pending" style={dropdownStyles.option}>
-              Pending
-            </option>
-            <option value="Confirmed" style={dropdownStyles.option}>
-              Confirmed
-            </option>
-            <option value="Cancelled" style={dropdownStyles.option}>
-              Cancelled
-            </option>
-            <option value="Completed" style={dropdownStyles.option}>
-              Completed
-            </option>
+            {appointment?.isDocumentRequest ? (
+              <>
+                <option value="Pending" style={dropdownStyles.option}>
+                  Under Review
+                </option>
+                <option value="Confirmed" style={dropdownStyles.option}>
+                  Approved
+                </option>
+                <option value="Cancelled" style={dropdownStyles.option}>
+                  Rejected
+                </option>
+                <option value="Completed" style={dropdownStyles.option}>
+                  Completed
+                </option>
+              </>
+            ) : (
+              <>
+                <option value="Pending" style={dropdownStyles.option}>
+                  Pending
+                </option>
+                <option value="Confirmed" style={dropdownStyles.option}>
+                  Confirmed
+                </option>
+                <option value="Cancelled" style={dropdownStyles.option}>
+                  Cancelled
+                </option>
+                <option value="Completed" style={dropdownStyles.option}>
+                  Completed
+                </option>
+              </>
+            )}
           </select>
         </div>
       )}

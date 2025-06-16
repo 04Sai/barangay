@@ -4,7 +4,6 @@ import {
   FaArrowLeft,
   FaBullhorn,
   FaTag,
-  FaExclamationCircle,
   FaChevronLeft,
   FaChevronRight,
   FaSpinner,
@@ -35,7 +34,6 @@ const Announcement = () => {
     "General",
   ];
 
-  // Fetch announcements from backend
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
@@ -44,7 +42,7 @@ const Announcement = () => {
 
         const params = {
           isActive: true,
-          limit: 50, // Fetch more to handle local pagination
+          limit: 50,
           sortBy: 'createdAt',
           sortOrder: 'desc'
         };
@@ -53,18 +51,15 @@ const Announcement = () => {
           params.category = filterCategory;
         }
 
-        console.log('Announcement page: Fetching announcements with params:', params);
         const response = await announcementService.getAllAnnouncements(params);
 
         if (response.success) {
           setAnnouncements(response.data || []);
           setTotalPages(Math.ceil((response.data || []).length / announcementsPerPage));
-          console.log('Announcement page: Successfully loaded announcements:', response.data?.length || 0);
         } else {
           throw new Error(response.error || "Failed to fetch announcements");
         }
       } catch (err) {
-        console.error("Announcement page: Error fetching announcements:", err);
         setError("Failed to load announcements from server");
         setAnnouncements([]);
         setTotalPages(0);
@@ -76,12 +71,10 @@ const Announcement = () => {
     fetchAnnouncements();
   }, [filterCategory]);
 
-  // Reset to first page when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filterCategory]);
 
-  // Get paginated announcements for current page
   const getPaginatedAnnouncements = () => {
     const startIndex = (currentPage - 1) * announcementsPerPage;
     const endIndex = startIndex + announcementsPerPage;

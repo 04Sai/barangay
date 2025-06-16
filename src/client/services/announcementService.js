@@ -17,10 +17,14 @@ class AnnouncementService {
             if (params.page) {
                 queryParams.append('page', params.page);
             }
+            if (params.sortBy) {
+                queryParams.append('sortBy', params.sortBy);
+            }
+            if (params.sortOrder) {
+                queryParams.append('sortOrder', params.sortOrder);
+            }
 
             const url = `${API_BASE_URL}/announcements?${queryParams.toString()}`;
-            console.log('Fetching announcements from:', url);
-            
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -28,18 +32,12 @@ class AnnouncementService {
                 },
             });
 
-            console.log('Announcements API response status:', response.status);
-
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('Announcements API error response:', errorData);
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('Announcements API success response:', data);
-            
-            // Return consistent structure regardless of backend response format
             return {
                 success: true,
                 data: data.data || data,
@@ -47,7 +45,6 @@ class AnnouncementService {
                 filters: data.filters
             };
         } catch (error) {
-            console.error('Error fetching announcements:', error);
             return {
                 success: false,
                 error: error.message,
@@ -73,7 +70,71 @@ class AnnouncementService {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error fetching announcement:', error);
+            throw error;
+        }
+    }
+
+    async createAnnouncement(announcementData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/announcements`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(announcementData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateAnnouncement(id, announcementData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/announcements/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(announcementData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async deleteAnnouncement(id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/announcements/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
             throw error;
         }
     }

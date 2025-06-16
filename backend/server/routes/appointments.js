@@ -1,10 +1,11 @@
 const express = require('express');
 const Appointment = require('../models/Appointment');
+const DocumentRequest = require('../models/DocumentRequest');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all appointments with advanced filtering
+// Get all appointments with advanced filtering (including document requests)
 router.get('/', async (req, res) => {
     try {
         const { 
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
             sortOrder 
         } = req.query;
         
-        // Build filter object
+        // Build filter object for appointments
         const filter = {};
         
         if (status && status !== 'All') {
@@ -66,6 +67,47 @@ router.get('/', async (req, res) => {
             ];
         }
 
+        // Build filter for document requests
+        const docRequestFilter = {};
+        
+        // Map appointment statuses to document request statuses
+        if (status && status !== 'All') {
+            const statusMapping = {
+                'Pending': ['Pending Review', 'Under Review'],
+                'Confirmed': ['Approved', 'Ready for Pickup'],
+                'Completed': ['Completed'],
+                'Cancelled': ['Rejected', 'Cancelled']
+            };
+            
+            if (status.includes(',')) {
+                const mappedStatuses = status.split(',').flatMap(s => statusMapping[s] || [s]);
+                docRequestFilter.status = { $in: mappedStatuses };
+            } else {
+                const mappedStatuses = statusMapping[status] || [status];
+                docRequestFilter.status = { $in: mappedStatuses };
+            }
+        }
+
+        // Date range filter for document requests
+        if (dateFrom || dateTo) {
+            docRequestFilter['appointment.preferredDate'] = {};
+            if (dateFrom) {
+                docRequestFilter['appointment.preferredDate'].$gte = new Date(dateFrom);
+            }
+            if (dateTo) {
+                docRequestFilter['appointment.preferredDate'].$lte = new Date(dateTo + 'T23:59:59.999Z');
+            }
+        }
+
+        // Text search for document requests
+        if (search) {
+            docRequestFilter.$or = [
+                { 'requestor.name': { $regex: search, $options: 'i' } },
+                { 'documentTypes.type': { $regex: search, $options: 'i' } },
+                { requestId: { $regex: search, $options: 'i' } }
+            ];
+        }
+
         // Pagination
         const pageNumber = parseInt(page) || 1;
         const pageSize = parseInt(limit) || 25;
@@ -77,14 +119,75 @@ router.get('/', async (req, res) => {
         const sortDirection = sortOrder === 'desc' ? -1 : 1;
         sort[sortField] = sortDirection;
 
+        // Fetch regular appointments
         const appointments = await Appointment.find(filter)
             .populate('createdBy', 'firstName lastName email')
             .populate('lastModifiedBy', 'firstName lastName email')
             .sort(sort)
-            .skip(skip)
-            .limit(pageSize);
+            .lean();
 
-        const total = await Appointment.countDocuments(filter);
+        // Fetch document requests and convert to appointment format
+        const documentRequests = await DocumentRequest.find(docRequestFilter)
+            .sort({ createdAt: sortDirection })
+            .lean();
+
+        // Convert document requests to appointment format
+        const documentAppointments = documentRequests.map(docReq => ({
+            _id: docReq._id,
+            title: `Document Request - ${docReq.documentTypes.map(dt => dt.type).join(', ')}`,
+            type: 'Document Request',
+            description: `Request ID: ${docReq.requestId}. Documents: ${docReq.documentTypes.map(dt => dt.type).join(', ')}`,
+            dateTime: {
+                scheduled: docReq.appointment?.preferredDate ? 
+                    new Date(`${docReq.appointment.preferredDate}T${docReq.appointment.preferredTime || '09:00'}:00`) : 
+                    docReq.createdAt,
+                created: docReq.createdAt,
+                lastModified: docReq.updatedAt
+            },
+            location: {
+                venue: 'Barangay Hall - Document Processing',
+                address: 'Barangay Office'
+            },
+            appointee: {
+                name: docReq.requestor?.name || 'Unknown',
+                contactNumber: docReq.requestor?.contactNumber || 'Not provided',
+                email: docReq.requestor?.email || 'Not provided',
+                address: docReq.requestor?.address || 'Not provided'
+            },
+            status: docReq.status === 'Pending Review' ? 'Pending' :
+                   docReq.status === 'Under Review' ? 'Pending' :
+                   docReq.status === 'Approved' ? 'Confirmed' :
+                   docReq.status === 'Ready for Pickup' ? 'Confirmed' :
+                   docReq.status === 'Completed' ? 'Completed' :
+                   docReq.status === 'Rejected' ? 'Cancelled' :
+                   docReq.status === 'Cancelled' ? 'Cancelled' : 'Pending',
+            priority: docReq.priority || 'Normal',
+            contactInfo: docReq.requestor?.contactNumber || 'Not provided',
+            assignedTo: {
+                department: 'Administrative Office',
+                official: 'Document Processing Staff'
+            },
+            isDocumentRequest: true,
+            documentRequestData: docReq,
+            createdAt: docReq.createdAt,
+            updatedAt: docReq.updatedAt
+        }));
+
+        // Combine and sort all appointments
+        const allAppointments = [...appointments, ...documentAppointments];
+        
+        // Apply sorting to combined results
+        allAppointments.sort((a, b) => {
+            const aValue = a.dateTime?.scheduled || a.createdAt;
+            const bValue = b.dateTime?.scheduled || b.createdAt;
+            return sortDirection === 1 ? 
+                new Date(aValue) - new Date(bValue) : 
+                new Date(bValue) - new Date(aValue);
+        });
+
+        // Apply pagination to combined results
+        const paginatedAppointments = allAppointments.slice(skip, skip + pageSize);
+        const total = allAppointments.length;
 
         // Get aggregated statistics
         const statusStats = await Appointment.aggregate([
@@ -100,6 +203,15 @@ router.get('/', async (req, res) => {
             { $limit: 10 }
         ]);
 
+        // Add document request stats
+        const docRequestStats = await DocumentRequest.aggregate([
+            { $match: docRequestFilter },
+            { $group: { _id: 'Document Request', count: { $sum: 1 } } }
+        ]);
+
+        // Combine type stats
+        const combinedTypeStats = [...typeStats, ...docRequestStats];
+
         const departmentStats = await Appointment.aggregate([
             { $match: filter },
             { $group: { _id: '$assignedTo.department', count: { $sum: 1 } } },
@@ -108,16 +220,16 @@ router.get('/', async (req, res) => {
 
         res.json({
             success: true,
-            data: appointments,
+            data: paginatedAppointments,
             pagination: {
                 current: pageNumber,
                 total: Math.ceil(total / pageSize),
-                count: appointments.length,
+                count: paginatedAppointments.length,
                 totalItems: total
             },
             statistics: {
                 status: statusStats,
-                types: typeStats,
+                types: combinedTypeStats,
                 departments: departmentStats
             },
             filters: {

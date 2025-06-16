@@ -78,8 +78,13 @@ export const RegisterButton = (props) => (
   <Button label="Register" type="primary" icon={<FaUserPlus />} {...props} />
 );
 
-export const CallButton = (props) => (
-  <Button label="Call" type="success" icon={<FaPhone />} {...props} />
+export const CallButton = ({ phoneNumber, label, ...props }) => (
+  <Button 
+    label={phoneNumber || "Contact info not available"} 
+    type="danger" 
+    icon={<FaPhone />} 
+    {...props} 
+  />
 );
 
 export const BackButton = (props) => (

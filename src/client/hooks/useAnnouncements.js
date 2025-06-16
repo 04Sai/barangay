@@ -12,7 +12,6 @@ export const useAnnouncements = (params = {}) => {
       setLoading(true);
       setError('');
 
-      console.log('useAnnouncements: Fetching with params:', params);
       const response = await announcementService.getAllAnnouncements({
         isActive: true,
         ...params
@@ -21,12 +20,10 @@ export const useAnnouncements = (params = {}) => {
       if (response.success) {
         setAnnouncements(response.data || []);
         setPagination(response.pagination);
-        console.log('useAnnouncements: Successfully fetched announcements:', response.data?.length || 0);
       } else {
         throw new Error(response.error || 'Failed to fetch announcements');
       }
     } catch (err) {
-      console.error('useAnnouncements: Error fetching announcements:', err);
       setError(err.message || 'Failed to load announcements');
       setAnnouncements([]);
       setPagination(null);

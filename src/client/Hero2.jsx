@@ -38,9 +38,8 @@ const Hero2 = () => {
                 {service.name}
               </h3>
               <CallButton
-                label={service.buttonLabel}
+                phoneNumber={service.phoneNumber || "Contact barangay office"}
                 icon={<FaPhone />}
-                onClick={() => window.open(`tel:${service.phoneNumber}`)}
               />
             </div>
           ))}

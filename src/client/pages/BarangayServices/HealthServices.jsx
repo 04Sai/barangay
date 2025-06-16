@@ -133,10 +133,6 @@ const HealthServices = () => {
     fetchData();
   }, []);
 
-  const handleCall = (contact) => {
-    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
-  };
-
   const getDaySchedule = (day) => {
     return HealthCenterScheduleData[day] || [];
   };
@@ -246,7 +242,7 @@ const HealthServices = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0]}</span>
+                    <span>{service.contact || service.contactNumbers?.[0] || service.phoneNumber || "Contact for details"}</span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -255,11 +251,8 @@ const HealthServices = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
-                    label="Call Now"
-                    icon={<FaPhone />}
+                    phoneNumber={service.contact || service.contactNumbers?.[0] || service.phoneNumber}
                     className="mt-auto"
-                    type="success"
                   />
                 </div>
               ))}
@@ -340,7 +333,7 @@ const HealthServices = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

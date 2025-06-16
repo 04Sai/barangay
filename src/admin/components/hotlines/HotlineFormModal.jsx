@@ -9,10 +9,8 @@ const HotlineFormModal = ({
   onClose,
   onSubmit,
   categories,
-  priorities,
   availabilities,
   responseTimes,
-  supportedLanguages,
 }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -21,14 +19,12 @@ const HotlineFormModal = ({
     alternateNumber: "",
     email: "",
     category: "",
-    priority: "Medium",
     availability: "24/7",
     customHours: "",
     address: "",
     website: "",
     coordinates: { latitude: "", longitude: "" },
     responseTime: "Variable",
-    languages: [],
     specialInstructions: "",
     tags: [],
     socialMedia: { facebook: "", twitter: "", instagram: "" },
@@ -45,7 +41,6 @@ const HotlineFormModal = ({
         alternateNumber: hotline.alternateNumber || "",
         email: hotline.email || "",
         category: hotline.category || "",
-        priority: hotline.priority || "Medium",
         availability: hotline.availability || "24/7",
         customHours: hotline.customHours || "",
         address: hotline.address || "",
@@ -55,7 +50,6 @@ const HotlineFormModal = ({
           longitude: hotline.coordinates?.longitude || "",
         },
         responseTime: hotline.responseTime || "Variable",
-        languages: hotline.languages || [],
         specialInstructions: hotline.specialInstructions || "",
         tags: hotline.tags || [],
         socialMedia: {
@@ -188,43 +182,11 @@ const HotlineFormModal = ({
           </select>
         </div>
         <div>
-          <label className="block text-white mb-1">Priority</label>
-          <select
-            name="priority"
-            value={formData.priority}
-            onChange={handleInputChange}
-            disabled={submitting}
-            className={dropdownStyles.select}
-            style={{ backgroundColor: "#1e3a8a" }}
-          >
-            {priorities.map((priority) => (
-              <option
-                key={priority}
-                value={priority}
-                style={dropdownStyles.option}
-              >
-                {priority}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
           <label className="block text-white mb-1">Alternate Number</label>
           <input
             type="tel"
             name="alternateNumber"
             value={formData.alternateNumber}
-            onChange={handleInputChange}
-            disabled={submitting}
-            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
-          />
-        </div>
-        <div>
-          <label className="block text-white mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
             onChange={handleInputChange}
             disabled={submitting}
             className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
@@ -292,28 +254,6 @@ const HotlineFormModal = ({
           disabled={submitting}
           className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
         />
-      </div>
-
-      <div>
-        <label className="block text-white mb-1">Supported Languages</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {supportedLanguages.map((lang) => (
-            <div key={lang} className="flex items-center">
-              <input
-                type="checkbox"
-                id={`lang-${lang}`}
-                name="languages"
-                value={lang}
-                checked={formData.languages.includes(lang)}
-                onChange={handleInputChange}
-                className="mr-2"
-              />
-              <label htmlFor={`lang-${lang}`} className="text-white text-sm">
-                {lang}
-              </label>
-            </div>
-          ))}
-        </div>
       </div>
     </FormModal>
   );

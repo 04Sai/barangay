@@ -35,25 +35,33 @@ router.post('/register', async (req, res) => {
         // Save user
         await user.save();
 
-        // Send verification email
+        // Send verification email - make this required for successful registration
         try {
             await sendEmailVerification(email, firstName, verificationToken);
             console.log('Verification email sent successfully');
+            
+            res.status(201).json({
+                message: 'User registered successfully. Please check your email to verify your account.',
+                emailSent: true,
+                user: {
+                    id: user._id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
+                    isEmailVerified: user.isEmailVerified
+                }
+            });
         } catch (emailError) {
             console.error('Failed to send verification email:', emailError);
-            // Don't fail registration if email fails, just log it
+            
+            // Delete the user if email sending fails
+            await User.findByIdAndDelete(user._id);
+            
+            return res.status(500).json({ 
+                message: 'Registration failed: Unable to send verification email. Please try again later.',
+                emailSent: false 
+            });
         }
-
-        res.status(201).json({
-            message: 'User registered successfully. Please check your email to verify your account.',
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                isEmailVerified: user.isEmailVerified
-            }
-        });
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ message: 'Registration failed', error: error.message });

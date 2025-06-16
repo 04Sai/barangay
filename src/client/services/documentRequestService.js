@@ -1,35 +1,39 @@
 const API_BASE_URL = 'http://localhost:1337/api';
 
-class HotlineService {
-    async getHotlinesByCategory(category) {
+class DocumentRequestService {
+    async createDocumentRequest(requestData) {
         try {
-            const queryParams = new URLSearchParams();
-            if (category && category !== 'All') {
-                queryParams.append('category', category);
-            }
-
-            const url = `${API_BASE_URL}/hotlines?${queryParams.toString()}`;
-            const response = await fetch(url, {
-                method: 'GET',
+            console.log('Sending document request:', requestData);
+            
+            const response = await fetch(`${API_BASE_URL}/document-requests`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(requestData),
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+                console.error('Document request error response:', errorData);
+                
+                // Handle validation errors specifically
+                if (errorData.errors && Array.isArray(errorData.errors)) {
+                    throw new Error(`Validation failed: ${errorData.errors.join(', ')}`);
+                }
+                
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error fetching hotlines by category:', error);
-            return { success: false, data: [], error: error.message };
+            console.error('Error creating document request:', error);
+            throw error;
         }
     }
 
-    async getAllHotlines(params = {}) {
+    async getAllDocumentRequests(params = {}) {
         try {
             const queryParams = new URLSearchParams();
             
@@ -39,7 +43,7 @@ class HotlineService {
                 }
             });
 
-            const url = `${API_BASE_URL}/hotlines?${queryParams.toString()}`;
+            const url = `${API_BASE_URL}/document-requests?${queryParams.toString()}`;
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -55,35 +59,14 @@ class HotlineService {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error fetching hotlines:', error);
-            return { success: false, data: [], error: error.message };
-        }
-    }
-
-    async getEmergencyHotlines() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/hotlines/emergency`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching emergency hotlines:', error);
+            console.error('Error fetching document requests:', error);
             throw error;
         }
     }
 
-    async getCategories() {
+    async getDocumentRequestById(id) {
         try {
-            const response = await fetch(`${API_BASE_URL}/hotlines/categories`, {
+            const response = await fetch(`${API_BASE_URL}/document-requests/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,29 +74,40 @@ class HotlineService {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error fetching categories:', error);
-            return { 
-                success: false, 
-                data: [
-                    "Emergency",
-                    "Health Services", 
-                    "Police & Security",
-                    "Fire Department",
-                    "Medical Emergency",
-                    "Animal Bite Center",
-                    "Peace and Order",
-                    "Towing Services and Assistance"
-                ],
-                error: error.message 
-            };
+            console.error('Error fetching document request:', error);
+            throw error;
+        }
+    }
+
+    async updateDocumentRequest(id, updateData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/document-requests/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error updating document request:', error);
+            throw error;
         }
     }
 }
 
-export default new HotlineService();
+export default new DocumentRequestService();

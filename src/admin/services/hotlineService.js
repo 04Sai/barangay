@@ -190,6 +190,40 @@ class HotlineService {
             throw error;
         }
     }
+
+    async getCategories() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/hotlines/categories`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            return { 
+                success: false, 
+                data: [
+                    "Emergency",
+                    "Health Services", 
+                    "Police & Security",
+                    "Fire Department",
+                    "Medical Emergency",
+                    "Animal Bite Center",
+                    "Peace and Order",
+                    "Towing Services and Assistance"
+                ],
+                error: error.message 
+            };
+        }
+    }
 }
 
 export default new HotlineService();

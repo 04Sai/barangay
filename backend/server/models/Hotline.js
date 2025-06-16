@@ -34,21 +34,14 @@ const hotlineSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Category is required'],
         enum: [
-            'Emergency',
-            'Health Services',
-            'Police & Security',
-            'Fire Department',
-            'Medical Emergency',
-            'Public Utilities',
-            'Government Services',
-            'Community Services',
-            'Transportation',
-            'Mental Health',
-            'Senior Citizens',
-            'Youth Services',
-            'Animal Control',
-            'Environmental',
-            'Disaster Response'
+            "Emergency",
+    "Health Services",
+    "Police & Security",
+    "Fire Department",
+    "Medical Emergency",
+    "Animal Bite Center",
+    "Peace and Order",
+    "Towing Services and Assistance"
         ]
     },
     priority: {

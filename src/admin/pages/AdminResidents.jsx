@@ -248,13 +248,13 @@ const AdminResidents = () => {
         <h2 className="text-2xl font-karla font-bold text-white">
           All Barangay Residents
         </h2>
-        <button
+        {/* <button
           onClick={handleAddResident}
           className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors mt-4 md:mt-0"
         >
           <FaUserPlus className="mr-2" />
           Register New Resident
-        </button>
+        </button> */}
       </div>
 
       {error && (

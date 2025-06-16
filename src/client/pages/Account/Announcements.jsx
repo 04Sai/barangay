@@ -44,7 +44,6 @@ const Announcements = () => {
     "Default": <FaBullhorn className="text-blue-400" />
   };
 
-  // Fetch announcements data
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
@@ -60,21 +59,15 @@ const Announcements = () => {
           params.category = selectedCategory;
         }
 
-        console.log('Fetching announcements with params:', params);
         const response = await announcementService.getAllAnnouncements(params);
         
         if (response && response.success) {
           setAnnouncements(response.data || []);
-          console.log('Successfully loaded announcements:', response.data?.length || 0);
         } else {
           throw new Error(response?.message || "Failed to fetch announcements");
         }
       } catch (err) {
-        console.error("Error fetching announcements:", err);
         setError(`Failed to load announcements: ${err.message}`);
-        
-        // Fallback to empty array instead of static data
-        console.log('Falling back to empty announcements array');
         setAnnouncements([]);
       } finally {
         setLoading(false);
@@ -123,10 +116,8 @@ const Announcements = () => {
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">
       <div className="screen-max-width mx-auto">
-        {/* Glassmorphism container */}
         <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6">
           <div className="space-y-2 mb-6 relative">
-            {/* Image positioned on top right */}
             <div className="absolute right-0 top-0">
               <img
                 src={AnnouncementImage}
@@ -143,7 +134,6 @@ const Announcements = () => {
             </p>
           </div>
 
-          {/* Error Display */}
           {error && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
               <p className="text-red-200">{error}</p>
@@ -153,7 +143,6 @@ const Announcements = () => {
             </div>
           )}
 
-          {/* Category Filter */}
           <div className="mb-8 mt-12">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
               Filter by Category
@@ -175,7 +164,6 @@ const Announcements = () => {
             </div>
           </div>
 
-          {/* Announcements List */}
           <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-6 text-shadow">
               {selectedCategory === "All" ? "All Announcements" : `${selectedCategory} Announcements`}
@@ -244,7 +232,6 @@ const Announcements = () => {
             )}
           </div>
 
-          {/* Add back button at the bottom right */}
           <div className="flex justify-end mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>

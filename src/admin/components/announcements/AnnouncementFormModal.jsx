@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import FormModal from "../common/FormModal";
+import { dropdownStyles } from "../../utils/formStyles";
 
 const AnnouncementFormModal = ({ announcement, isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -84,8 +85,7 @@ const AnnouncementFormModal = ({ announcement, isOpen, onClose, onSubmit }) => {
             onChange={handleInputChange}
             required
             disabled={submitting}
-            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
           />
         </div>
         <div>
@@ -96,12 +96,14 @@ const AnnouncementFormModal = ({ announcement, isOpen, onClose, onSubmit }) => {
             onChange={handleInputChange}
             required
             disabled={submitting}
-            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            className={dropdownStyles.select}
+            style={{ backgroundColor: "#1e3a8a" }}
           >
-            <option value="">Select Category</option>
+            <option value="" style={dropdownStyles.option}>
+              Select Category
+            </option>
             {categories.map((category) => (
-              <option key={category} value={category}>
+              <option key={category} value={category} style={dropdownStyles.option}>
                 {category}
               </option>
             ))}
@@ -116,8 +118,7 @@ const AnnouncementFormModal = ({ announcement, isOpen, onClose, onSubmit }) => {
             onChange={handleInputChange}
             required
             disabled={submitting}
-            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
           />
         </div>
       </div>
@@ -130,8 +131,7 @@ const AnnouncementFormModal = ({ announcement, isOpen, onClose, onSubmit }) => {
           required
           rows="6"
           disabled={submitting}
-          className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white shadow-inner
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+          className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white"
         ></textarea>
       </div>
     </FormModal>

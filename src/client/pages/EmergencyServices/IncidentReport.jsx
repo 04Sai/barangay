@@ -471,7 +471,7 @@ const IncidentReport = () => {
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <label className="flex items-center text-white cursor-pointer">
                     <input
                       type="checkbox"
@@ -482,7 +482,7 @@ const IncidentReport = () => {
                     />
                     <span>This is an emergency situation</span>
                   </label>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -682,7 +682,7 @@ const IncidentReport = () => {
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="flex items-center bg-red-500/30 hover:bg-red-500/50 text-white px-6 py-3 rounded-lg border border-red-500/50 transition-colors disabled:opacity-50"
+                className="flex items-center bg-green-500 hover:bg-green-900 text-white px-6 py-3 rounded-lg border border-green-500/50 transition-colors disabled:opacity-50"
               >
                 {submitLoading ? (
                   <>

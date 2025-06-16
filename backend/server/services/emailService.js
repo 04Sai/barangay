@@ -56,6 +56,10 @@ const sendEmailVerification = async (email, firstName, verificationToken) => {
         console.log('Attempting to send email verification to:', email);
         console.log('SendGrid API Key configured:', !!process.env.SENDGRID_API_KEY);
         
+        if (!process.env.SENDGRID_API_KEY) {
+            throw new Error('SendGrid API key not configured');
+        }
+        
         const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:4000'}/verify-email?token=${verificationToken}`;
         
         const msg = {
@@ -132,7 +136,8 @@ const sendEmailVerification = async (email, firstName, verificationToken) => {
             });
         }
         
-        throw new Error('Failed to send verification email');
+        // Always throw the error to be caught by the calling function
+        throw new Error(`Failed to send verification email: ${error.message}`);
     }
 };
 

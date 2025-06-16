@@ -48,7 +48,7 @@ const AnimalBiteCenter = () => {
         // Fetch animal bite centers from backend with fallback
         try {
           const centersResponse = await hotlineService.getHotlinesByCategory(
-            "Animal Control"
+            "Animal Bite Center"
           );
           if (centersResponse && centersResponse.success) {
             setAnimalBiteCenters(centersResponse.data);
@@ -71,10 +71,6 @@ const AnimalBiteCenter = () => {
 
     fetchData();
   }, []);
-
-  const handleCall = (contact) => {
-    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
-  };
 
   if (loading) {
     return (
@@ -174,7 +170,7 @@ const AnimalBiteCenter = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{center.contact || center.contactNumbers?.[0]}</span>
+                    <span>{center.phoneNumber || center.contact || center.contactNumbers?.[0] || "Contact for details"}</span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -183,13 +179,8 @@ const AnimalBiteCenter = () => {
                   </div>
 
                   <CallButton
-                    onClick={() =>
-                      handleCall(center.contact || center.contactNumbers?.[0])
-                    }
-                    label="Call Now"
-                    icon={<FaPhone />}
+                    phoneNumber={center.phoneNumber || center.contact || center.contactNumbers?.[0]}
                     className="mt-auto"
-                    type="success"
                   />
                 </div>
               ))}

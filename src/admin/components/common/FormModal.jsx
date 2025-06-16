@@ -49,7 +49,7 @@ const FormModal = ({
             className="flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-white hover:bg-blue-700 disabled:opacity-70 transition-colors"
           >
             {submitting && <FaSpinner className="mr-2 animate-spin" />}
-            {submitText}
+            {submitting ? "Saving..." : submitText}
           </button>
         </div>
       </form>

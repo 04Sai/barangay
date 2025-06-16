@@ -47,7 +47,7 @@ const TowingAssistance = () => {
 
         // Fetch towing services from backend with fallback
         try {
-          const servicesResponse = await hotlineService.getHotlinesByCategory('Towing & Recovery');
+          const servicesResponse = await hotlineService.getHotlinesByCategory('Towing Services and Assistance');
           if (servicesResponse && servicesResponse.success) {
             setTowingServices(servicesResponse.data);
           } else {
@@ -70,10 +70,6 @@ const TowingAssistance = () => {
 
     fetchData();
   }, []);
-
-  const handleCall = (contact) => {
-    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
-  };
 
   if (loading) {
     return (
@@ -183,7 +179,7 @@ const TowingAssistance = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0]}</span>
+                    <span>{service.phoneNumber || service.contact || service.contactNumbers?.[0] || "Contact for details"}</span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -192,11 +188,8 @@ const TowingAssistance = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0])}
-                    label="Call Now"
-                    icon={<FaPhone />}
+                    phoneNumber={service.phoneNumber || service.contact || service.contactNumbers?.[0]}
                     className="mt-auto"
-                    type="warning"
                   />
                 </div>
               ))}
@@ -204,7 +197,7 @@ const TowingAssistance = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

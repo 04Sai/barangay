@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCalendarAlt,
   FaArrowLeft,
@@ -9,37 +9,87 @@ import {
   FaFileAlt,
   FaExchangeAlt,
   FaBan,
+  FaSpinner,
 } from "react-icons/fa";
-import { AppointmentsData } from "../../data";
 import ApptImage from "../../../assets/services/Appt.svg";
 import { useNavigate } from "react-router-dom";
 import Button, { BackButton } from "../../buttons";
+import appointmentService from "../../services/appointmentService";
 
 const Appointment = () => {
   const [filterType, setFilterType] = useState("All");
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch appointments from backend
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await appointmentService.getAllAppointments({
+          sortBy: "dateTime.scheduled",
+          sortOrder: "asc",
+          limit: 50,
+        });
+
+        if (response && response.success) {
+          setAppointments(response.data || []);
+        } else {
+          throw new Error(response.message || "Failed to fetch appointments");
+        }
+      } catch (err) {
+        console.error("Error fetching appointments:", err);
+        setError("Failed to load appointments from server");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
 
   // Filter appointments based on selected type
   const filteredAppointments =
     filterType === "All"
-      ? AppointmentsData
-      : AppointmentsData.filter((appt) => appt.type === filterType);
+      ? appointments
+      : appointments.filter((appt) => appt.type === filterType);
 
   // Get all unique types from appointments
   const appointmentTypes = [
     "All",
-    ...new Set(AppointmentsData.map((appt) => appt.type)),
+    ...new Set(appointments.map((appt) => appt.type)),
   ];
 
   // Function to format date
   const formatDate = (dateString) => {
-    const options = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString("en-US", options);
+    try {
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      return new Date(dateString).toLocaleDateString("en-US", options);
+    } catch (error) {
+      return "Date not available";
+    }
+  };
+
+  // Function to format time
+  const formatTime = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      return "Time not available";
+    }
   };
 
   // Function to get status color
@@ -51,10 +101,72 @@ const Appointment = () => {
         return "bg-yellow-600";
       case "Cancelled":
         return "bg-red-600";
+      case "Completed":
+        return "bg-blue-600";
+      case "In Progress":
+        return "bg-purple-600";
+      case "No Show":
+        return "bg-gray-600";
+      case "Rescheduled":
+        return "bg-orange-600";
       default:
         return "bg-blue-600";
     }
   };
+
+  // Handle status update
+  const handleStatusUpdate = async (appointmentId, newStatus) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to ${newStatus.toLowerCase()} this appointment?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUpdating(appointmentId);
+      const response = await appointmentService.updateAppointmentStatus(
+        appointmentId,
+        newStatus
+      );
+
+      if (response && response.success) {
+        // Update local state
+        setAppointments(
+          appointments.map((apt) =>
+            apt._id === appointmentId || apt.id === appointmentId
+              ? { ...apt, status: newStatus }
+              : apt
+          )
+        );
+      } else {
+        throw new Error(response.message || "Failed to update appointment");
+      }
+    } catch (err) {
+      console.error("Error updating appointment:", err);
+      alert("Failed to update appointment. Please try again.");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-28 pb-10 px-4 sm:px-6">
+        <div className="screen-max-width mx-auto">
+          <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-6">
+            <div className="flex justify-center items-center py-12">
+              <FaSpinner className="animate-spin text-white mr-2 text-2xl" />
+              <span className="text-white text-lg">
+                Loading your appointments...
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">
@@ -79,6 +191,13 @@ const Appointment = () => {
             </p>
           </div>
 
+          {/* Error display */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-200">{error}</p>
+            </div>
+          )}
+
           {/* Filter by type */}
           <div className="mb-8 mt-12">
             <div className="flex flex-wrap items-center gap-2">
@@ -100,18 +219,19 @@ const Appointment = () => {
           {/* Upcoming Appointments */}
           <div className="space-y-4">
             <h3 className="text-xl font-karla font-bold text-white mb-4 text-shadow">
-              Upcoming Appointments
+              Your Appointments ({filteredAppointments.length})
             </h3>
 
             {filteredAppointments.length === 0 ? (
               <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6 text-center text-white">
-                No appointments found. Schedule a new appointment through our
-                services.
+                {filterType === "All"
+                  ? "No appointments found. Schedule a new appointment through our services."
+                  : `No ${filterType} appointments found.`}
               </div>
             ) : (
               filteredAppointments.map((appointment) => (
                 <div
-                  key={appointment.id}
+                  key={appointment._id || appointment.id}
                   className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6"
                 >
                   <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
@@ -130,12 +250,20 @@ const Appointment = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center text-white mb-2">
                       <FaCalendarAlt className="mr-2 text-blue-400" />
-                      <span>{formatDate(appointment.date)}</span>
+                      <span>
+                        {formatDate(
+                          appointment.dateTime?.scheduled || appointment.date
+                        )}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-white mb-2">
                       <FaClock className="mr-2 text-blue-400" />
-                      <span>{appointment.time}</span>
+                      <span>
+                        {appointment.dateTime?.scheduled
+                          ? formatTime(appointment.dateTime.scheduled)
+                          : appointment.time}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-white mb-2">
@@ -145,34 +273,86 @@ const Appointment = () => {
 
                     <div className="flex items-center text-white mb-2">
                       <FaMapMarkerAlt className="mr-2 text-blue-400" />
-                      <span>{appointment.location}</span>
+                      <span>
+                        {appointment.location?.venue || appointment.location}
+                      </span>
                     </div>
+
+                    {appointment.appointee?.name && (
+                      <div className="flex items-center text-white mb-2">
+                        <FaUser className="mr-2 text-blue-400" />
+                        <span>Appointee: {appointment.appointee.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-white/5 p-4 rounded-lg border border-white/10 text-white">
                     <div className="flex items-start">
                       <FaInfoCircle className="mr-2 mt-1 text-blue-400 flex-shrink-0" />
-                      <p>{appointment.notes}</p>
+                      <p>
+                        {appointment.description ||
+                          appointment.notes ||
+                          "No additional notes"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex justify-end mt-4 space-x-2">
-                    {appointment.status !== "Cancelled" && (
+                    {appointment.status !== "Cancelled" &&
+                      appointment.status !== "Completed" && (
+                        <Button
+                          label={
+                            updating === (appointment._id || appointment.id)
+                              ? "Cancelling..."
+                              : "Cancel"
+                          }
+                          type="danger"
+                          icon={
+                            updating === (appointment._id || appointment.id) ? (
+                              <FaSpinner className="animate-spin" />
+                            ) : (
+                              <FaBan />
+                            )
+                          }
+                          onClick={() =>
+                            handleStatusUpdate(
+                              appointment._id || appointment.id,
+                              "Cancelled"
+                            )
+                          }
+                          disabled={
+                            updating === (appointment._id || appointment.id)
+                          }
+                          className="px-4 py-2"
+                        />
+                      )}
+                    {appointment.status === "Pending" && (
                       <Button
-                        label="Cancel"
-                        type="danger"
-                        icon={<FaBan />}
-                        onClick={() => {}} // This would be connected to your backend
+                        label={
+                          updating === (appointment._id || appointment.id)
+                            ? "Updating..."
+                            : "Reschedule"
+                        }
+                        type="primary"
+                        icon={
+                          updating === (appointment._id || appointment.id) ? (
+                            <FaSpinner className="animate-spin" />
+                          ) : (
+                            <FaExchangeAlt />
+                          )
+                        }
+                        onClick={() =>
+                          handleStatusUpdate(
+                            appointment._id || appointment.id,
+                            "Rescheduled"
+                          )
+                        }
+                        disabled={
+                          updating === (appointment._id || appointment.id)
+                        }
                         className="px-4 py-2"
                       />
                     )}
-                    <Button
-                      label="Reschedule"
-                      type="primary"
-                      icon={<FaExchangeAlt />}
-                      onClick={() => {}} // This would be connected to your backend
-                      className="px-4 py-2"
-                    />
                   </div>
                 </div>
               ))
@@ -180,7 +360,7 @@ const Appointment = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

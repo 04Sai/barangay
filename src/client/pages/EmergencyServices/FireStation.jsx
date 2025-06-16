@@ -70,10 +70,6 @@ const FireStation = () => {
     fetchData();
   }, []);
 
-  const handleCall = (contact) => {
-    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
-  };
-
   if (loading) {
     return (
       <div className="pt-28 pb-10 px-4 sm:px-6">
@@ -171,7 +167,7 @@ const FireStation = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{station.contact || station.contactNumbers?.[0]}</span>
+                    <span>{station.contact || station.contactNumbers?.[0] || station.phoneNumber || "Contact for details"}</span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -180,11 +176,8 @@ const FireStation = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(station.contact || station.contactNumbers?.[0])}
-                    label="Call Now"
-                    icon={<FaPhone />}
+                    phoneNumber={station.contact || station.contactNumbers?.[0] || station.phoneNumber}
                     className="mt-auto"
-                    type="danger"
                   />
                 </div>
               ))}
@@ -192,7 +185,7 @@ const FireStation = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

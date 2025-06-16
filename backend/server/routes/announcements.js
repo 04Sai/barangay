@@ -4,11 +4,8 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all announcements with filtering
 router.get('/', async (req, res) => {
     try {
-        console.log('Received announcements request with query:', req.query);
-        
         const { 
             category, 
             isActive, 
@@ -18,7 +15,6 @@ router.get('/', async (req, res) => {
             sortOrder 
         } = req.query;
         
-        // Build filter object
         const filter = {};
         
         if (category && category !== 'All') {
@@ -28,20 +24,15 @@ router.get('/', async (req, res) => {
             filter.isActive = isActive === 'true';
         }
 
-        console.log('Applied filter:', JSON.stringify(filter, null, 2));
-
-        // Pagination
         const pageNumber = parseInt(page) || 1;
         const pageSize = Math.min(parseInt(limit) || 25, 100);
         const skip = (pageNumber - 1) * pageSize;
 
-        // Sorting
         const sort = {};
         const sortField = sortBy || 'createdAt';
         const sortDirection = sortOrder === 'asc' ? 1 : -1;
         sort[sortField] = sortDirection;
 
-        // Execute the query
         const announcements = await Announcement.find(filter)
             .populate('createdBy', 'firstName lastName email')
             .sort(sort)
@@ -50,8 +41,6 @@ router.get('/', async (req, res) => {
             .lean();
 
         const total = await Announcement.countDocuments(filter);
-
-        console.log(`Found ${announcements.length} announcements out of ${total} total`);
 
         res.json({
             success: true,
@@ -68,7 +57,6 @@ router.get('/', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get announcements error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to fetch announcements', 
@@ -77,7 +65,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get single announcement
 router.get('/:id', async (req, res) => {
     try {
         const announcement = await Announcement.findById(req.params.id)
@@ -95,7 +82,6 @@ router.get('/:id', async (req, res) => {
             data: announcement
         });
     } catch (error) {
-        console.error('Get announcement error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to fetch announcement', 
@@ -104,7 +90,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Create new announcement
 router.post('/', async (req, res) => {
     try {
         const announcement = new Announcement(req.body);
@@ -116,7 +101,6 @@ router.post('/', async (req, res) => {
             data: announcement
         });
     } catch (error) {
-        console.error('Create announcement error:', error);
         if (error.name === 'ValidationError') {
             return res.status(400).json({ 
                 success: false,
@@ -132,7 +116,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Update announcement
 router.put('/:id', async (req, res) => {
     try {
         const announcement = await Announcement.findByIdAndUpdate(
@@ -154,7 +137,6 @@ router.put('/:id', async (req, res) => {
             data: announcement
         });
     } catch (error) {
-        console.error('Update announcement error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to update announcement', 
@@ -163,7 +145,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete announcement
 router.delete('/:id', async (req, res) => {
     try {
         const announcement = await Announcement.findByIdAndDelete(req.params.id);
@@ -180,7 +161,6 @@ router.delete('/:id', async (req, res) => {
             message: 'Announcement deleted successfully'
         });
     } catch (error) {
-        console.error('Delete announcement error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to delete announcement', 

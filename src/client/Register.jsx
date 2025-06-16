@@ -1,17 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import FormInput from "./components/FormInput";
 import FormCheckbox from "./components/FormCheckbox";
 import { BackButton } from "./buttons";
 import { API_ENDPOINTS } from "../config/api";
 
 const Register = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    middleName: "",
     contactNumber: "",
     email: "",
     password: "",
@@ -22,43 +19,74 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
-
+    
+    // Handle special validation for contact number (numbers only)
+    if (name === 'contactNumber') {
+      const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+    } else if (name === 'firstName' || name === 'lastName') {
+      // Allow only letters and spaces for names
+      const nameValue = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: nameValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+    
     if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: "",
-      });
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  const validate = () => {
+  const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim())
+    if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!formData.contactNumber.trim())
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.firstName.trim())) {
+      newErrors.firstName = "First name should contain only letters";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.lastName.trim())) {
+      newErrors.lastName = "Last name should contain only letters";
+    }
+
+    if (!formData.contactNumber.trim()) {
       newErrors.contactNumber = "Contact number is required";
+    } else if (!/^\d+$/.test(formData.contactNumber)) {
+      newErrors.contactNumber = "Contact number should contain only numbers";
+    } else if (formData.contactNumber.length < 10) {
+      newErrors.contactNumber = "Contact number must be at least 10 digits";
+    } else if (formData.contactNumber.length > 11) {
+      newErrors.contactNumber = "Contact number must not exceed 11 digits";
+    }
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (
-      !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)
-    ) {
-      newErrors.email = "Please provide a valid email";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -66,7 +94,7 @@ const Register = () => {
     }
 
     if (!formData.agreedToTerms) {
-      newErrors.agreedToTerms = "You must agree to terms and conditions";
+      newErrors.agreedToTerms = "You must agree to the terms and conditions";
     }
 
     return newErrors;
@@ -76,7 +104,7 @@ const Register = () => {
     e.preventDefault();
     setServerError("");
 
-    const validationErrors = validate();
+    const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -85,36 +113,44 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
-      const { confirmPassword, ...dataToSend } = formData;
+      const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          contactNumber: formData.contactNumber,
+          email: formData.email,
+          password: formData.password,
+          agreedToTerms: formData.agreedToTerms,
+        }),
+      });
 
-      const response = await axios.post(
-        API_ENDPOINTS.AUTH.REGISTER,
-        dataToSend
-      );
+      const data = await response.json();
 
-      if (response.status === 201) {
-        navigate("/login", {
-          state: { message: "Registration successful! Please log in." },
+      if (response.ok && data.emailSent) {
+        // Redirect to login with success message instead of verification page
+        navigate("/login", { 
+          state: { 
+            message: "Registration successful! Please check your email to verify your account before logging in." 
+          } 
         });
+      } else if (response.ok && !data.emailSent) {
+        setServerError("Registration completed but verification email could not be sent. Please contact support.");
+      } else {
+        setServerError(data.message || "Registration failed");
       }
     } catch (error) {
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
-        setServerError(
-          "Cannot connect to server. Please check your internet connection or try again later."
-        );
-      } else {
-        setServerError(
-          error.response?.data?.message ||
-            "Registration failed. Please try again."
-        );
-      }
+      setServerError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleGoBack = () => {
-    navigate(-1); // Navigate to the previous page in history
+    navigate(-1);
   };
 
   return (
@@ -136,18 +172,24 @@ const Register = () => {
               id="firstName"
               label="First Name *"
               name="firstName"
+              type="text"
               value={formData.firstName}
               onChange={handleChange}
               error={errors.firstName}
+              pattern="[a-zA-Z\s]+"
+              title="First name should contain only letters"
             />
 
             <FormInput
               id="lastName"
               label="Last Name *"
               name="lastName"
+              type="text"
               value={formData.lastName}
               onChange={handleChange}
               error={errors.lastName}
+              pattern="[a-zA-Z\s]+"
+              title="Last name should contain only letters"
             />
           </div>
 
@@ -155,9 +197,14 @@ const Register = () => {
             id="contactNumber"
             label="Contact Number *"
             name="contactNumber"
+            type="tel"
             value={formData.contactNumber}
             onChange={handleChange}
             error={errors.contactNumber}
+            maxLength={11}
+            pattern="[0-9]{10,11}"
+            title="Contact number should be 10-11 digits"
+            placeholder="09123456789"
           />
 
           <FormInput

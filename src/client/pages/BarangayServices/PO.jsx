@@ -48,7 +48,13 @@ const PO = () => {
 
         // Fetch peace and order services from backend with fallback
         try {
-          const servicesResponse = await hotlineService.getHotlinesByCategory('Police & Security');
+          // Try Peace and Order first, then Police & Security as fallback
+          let servicesResponse = await hotlineService.getHotlinesByCategory('Peace and Order');
+          
+          if (!servicesResponse || !servicesResponse.success || servicesResponse.data.length === 0) {
+            servicesResponse = await hotlineService.getHotlinesByCategory('Police & Security');
+          }
+          
           if (servicesResponse && servicesResponse.success) {
             setPeaceOrderServices(servicesResponse.data);
           } else {
@@ -71,10 +77,6 @@ const PO = () => {
 
     fetchData();
   }, []);
-
-  const handleCall = (contact) => {
-    window.location.href = `tel:${contact.replace(/[^0-9]/g, "")}`;
-  };
 
   const getServiceTypeIcon = (type) => {
     switch (type) {
@@ -214,7 +216,7 @@ const PO = () => {
 
                   <div className="flex items-center space-x-2 mb-1 text-white">
                     <FaPhone className="flex-shrink-0" />
-                    <span>{service.contact || service.contactNumbers?.[0] || service.phoneNumber}</span>
+                    <span>{service.phoneNumber || service.contact || service.contactNumbers?.[0] || "Contact for details"}</span>
                   </div>
 
                   <div className="text-white mb-4">
@@ -222,11 +224,8 @@ const PO = () => {
                   </div>
 
                   <CallButton
-                    onClick={() => handleCall(service.contact || service.contactNumbers?.[0] || service.phoneNumber)}
-                    label="Call Now"
-                    icon={<FaPhone />}
+                    phoneNumber={service.phoneNumber || service.contact || service.contactNumbers?.[0]}
                     className="mt-auto"
-                    type="primary"
                   />
                 </div>
               ))}
@@ -234,7 +233,7 @@ const PO = () => {
           </div>
 
           {/* Add back button at the bottom right */}
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-start mt-6">
             <BackButton onClick={() => navigate(-1)} icon={<FaArrowLeft />} />
           </div>
         </div>

@@ -37,7 +37,6 @@ const AdminHotlines = () => {
   const [filters, setFilters] = useState({
     search: "",
     category: "",
-    priority: "",
     availability: "",
     isActive: "",
     isVerified: "",
@@ -49,19 +48,11 @@ const AdminHotlines = () => {
     "Police & Security",
     "Fire Department",
     "Medical Emergency",
-    "Public Utilities",
-    "Government Services",
-    "Community Services",
-    "Transportation",
-    "Mental Health",
-    "Senior Citizens",
-    "Youth Services",
-    "Animal Control",
-    "Environmental",
-    "Disaster Response",
+    "Animal Bite Center",
+    "Peace and Order",
+    "Towing Services and Assistance"
   ];
 
-  const priorities = ["Critical", "High", "Medium", "Low"];
   const availabilities = [
     "24/7",
     "Business Hours",
@@ -258,21 +249,6 @@ const AdminHotlines = () => {
     );
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "Critical":
-        return "bg-red-500";
-      case "High":
-        return "bg-orange-500";
-      case "Medium":
-        return "bg-yellow-500";
-      case "Low":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Emergency":
@@ -394,7 +370,7 @@ const AdminHotlines = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="relative">
             <input
               type="text"
@@ -421,27 +397,6 @@ const AdminHotlines = () => {
             {categories.map((cat) => (
               <option key={cat} value={cat} style={dropdownStyles.option}>
                 {cat}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="priority"
-            value={filters.priority}
-            onChange={handleFilterChange}
-            className={dropdownStyles.select}
-            style={{ backgroundColor: "#1e3a8a" }}
-          >
-            <option value="" style={dropdownStyles.option}>
-              All Priorities
-            </option>
-            {priorities.map((priority) => (
-              <option
-                key={priority}
-                value={priority}
-                style={dropdownStyles.option}
-              >
-                {priority}
               </option>
             ))}
           </select>
@@ -513,10 +468,8 @@ const AdminHotlines = () => {
           onClose={() => setShowForm(false)}
           onSubmit={handleSubmitHotline}
           categories={categories}
-          priorities={priorities}
           availabilities={availabilities}
           responseTimes={responseTimes}
-          supportedLanguages={supportedLanguages}
         />
 
         {/* Hotlines Table */}
@@ -538,7 +491,6 @@ const AdminHotlines = () => {
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Category</th>
                 <th className="px-4 py-3 text-left">Phone</th>
-                <th className="px-4 py-3 text-left">Priority</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -580,15 +532,6 @@ const AdminHotlines = () => {
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs text-white ${getPriorityColor(
-                        hotline.priority
-                      )}`}
-                    >
-                      {hotline.priority}
-                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">

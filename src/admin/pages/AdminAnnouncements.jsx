@@ -10,35 +10,30 @@ const AdminAnnouncements = () => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [setFormData] = useState({
+  const [formData, setFormData] = useState({
     title: "",
     category: "",
     date: new Date().toISOString().split("T")[0],
     content: "",
   });
 
-  // Load announcements from database
   const loadAnnouncements = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Admin: Loading announcements from database');
       const response = await announcementService.getAllAnnouncements({
-        // Don't filter by isActive in admin - show all announcements
         limit: 100,
       });
 
       if (response.success) {
         setAnnouncements(response.data);
-        console.log('Admin: Successfully loaded announcements:', response.data?.length || 0);
       } else {
         throw new Error(response.message || "Failed to load announcements");
       }
     } catch (error) {
-      console.error("Admin: Error loading announcements:", error);
       setError(`Failed to load announcements: ${error.message}. Please check if the backend server is running.`);
-      setAnnouncements([]); // Don't use fallback data in admin
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
@@ -77,7 +72,6 @@ const AdminAnnouncements = () => {
       setError(null);
 
       if (id) {
-        // Update existing announcement
         const response = await announcementService.updateAnnouncement(id, data);
         if (response.success) {
           setAnnouncements(
@@ -90,7 +84,6 @@ const AdminAnnouncements = () => {
           throw new Error(response.message || "Failed to update announcement");
         }
       } else {
-        // Create new announcement
         const response = await announcementService.createAnnouncement(data);
         if (response.success) {
           setAnnouncements([response.data, ...announcements]);
@@ -107,7 +100,6 @@ const AdminAnnouncements = () => {
 
       return success;
     } catch (error) {
-      console.error("Error submitting announcement:", error);
       setError(error.message || "Failed to save announcement");
       return false;
     }
@@ -127,7 +119,6 @@ const AdminAnnouncements = () => {
         throw new Error(response.message || "Failed to delete announcement");
       }
     } catch (error) {
-      console.error("Error deleting announcement:", error);
       setError(error.message);
     }
   };
@@ -173,7 +164,6 @@ const AdminAnnouncements = () => {
         </div>
       )}
 
-      {/* Form Modal */}
       <AnnouncementFormModal
         announcement={
           editingId ? announcements.find((a) => a._id === editingId) : null
