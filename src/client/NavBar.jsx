@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/BSERS-logo.svg";
 import { LoginButton } from "./buttons";
+import { SpeechControls } from "./components/WebSpeech";
 
 const NavBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -87,6 +88,7 @@ const NavBar = () => {
           </Link>
         </div>
         <div className="flex items-center gap-4">
+          <SpeechControls />
           <>
             <LoginButton onClick={() => navigate("/login")} />
             <Link

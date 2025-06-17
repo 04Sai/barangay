@@ -9,6 +9,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { EmgergencyServicesData, BarangayServicesData } from "../data";
+import { useSpeech } from "../components/WebSpeech";
 
 // Import images directly to ensure they're available
 import IncidentReport from "../../assets/services/IncidentReport.svg";
@@ -32,6 +33,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { speak } = useSpeech();
 
   // Image mapping objects for both service types
   const emergencyImages = {
@@ -370,7 +372,7 @@ const Dashboard = () => {
     "Community Event": <FaBullhorn className="text-blue-400" />,
     "Health Service": <FaInfoCircle className="text-green-400" />,
     "Health Advisory": <FaExclamationCircle className="text-yellow-400" />,
-    "Emergency": <FaExclamationCircle className="text-red-400" />,
+    Emergency: <FaExclamationCircle className="text-red-400" />,
     Default: <FaBullhorn className="text-blue-400" />,
   };
 
@@ -394,23 +396,29 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchRecentAnnouncements = async () => {
       try {
-        console.log('Dashboard: Fetching recent announcements');
+        console.log("Dashboard: Fetching recent announcements");
         const response = await announcementService.getAllAnnouncements({
           isActive: true,
           limit: 5,
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
+          sortBy: "createdAt",
+          sortOrder: "desc",
         });
 
         if (response.success) {
-          console.log('Dashboard: Successfully fetched announcements:', response.data?.length || 0);
+          console.log(
+            "Dashboard: Successfully fetched announcements:",
+            response.data?.length || 0
+          );
           setRecentAnnouncements(response.data || []);
         } else {
-          console.error('Dashboard: Failed to fetch announcements:', response.error);
+          console.error(
+            "Dashboard: Failed to fetch announcements:",
+            response.error
+          );
           setRecentAnnouncements([]);
         }
       } catch (error) {
-        console.error('Dashboard: Error fetching announcements:', error);
+        console.error("Dashboard: Error fetching announcements:", error);
         setRecentAnnouncements([]);
       }
     };
@@ -435,6 +443,12 @@ const Dashboard = () => {
     };
     setCurrentDate(now.toLocaleDateString("en-US", options));
   }, []);
+
+  // Enhanced navigation functions with speech
+  const navigateTo = (path, announcement) => {
+    speak(announcement);
+    navigate(path);
+  };
 
   return (
     <div className="pt-28 pb-10 px-4 sm:px-6">

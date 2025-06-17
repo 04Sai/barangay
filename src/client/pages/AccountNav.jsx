@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../assets/BSERS-logo.svg";
+import { SpeechControls, useSpeech } from "../components/WebSpeech";
 
 const AccountNav = () => {
+  const { speak } = useSpeech();
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -13,10 +15,12 @@ const AccountNav = () => {
   };
 
   const handleLogoutClick = () => {
+    speak("Confirm logout?");
     setShowLogoutConfirm(true);
   };
 
   const handleLogoutConfirm = () => {
+    speak("Logging out. Goodbye!");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     // Navigate to the home page instead of login page
@@ -24,6 +28,7 @@ const AccountNav = () => {
   };
 
   const handleLogoutCancel = () => {
+    speak("Logout cancelled");
     setShowLogoutConfirm(false);
   };
 
@@ -38,6 +43,7 @@ const AccountNav = () => {
           Barangay Dulong Bayan
         </h3>
         <div className="flex items-center space-x-6">
+          <SpeechControls />
           <Link
             to="/account"
             className={`text-white py-1 px-3 rounded-full transition-all duration-200 

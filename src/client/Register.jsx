@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import FormInput from "./components/FormInput";
 import FormCheckbox from "./components/FormCheckbox";
 import { BackButton } from "./buttons";
 import { API_ENDPOINTS } from "../config/api";
+import { useSpeech } from "./components/WebSpeech";
 
 const Register = () => {
+  const { speak } = useSpeech();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -21,32 +23,37 @@ const Register = () => {
   const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Announce the page on load
+    speak("Registration page. Create a new account here.");
+  }, [speak]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Handle special validation for contact number (numbers only)
-    if (name === 'contactNumber') {
-      const numericValue = value.replace(/\D/g, ''); // Remove non-numeric characters
-      setFormData(prev => ({
+    if (name === "contactNumber") {
+      const numericValue = value.replace(/\D/g, ""); // Remove non-numeric characters
+      setFormData((prev) => ({
         ...prev,
-        [name]: numericValue
+        [name]: numericValue,
       }));
-    } else if (name === 'firstName' || name === 'lastName') {
+    } else if (name === "firstName" || name === "lastName") {
       // Allow only letters and spaces for names
-      const nameValue = value.replace(/[^a-zA-Z\s]/g, '');
-      setFormData(prev => ({
+      const nameValue = value.replace(/[^a-zA-Z\s]/g, "");
+      setFormData((prev) => ({
         ...prev,
-        [name]: nameValue
+        [name]: nameValue,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === "checkbox" ? checked : value,
       }));
     }
-    
+
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -85,8 +92,13 @@ const Register = () => {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
+    } else if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(
+        formData.password
+      )
+    ) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -107,10 +119,12 @@ const Register = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      speak("Please input the correct credentials in the form.");
       return;
     }
 
     setIsSubmitting(true);
+    speak("Submitting registration. Please wait.");
 
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
@@ -132,18 +146,29 @@ const Register = () => {
 
       if (response.ok && data.emailSent) {
         // Redirect to login with success message instead of verification page
-        navigate("/login", { 
-          state: { 
-            message: "Registration successful! Please check your email to verify your account before logging in." 
-          } 
+        navigate("/login", {
+          state: {
+            message:
+              "Registration successful! Please check your email to verify your account before logging in.",
+          },
         });
+        speak(
+          "Registration successful! Please check your email to verify your account."
+        );
       } else if (response.ok && !data.emailSent) {
-        setServerError("Registration completed but verification email could not be sent. Please contact support.");
+        setServerError(
+          "Registration completed but verification email could not be sent. Please contact support."
+        );
+        speak(
+          "Registration completed but verification email could not be sent. Please contact support."
+        );
       } else {
         setServerError(data.message || "Registration failed");
+        speak("Registration failed. Please try again.");
       }
     } catch (error) {
       setServerError("Network error. Please try again.");
+      speak("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

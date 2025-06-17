@@ -5,10 +5,12 @@ import FormInput from "./components/FormInput";
 import FormCheckbox from "./components/FormCheckbox";
 import { BackButton } from "./buttons";
 import { API_ENDPOINTS } from "../config/api";
+import { useSpeech } from "./components/WebSpeech";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { speak } = useSpeech();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,8 +37,9 @@ const Login = () => {
 
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
+      speak(location.state.message);
     }
-  }, [location]);
+  }, [location, speak]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -76,10 +79,12 @@ const Login = () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      speak("Please fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
+    speak("Attempting to log in. Please wait.");
 
     try {
       const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, {
@@ -97,7 +102,9 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
         setLoginSuccess(true);
-        setSuccessMessage("Login successful! Redirecting to your account...");
+        const successMsg = "Login successful! Redirecting to your account...";
+        setSuccessMessage(successMsg);
+        speak(successMsg);
 
         setTimeout(() => {
           navigate("/account");
@@ -108,23 +115,27 @@ const Login = () => {
         error.code === "ERR_NETWORK" ||
         error.message.includes("Network Error")
       ) {
-        setServerError(
-          "Cannot connect to server. Please check your internet connection or try again later."
-        );
+        const errorMsg =
+          "Cannot connect to server. Please check your internet connection or try again later.";
+        setServerError(errorMsg);
+        speak(errorMsg);
       } else if (error.response?.data?.emailNotVerified) {
+        const errorMsg =
+          "Email not verified. Check your email for the verification link or request a new one.";
         setServerError(
           error.response.data.message +
             " " +
             "Check your email for the verification link or request a new one."
         );
+        speak(errorMsg);
         // Show resend verification option
         setShowResendVerification(true);
         setUserEmail(error.response.data.email);
       } else {
-        setServerError(
-          error.response?.data?.message ||
-            "Login failed. Please check your credentials and try again."
-        );
+        const errorMsg =
+          "Login failed. Please check your credentials and try again.";
+        setServerError(error.response?.data?.message || errorMsg);
+        speak(errorMsg);
       }
     } finally {
       setIsSubmitting(false);

@@ -43,8 +43,8 @@ const Announcement = () => {
         const params = {
           isActive: true,
           limit: 50,
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
+          sortBy: "createdAt",
+          sortOrder: "desc",
         };
 
         if (filterCategory !== "All") {
@@ -55,7 +55,9 @@ const Announcement = () => {
 
         if (response.success) {
           setAnnouncements(response.data || []);
-          setTotalPages(Math.ceil((response.data || []).length / announcementsPerPage));
+          setTotalPages(
+            Math.ceil((response.data || []).length / announcementsPerPage)
+          );
         } else {
           throw new Error(response.error || "Failed to fetch announcements");
         }
@@ -103,22 +105,6 @@ const Announcement = () => {
     }
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
   if (loading) {
     return (
       <div className="pt-24 pb-6 px-4 sm:px-6 h-screen flex flex-col">
@@ -126,7 +112,9 @@ const Announcement = () => {
           <div className="backdrop-blur-md bg-white/20 rounded-lg border border-white/30 shadow-lg p-5 flex flex-col h-full">
             <div className="flex justify-center items-center flex-grow">
               <FaSpinner className="animate-spin text-white text-2xl mr-3" />
-              <span className="text-white text-lg">Loading announcements...</span>
+              <span className="text-white text-lg">
+                Loading announcements...
+              </span>
             </div>
           </div>
         </div>
@@ -172,9 +160,9 @@ const Announcement = () => {
                   label={category}
                   type={filterCategory === category ? "primary" : "outline"}
                   className={`px-2 py-1 rounded-full text-xs ${
-                    filterCategory !== category
-                      ? "text-white border-white/30"
-                      : ""
+                    filterCategory === category
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-transparent border-white/50 text-white hover:bg-black/20 hover:border-white"
                   }`}
                 />
               ))}
@@ -187,7 +175,7 @@ const Announcement = () => {
                 <FaBullhorn className="text-gray-400 text-4xl mx-auto mb-4" />
                 <p className="text-lg">No announcements found</p>
                 <p className="text-sm text-gray-300 mt-1">
-                  {filterCategory === "All" 
+                  {filterCategory === "All"
                     ? "There are currently no active announcements."
                     : `No announcements found in the "${filterCategory}" category.`}
                 </p>
@@ -216,7 +204,11 @@ const Announcement = () => {
 
                     <div className="flex items-center text-white text-sm mb-1">
                       <FaCalendarAlt className="mr-2 text-xs" />
-                      <span>{formatDate(announcement.date || announcement.createdAt)}</span>
+                      <span>
+                        {formatDate(
+                          announcement.date || announcement.createdAt
+                        )}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-white text-sm mb-2">
@@ -243,46 +235,7 @@ const Announcement = () => {
 
           <div className="mt-auto pt-2 border-t border-white/20">
             <div className="flex justify-between items-center">
-              {totalPages > 1 && (
-                <div className="flex space-x-1">
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handlePageChange(index + 1)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        currentPage === index + 1
-                          ? "bg-blue-600 transform scale-125"
-                          : "bg-white/30 hover:bg-white/50"
-                      }`}
-                      aria-label={`Page ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-
               <div className="flex space-x-2">
-                {totalPages > 1 && (
-                  <>
-                    <Button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 1}
-                      label=""
-                      type="primary"
-                      className={`p-2 ${currentPage === 1 ? "opacity-50" : ""}`}
-                      icon={<FaChevronLeft />}
-                    />
-                    <Button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      label=""
-                      type="primary"
-                      className={`p-2 ${
-                        currentPage === totalPages ? "opacity-50" : ""
-                      }`}
-                      icon={<FaChevronRight />}
-                    />
-                  </>
-                )}
                 <Button
                   onClick={() => navigate(-1)}
                   label="Back"

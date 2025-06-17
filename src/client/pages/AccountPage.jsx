@@ -1,5 +1,5 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import AccountNav from "./AccountNav";
 import Dashboard from "./Dashboard";
 import AccountSettings from "./AccountSettings";
@@ -16,8 +16,39 @@ import HealthServices from "./BarangayServices/HealthServices";
 import PO from "./BarangayServices/PO";
 import DocumentServices from "./BarangayServices/DocumentServices";
 import Appointment from "./BarangayServices/Appointment";
+import { useSpeech } from "../components/WebSpeech";
+
+// Map routes to descriptive names for speech
+const routeDescriptions = {
+  "/account": "Dashboard",
+  "/account/profile": "Account Settings",
+  "/account/incident-report": "Incident Report",
+  "/account/incident-report/step2": "Incident Report Step 2",
+  "/account/incident-report/preview": "Incident Report Preview",
+  "/account/medical-assistance": "Medical Assistance",
+  "/account/police-station": "Police Station",
+  "/account/fire-station": "Fire Station",
+  "/account/animal-bite-center": "Animal Bite Center",
+  "/account/towing-assistance": "Towing Assistance",
+  "/account/announcements": "Announcements",
+  "/account/health-services": "Health Services",
+  "/account/peace-and-order": "Peace and Order",
+  "/account/document-services": "Document Services",
+  "/account/appointments": "Appointments",
+};
 
 const Account = () => {
+  const location = useLocation();
+  const { speak } = useSpeech();
+
+  // Announce page changes
+  useEffect(() => {
+    const description = routeDescriptions[location.pathname];
+    if (description) {
+      speak(`Navigated to ${description}`);
+    }
+  }, [location.pathname, speak]);
+
   return (
     <div className="account-bg">
       <AccountNav />

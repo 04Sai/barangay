@@ -28,6 +28,7 @@ import AdminAppointments from "./admin/pages/AdminAppointments";
 import AdminResidents from "./admin/pages/AdminResidents";
 import AdminSettings from "./admin/pages/AdminSettings";
 import AdminLogin from "./admin/pages/AdminLogin";
+import { SpeechProvider } from "./client/components/WebSpeech";
 
 // Non-auth route component to redirect authenticated users away from public pages
 const NonAuthRoute = ({ children }) => {
@@ -237,9 +238,11 @@ const Layout = () => {
 
 const App = () => {
   return (
-    <Router>
-      <Layout />
-    </Router>
+    <SpeechProvider>
+      <Router>
+        <Layout />
+      </Router>
+    </SpeechProvider>
   );
 };
 

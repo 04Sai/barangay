@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { 
-  FaBullhorn, 
-  FaCalendarAlt, 
-  FaArrowLeft, 
+import {
+  FaBullhorn,
+  FaCalendarAlt,
+  FaArrowLeft,
   FaSpinner,
   FaExclamationCircle,
-  FaInfoCircle
+  FaInfoCircle,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "../../buttons";
@@ -22,26 +22,26 @@ const BarangayAnnouncements = () => {
   const categories = [
     "All",
     "Community Event",
-    "Utility Advisory", 
+    "Utility Advisory",
     "Health Service",
     "Health Advisory",
     "Sports Event",
     "Emergency",
-    "General"
+    "General",
   ];
 
   const priorityColors = {
     high: "bg-red-500/20 border-red-500/30 text-red-200",
-    medium: "bg-yellow-500/20 border-yellow-500/30 text-yellow-200", 
-    low: "bg-green-500/20 border-green-500/30 text-green-200"
+    medium: "bg-yellow-500/20 border-yellow-500/30 text-yellow-200",
+    low: "bg-green-500/20 border-green-500/30 text-green-200",
   };
 
   const categoryIcons = {
     "Community Event": <FaBullhorn className="text-blue-400" />,
     "Health Service": <FaInfoCircle className="text-green-400" />,
     "Health Advisory": <FaExclamationCircle className="text-yellow-400" />,
-    "Emergency": <FaExclamationCircle className="text-red-400" />,
-    "Default": <FaBullhorn className="text-blue-400" />
+    Emergency: <FaExclamationCircle className="text-red-400" />,
+    Default: <FaBullhorn className="text-blue-400" />,
   };
 
   // Fetch announcements data
@@ -53,7 +53,7 @@ const BarangayAnnouncements = () => {
 
         const params = {
           isActive: true,
-          limit: 50
+          limit: 50,
         };
 
         if (selectedCategory !== "All") {
@@ -61,7 +61,7 @@ const BarangayAnnouncements = () => {
         }
 
         const response = await announcementService.getAllAnnouncements(params);
-        
+
         if (response && response.success) {
           setAnnouncements(response.data || []);
         } else {
@@ -70,7 +70,7 @@ const BarangayAnnouncements = () => {
       } catch (err) {
         console.error("Error fetching announcements:", err);
         setError("Failed to load announcements");
-        
+
         // Fallback to empty array instead of static data
         setAnnouncements([]);
       } finally {
@@ -86,8 +86,8 @@ const BarangayAnnouncements = () => {
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
         year: "numeric",
-        month: "long", 
-        day: "numeric"
+        month: "long",
+        day: "numeric",
       });
     } catch (error) {
       return "Date not available";
@@ -175,9 +175,12 @@ const BarangayAnnouncements = () => {
           {/* Announcements List */}
           <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/30 shadow-lg p-6">
             <h3 className="text-xl font-karla font-bold text-white mb-6 text-shadow">
-              {selectedCategory === "All" ? "All Announcements" : `${selectedCategory} Announcements`}
+              {selectedCategory === "All"
+                ? "All Announcements"
+                : `${selectedCategory} Announcements`}
               <span className="ml-2 text-sm font-normal text-gray-300">
-                ({announcements.length} {announcements.length === 1 ? 'announcement' : 'announcements'})
+                ({announcements.length}{" "}
+                {announcements.length === 1 ? "announcement" : "announcements"})
               </span>
             </h3>
 
@@ -186,7 +189,7 @@ const BarangayAnnouncements = () => {
                 <FaBullhorn className="text-gray-400 text-4xl mx-auto mb-4" />
                 <p className="text-gray-300 text-lg">No announcements found</p>
                 <p className="text-gray-400 text-sm">
-                  {selectedCategory === "All" 
+                  {selectedCategory === "All"
                     ? "There are currently no active announcements."
                     : `No announcements found in the "${selectedCategory}" category.`}
                 </p>
@@ -208,7 +211,9 @@ const BarangayAnnouncements = () => {
                           <div className="flex items-center space-x-4 mt-1">
                             <span className="text-sm text-gray-300 flex items-center">
                               <FaCalendarAlt className="mr-1" />
-                              {formatDate(announcement.date || announcement.createdAt)}
+                              {formatDate(
+                                announcement.date || announcement.createdAt
+                              )}
                             </span>
                             <span className="text-sm px-2 py-1 rounded bg-blue-500/20 border border-blue-500/30 text-blue-200">
                               {announcement.category}
@@ -216,9 +221,13 @@ const BarangayAnnouncements = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {announcement.priority && (
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityClass(announcement.priority)}`}>
+                        <div
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityClass(
+                            announcement.priority
+                          )}`}
+                        >
                           {announcement.priority.toUpperCase()} PRIORITY
                         </div>
                       )}

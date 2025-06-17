@@ -24,8 +24,10 @@ import {
   generateDays,
 } from "../data/inputfieldsdata.js";
 import { API_ENDPOINTS } from "../../config/api";
+import { useSpeech } from "../components/WebSpeech";
 
 const AccountSettings = () => {
+  const { speak, speakLabel, speakInput, speakSelect } = useSpeech();
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -66,19 +68,24 @@ const AccountSettings = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
+    // Validate file type with speech feedback
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file");
+      const errorMsg = "Please select a valid image file";
+      speak(errorMsg);
+      setError(errorMsg);
       return;
     }
 
-    // Validate file size (max 5MB)
+    // Validate file size with speech feedback
     if (file.size > 5 * 1024 * 1024) {
-      setError("Image size should be less than 5MB");
+      const errorMsg = "Image size should be less than 5MB";
+      speak(errorMsg);
+      setError(errorMsg);
       return;
     }
 
     try {
+      speak("Uploading profile picture. Please wait.");
       setUploadingImage(true);
       setError("");
 
@@ -100,10 +107,13 @@ const AccountSettings = () => {
 
       setImagePreview(base64);
       setSuccess("Profile picture uploaded successfully!");
+      speak("Profile picture uploaded successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error("Error converting image:", err);
-      setError("Failed to process image");
+      const errorMsg = "Failed to process image";
+      speak(errorMsg);
+      setError(errorMsg);
     } finally {
       setUploadingImage(false);
     }
@@ -116,7 +126,9 @@ const AccountSettings = () => {
       profilePicture: null,
     }));
     setImagePreview(null);
-    setSuccess("Profile picture removed. Don't forget to save changes.");
+    const msg = "Profile picture removed. Don't forget to save changes.";
+    speak(msg);
+    setSuccess(msg);
     setTimeout(() => setSuccess(""), 3000);
   };
 
@@ -170,9 +182,11 @@ const AccountSettings = () => {
 
         if (!response.ok) {
           // Check if we're getting HTML instead of JSON (wrong endpoint)
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('text/html')) {
-            throw new Error('Backend offline or wrong endpoint - using local data');
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("text/html")) {
+            throw new Error(
+              "Backend offline or wrong endpoint - using local data"
+            );
           }
 
           // If backend is offline, try to use localStorage data
@@ -309,9 +323,9 @@ const AccountSettings = () => {
       });
 
       // Check if we're getting HTML instead of JSON (backend offline)
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('text/html')) {
-        throw new Error('Backend offline');
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error("Backend offline");
       }
 
       if (!response.ok) {
@@ -320,13 +334,16 @@ const AccountSettings = () => {
           const errorData = JSON.parse(errorText);
           throw new Error(errorData.message || "Failed to update profile");
         } catch {
-          throw new Error(`Failed to update profile: ${response.status} ${errorText}`);
+          throw new Error(
+            `Failed to update profile: ${response.status} ${errorText}`
+          );
         }
       }
 
       const data = await response.json();
       setUserData(data.user);
       setSuccess("Profile updated successfully!");
+      speak("Profile updated successfully!");
 
       // Update localStorage user data
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -338,9 +355,16 @@ const AccountSettings = () => {
     } catch (err) {
       console.error("Update profile error:", err);
 
-      // Handle network errors gracefully
-      if (err.message.includes('Backend offline') || err.message.includes('fetch') || err.message.includes('NetworkError')) {
-        setError("Cannot connect to server. Your changes have been saved locally and will sync when the connection is restored.");
+      // Handle network errors gracefully with speech
+      if (
+        err.message.includes("Backend offline") ||
+        err.message.includes("fetch") ||
+        err.message.includes("NetworkError")
+      ) {
+        const offlineMsg =
+          "Cannot connect to server. Your changes have been saved locally and will sync when the connection is restored.";
+        speak(offlineMsg);
+        setError(offlineMsg);
 
         // Save to localStorage as fallback
         const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -348,7 +372,7 @@ const AccountSettings = () => {
           ...currentUser,
           ...formData,
           birthday: birthday,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUserData(updatedUser);
@@ -356,24 +380,50 @@ const AccountSettings = () => {
         // Show success message instead of error for offline functionality
         setTimeout(() => {
           setError("");
-          setSuccess("Changes saved locally. Will sync when online.");
+          const localSaveMsg = "Changes saved locally. Will sync when online.";
+          speak(localSaveMsg);
+          setSuccess(localSaveMsg);
           setTimeout(() => setSuccess(""), 3000);
         }, 1000);
       } else {
-        setError(err.message || "Failed to update profile");
+        const errorMsg = err.message || "Failed to update profile";
+        speak("Error: " + errorMsg);
+        setError(errorMsg);
       }
     } finally {
       setSaving(false);
     }
   };
 
+  // Speak the page title when the component mounts
+  useEffect(() => {
+    speak(
+      "Account Settings page. You can update your personal information here."
+    );
+  }, [speak]);
+
   // Handle form input changes
   const handleInputChange = (field, value) => {
+    // Get human-readable field name for speech
+    const fieldNames = {
+      firstName: "First Name",
+      lastName: "Last Name",
+      middleName: "Middle Name",
+      contactNumber: "Contact Number",
+      civilStatus: "Civil Status",
+      religion: "Religion",
+      gender: "Gender",
+      address: "Address",
+    };
+
+    const fieldLabel = fieldNames[field] || field;
+    speakInput(fieldLabel, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+    speak("Saving your profile changes. Please wait.");
     updateProfile();
   };
 
@@ -382,6 +432,9 @@ const AccountSettings = () => {
   const days = generateDays(birthday.month, birthday.year);
 
   const handleBirthdayChange = (field, value) => {
+    // Speak the birthday field change
+    speakSelect(`Birthday ${field}`, value);
+
     setBirthday((prev) => {
       const newBirthday = { ...prev, [field]: value };
       // If changing month or year, validate the current day
@@ -467,6 +520,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleInputChange("firstName", e.target.value)
                       }
+                      onFocus={() => speakLabel("First Name")}
                       className="form-input"
                       placeholder="First Name"
                     />
@@ -480,6 +534,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleInputChange("middleName", e.target.value)
                       }
+                      onFocus={() => speakLabel("Middle Name")}
                       className="form-input"
                       placeholder="Middle Name"
                     />
@@ -493,6 +548,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleInputChange("lastName", e.target.value)
                       }
+                      onFocus={() => speakLabel("Last Name")}
                       className="form-input"
                       placeholder="Last Name"
                     />
@@ -501,7 +557,12 @@ const AccountSettings = () => {
 
                 {/* Profile picture (right side) */}
                 <div className="profile-upload">
-                  <label className="profile-image-container cursor-pointer group">
+                  <label
+                    className="profile-image-container cursor-pointer group"
+                    onClick={() =>
+                      speak("Profile picture upload. Click to select an image.")
+                    }
+                  >
                     <div className="profile-image">
                       {imagePreview ? (
                         <div className="relative w-full h-full">
@@ -519,6 +580,7 @@ const AccountSettings = () => {
                             }}
                             className="absolute"
                             title="Remove picture"
+                            aria-label="Remove profile picture"
                           >
                             <FaTimes />
                           </button>
@@ -548,7 +610,9 @@ const AccountSettings = () => {
                     ) : (
                       <div className="text-center">
                         <div className="font-medium cursor-pointer transition-colors duration-200">
-                          {imagePreview ? 'Click to change picture' : 'Click to upload picture'}
+                          {imagePreview
+                            ? "Click to change picture"
+                            : "Click to upload picture"}
                         </div>
                         <div className="text-xs mt-1">
                           Max 5MB • JPG, PNG, GIF
@@ -571,6 +635,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleInputChange("contactNumber", e.target.value)
                       }
+                      onFocus={() => speakLabel("Phone Number")}
                       className="form-input"
                       placeholder="Phone Number"
                     />
@@ -583,6 +648,7 @@ const AccountSettings = () => {
                     onChange={(e) =>
                       handleInputChange("gender", e.target.value)
                     }
+                    onFocus={() => speakLabel("Gender")}
                     className="form-select"
                   >
                     {genderOptions.map((option) => (
@@ -600,6 +666,7 @@ const AccountSettings = () => {
                     onChange={(e) =>
                       handleInputChange("religion", e.target.value)
                     }
+                    onFocus={() => speakLabel("Religion")}
                     className="form-input"
                     placeholder="Religion (e.g. Catholic)"
                   />
@@ -632,6 +699,11 @@ const AccountSettings = () => {
                       className="form-input opacity-80 cursor-not-allowed"
                       placeholder="Email Address"
                       readOnly
+                      onFocus={() =>
+                        speak(
+                          "Email address. Contact the support if you wanted it to be changed."
+                        )
+                      }
                     />
                   </div>
                   <p className="text-xs text-blue-300 italic pl-2">
@@ -645,6 +717,7 @@ const AccountSettings = () => {
                     onChange={(e) =>
                       handleInputChange("civilStatus", e.target.value)
                     }
+                    onFocus={() => speakLabel("Civil Status")}
                     className="form-select"
                   >
                     {civilStatusOptions.map((option) => (
@@ -663,6 +736,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleInputChange("address", e.target.value)
                       }
+                      onFocus={() => speakLabel("Address")}
                       className="form-input"
                       rows="3"
                       placeholder="Full Address"
@@ -677,6 +751,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleBirthdayChange("month", e.target.value)
                       }
+                      onFocus={() => speakLabel("Birthday Month")}
                       className="form-select"
                     >
                       <option value="">Month</option>
@@ -692,6 +767,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleBirthdayChange("day", e.target.value)
                       }
+                      onFocus={() => speakLabel("Birthday Day")}
                       className="form-select"
                     >
                       <option value="">Day</option>
@@ -707,6 +783,7 @@ const AccountSettings = () => {
                       onChange={(e) =>
                         handleBirthdayChange("year", e.target.value)
                       }
+                      onFocus={() => speakLabel("Birthday Year")}
                       className="form-select"
                     >
                       <option value="">Year</option>
@@ -723,9 +800,19 @@ const AccountSettings = () => {
 
             {/* Button container */}
             <div className="button-container">
-              <BackButton onClick={() => navigate(-1)} />
+              <BackButton
+                onClick={() => {
+                  speak("Going back");
+                  navigate(-1);
+                }}
+              />
 
-              <button type="submit" disabled={saving} className="save-button">
+              <button
+                type="submit"
+                disabled={saving}
+                className="save-button"
+                onClick={() => !saving && speak("Saving your changes")}
+              >
                 {saving ? <FaSpinner className="spin" /> : <FaCheck />}
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
               </button>
